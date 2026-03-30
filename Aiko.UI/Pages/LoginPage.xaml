@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.LoginPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:Aiko.UI.Behaviors"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_login"
+    Title="ロ グ イ ン"
+    x:DataType="vm:LoginPageVM">
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_login}}"
+            Command="{Binding PageLoadedCommand}"
+            EventName="Loaded" />
+    </ContentPage.Behaviors>
+    <ScrollView>
+        <Border
+            HeightRequest="500"
+            Stroke="#FF8B8B8B"
+            StrokeShape="RoundRectangle 10,10,10,10"
+            StrokeThickness="4"
+            WidthRequest="500">
+            <Grid
+                ColumnDefinitions="50,150,250"
+                HorizontalOptions="Center"
+                RowDefinitions="auto,auto,auto,auto,auto"
+                RowSpacing="20"
+                VerticalOptions="Center">
+                <Image
+                    Margin="2"
+                    Source="{DynamicResource LoginHomeIcon}"
+                    VerticalOptions="Center" />
+                <Entry
+                    x:Name="ety_CompanyID"
+                    Grid.Column="1"
+                    Margin="20,0,0,0"
+                    FontSize="Body"
+                    MaxLength="6"
+                    Placeholder="entry text"
+                    Text="{Binding CompanyID}"
+                    TextTransform="Uppercase">
+                    <Entry.Behaviors>
+                        <behaviors:UpperAlphaNumericBehavior />
+                        <toolkit:EventToCommandBehavior
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference ety_CompanyID}}"
+                            Command="{Binding CompanyIDUnfocusedCommand}"
+                            EventName="Unfocused" />
+                    </Entry.Behaviors>
+
+                </Entry>
+                <Entry
+                    x:Name="ety_CompanyName"
+                    Grid.Column="2"
+                    Margin="10,0,0,0"
+                    FontSize="Body"
+                    IsEnabled="False"
+                    Text="{Binding CompanyName}" />
+
+                <Image
+                    Grid.Row="1"
+                    Margin="5"
+                    Source="{DynamicResource LoginUserIcon}" />
+                <Entry
+                    x:Name="ety_UserID"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="20,0,0,0"
+                    FontSize="Body"
+                    MaxLength="12"
+                    Text="{Binding UserID}"
+                    TextTransform="Uppercase">
+                    <Entry.Behaviors>
+                        <behaviors:UpperAlphaNumericBehavior />
+                        <toolkit:EventToCommandBehavior
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference ety_UserID}}"
+                            Command="{Binding UserIDUnfocusedCommand}"
+                            EventName="Unfocused" />
+                    </Entry.Behaviors>
+                </Entry>
+                <Entry
+                    x:Name="ety_RoleName"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Margin="10,0,0,0"
+                    FontSize="Body"
+                    IsEnabled="False"
+                    Text="{Binding UserName}" />
+
+                <Image
+                    Grid.Row="2"
+                    Margin="12"
+                    Source="{DynamicResource LoginPwdIcon}"
+                    VerticalOptions="Start" />
+
+                <VerticalStackLayout
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2">
+                    <Entry
+                        x:Name="ety_Pwd"
+                        Margin="20,0,0,0"
+                        ClearButtonVisibility="WhileEditing"
+                        FontSize="Body"
+                        IsPassword="True"
+                        Text="{Binding Pwd}" />
+                    <HorizontalStackLayout>
+                        <CheckBox
+                            x:Name="ckb_SaveUserInfo"
+                            Margin="10,0,0,0"
+                            IsChecked="{Binding IsSaveLoginInfo}" />
+                        <Label
+                            FontSize="Body"
+                            Text="会社ID、オベレータIDを記憶する"
+                            VerticalTextAlignment="Center" />
+                    </HorizontalStackLayout>
+
+                </VerticalStackLayout>
+
+                <Image
+                    Grid.Row="3"
+                    Source="{DynamicResource FileIcon}"
+                    VerticalOptions="Center" />
+
+                <Picker
+                    x:Name="pck_ConstructionList"
+                    Grid.Row="3"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    Margin="20,0,0,0"
+                    FontSize="Body"
+                    HorizontalTextAlignment="Start"
+                    ItemDisplayBinding="{Binding DisplyName}"
+                    ItemsSource="{Binding Projects}"
+                    SelectedIndex="{Binding ProjectSelectedIndex}" />
+
+
+                <VerticalStackLayout
+                    Grid.Row="4"
+                    Grid.ColumnSpan="3"
+                    Spacing="20">
+                    <Button
+                        x:Name="btn_Login"
+                        Command="{Binding LoginCommand}"
+                        CommandParameter="{Binding CompanyID}"
+                        Text="ログイン" />
+                    <Button
+                        x:Name="btn_Exit"
+                        Command="{Binding CloseAppCommand}"
+                        Text="終了" />
+
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+    </ScrollView>
+</ContentPage>

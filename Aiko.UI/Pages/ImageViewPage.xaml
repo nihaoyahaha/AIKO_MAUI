@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.ImageViewPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Aiko.UI"
+    xmlns:model="clr-namespace:Aiko.Common.Models.ImageView;assembly=Aiko.Common"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_ImagePreview"
+    x:DataType="vm:ImageViewPageVM"
+    Shell.NavBarIsVisible="False">
+    <Page.Resources>
+        <local:PictureFormatToVisibilityConverter x:Key="PictureFormatToVisibilityConverter" />
+    </Page.Resources>
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsEnabled="False" IsVisible="False" />
+    </Shell.BackButtonBehavior>
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_ImagePreview}}"
+            Command="{Binding PageLoadedCommand}"
+            EventName="Loaded" />
+    </ContentPage.Behaviors>
+    <Grid RowDefinitions="*,40">
+        <Grid BackgroundColor="AliceBlue">
+            <Grid
+                x:Name="MainGridView"
+                BackgroundColor="White"
+                IsClippedToBounds="True">
+                <Grid.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference MainGridView}}"
+                        Command="{Binding MainGridViewSizeChangedCommand}"
+                        CommandParameter="{Binding Source={x:Reference MainGridView}}"
+                        EventName="SizeChanged" />
+
+                </Grid.Behaviors>
+                <Grid.GestureRecognizers>
+                    <SwipeGestureRecognizer
+                        Command="{Binding NextImageCommand}"
+                        CommandParameter="swipeGesture"
+                        Direction="Left" />
+                    <SwipeGestureRecognizer
+                        Command="{Binding PreviousImageCommand}"
+                        CommandParameter="swipeGesture"
+                        Direction="Right" />
+                </Grid.GestureRecognizers>
+                <local:PinchToZoomContainer x:Name="pinchToZoom">
+                    <AbsoluteLayout x:Name="ZoomLayer">
+                        <Image
+                            x:Name="ContainerImg"
+                            Aspect="AspectFit"
+                            HeightRequest="{Binding PhotoPreview.PhotoLayer.PhotoHeight}"
+                            HorizontalOptions="Fill"
+                            IsVisible="{Binding PhotoPreview.PhotoLayer.PhotoIsChecked}"
+                            Source="{Binding PhotoPreview.PhotoLayer.PhotoBmp}"
+                            VerticalOptions="Fill"
+                            WidthRequest="{Binding PhotoPreview.PhotoLayer.PhotoWidth}" />
+                        <Image
+                            x:Name="greenImg"
+                            Margin="{Binding PhotoPreview.PhotoLayer.Margin}"
+                            Aspect="AspectFit"
+                            HeightRequest="{Binding PhotoPreview.PhotoLayer.GreenHeight}"
+                            IsVisible="{Binding PhotoPreview.PhotoLayer.GreenBackgroundIsChecked}"
+                            Source="{Binding PhotoPreview.PhotoLayer.GreenBmp}"
+                            WidthRequest="{Binding PhotoPreview.PhotoLayer.GreenWidth}" />
+                    </AbsoluteLayout>
+                </local:PinchToZoomContainer>
+            </Grid>
+            <ImageButton
+                Padding="10"
+                BackgroundColor="#66000000"
+                Command="{Binding PreviousImageCommand}"
+                CommandParameter="imageButton"
+                CornerRadius="24"
+                HeightRequest="48"
+                HorizontalOptions="Start"
+                InputTransparent="False"
+                IsEnabled="{Binding CanGoPrevious}"
+                Source="arrowleft.png"
+                WidthRequest="48" />
+            <ImageButton
+                Padding="10"
+                BackgroundColor="#66000000"
+                Command="{Binding NextImageCommand}"
+                CommandParameter="imageButton"
+                CornerRadius="24"
+                HeightRequest="48"
+                HorizontalOptions="End"
+                IsEnabled="{Binding CanGoNext}"
+                Rotation="180"
+                Source="arrowleft.png"
+                WidthRequest="48" />
+            <Label
+                Margin="0,0,0,20"
+                Padding="10,4"
+                BackgroundColor="#66000000"
+                HorizontalOptions="Center"
+                Text="{Binding PageInfo}"
+                TextColor="White"
+                VerticalOptions="End" />
+        </Grid>
+
+        <Grid Grid.Row="1" VerticalOptions="Center">
+            <HorizontalStackLayout HorizontalOptions="End">
+                <CheckBox
+                    x:Name="check_greenBackground"
+                    IsChecked="{Binding PhotoPreview.PhotoLayer.GreenBackgroundIsChecked}"
+                    IsVisible="{Binding GreenBackgroundCheckBoxLabelIsVisible}"
+                    VerticalOptions="Center" />
+                <Label
+                    Margin="-5,0,30,0"
+                    IsVisible="{Binding GreenBackgroundCheckBoxLabelIsVisible}"
+                    Text="黒板"
+                    VerticalOptions="Center" />
+
+                <CheckBox
+                    x:Name="check_photo"
+                    IsChecked="{Binding PhotoPreview.PhotoLayer.PhotoIsChecked}"
+                    IsVisible="{Binding PhotoCheckBoxLabelIsVisible}"
+                    VerticalOptions="Center" />
+                <Label
+                    Margin="-5,0,0,0"
+                    IsVisible="{Binding PhotoCheckBoxLabelIsVisible}"
+                    Text="写真"
+                    VerticalOptions="Center" />
+
+                <Button
+                    Margin="100,0,20,0"
+                    Command="{Binding RemoveCurrentItemCommand}"
+                    HeightRequest="40"
+                    Text="削除"
+                    WidthRequest="70" />
+
+                <Button
+                    x:Name="btn_back"
+                    Margin="100,0,10,0"
+                    Command="{Binding BackCommand}"
+                    FontSize="Body"
+                    HorizontalOptions="Start"
+                    Text="戻る"
+                    VerticalOptions="Center"
+                    WidthRequest="70" />
+            </HorizontalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>

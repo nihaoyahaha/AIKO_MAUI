@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="Aiko.UI.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Aiko.UI"
+    FlyoutBackgroundColor="{DynamicResource ShellFlyoutBackgroundColor}"
+    Shell.FlyoutBehavior="Flyout"
+    Shell.FlyoutWidth="250"
+    Shell.PresentationMode="ModalAnimated">
+    <Shell.TitleView>
+        <Grid>
+            <Label
+                FontAttributes="Bold"
+                FontSize="28"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                Text="配筋検査システム"
+                TextColor="{DynamicResource LabelTextColor}"
+                VerticalOptions="Center" />
+        </Grid>
+    </Shell.TitleView>
+
+    <Shell.ItemTemplate>
+        <DataTemplate>
+            <Grid HeightRequest="50">
+                <Label
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="Center"
+                    Text="{Binding Title}"
+                    TextColor="{DynamicResource LabelTextColor}"
+                    VerticalTextAlignment="Center"
+                    WidthRequest="200" />
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
+
+    <FlyoutItem
+        x:Name="flyout_login"
+        Title="ロ グ イ ン"
+        IsVisible="True"
+        Route="UserLogin">
+        <Tab>
+            <ShellContent
+                x:Name="shellContent_login"
+                Title="ロ グ イ ン"
+                ContentTemplate="{DataTemplate local:LoginPage}"
+                Route="Login" />
+
+        </Tab>
+
+    </FlyoutItem>
+
+    <FlyoutItem Title="環境設定">
+        <Tab>
+            <ShellContent
+                Title="遠隔サーバー"
+                ContentTemplate="{DataTemplate local:RemotingServerPage}"
+                Route="RemotingServer" />
+            <ShellContent
+                Title="オプション"
+                ContentTemplate="{DataTemplate local:SystemOptionServerPage}"
+                Route="SystemOptionServer" />
+            <ShellContent
+                Title="FTP接続"
+                ContentTemplate="{DataTemplate local:RemotingFtpServerPage}"
+                Route="RemotingFtpServer" />
+        </Tab>
+    </FlyoutItem>
+
+    <FlyoutItem Title="ダウンロード">
+        <Tab>
+            <ShellContent
+                Title="ダウンロード"
+                ContentTemplate="{DataTemplate local:DownloadPage}"
+                Route="Download" />
+
+            <ShellContent
+                x:Name="shellContent_Upload"
+                Title="同　期"
+                ContentTemplate="{DataTemplate local:UploadPage}"
+                IsVisible="False"
+                Route="Upload" />
+
+            <ShellContent
+                Title="ロ　グ"
+                ContentTemplate="{DataTemplate local:LogPage}"
+                Route="Log" />
+
+            <ShellContent
+                x:Name="shellContent_Delete"
+                Title="削  除"
+                ContentTemplate="{DataTemplate local:DeletePage}"
+                IsVisible="False"
+                Route="Delete" />
+        </Tab>
+
+    </FlyoutItem>
+
+    <FlyoutItem Title="テーマ">
+        <ShellContent
+            Title="テーマ"
+            ContentTemplate="{DataTemplate local:SwitchThemePage}"
+            Route="SwitchTheme" />
+    </FlyoutItem>
+
+    <FlyoutItem
+        x:Name="flyout_logout"
+        Title="ログアウト"
+        IsVisible="False">
+        <Tab>
+            <ShellContent
+                x:Name="shellContent_logout"
+                ContentTemplate="{DataTemplate local:LoginOutPage}"
+                Route="Logout" />
+        </Tab>
+
+    </FlyoutItem>
+
+</Shell>
+

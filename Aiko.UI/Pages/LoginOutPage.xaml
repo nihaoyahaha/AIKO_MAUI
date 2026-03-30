@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.LoginOutPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    Title="LoginOutPage"
+    x:DataType="vm:LoginOutPageVM">
+    <ScrollView Orientation="Both">
+        <Grid>
+
+            <Button
+                x:Name="btnLogout"
+                Margin="0,90,0,0"
+                Command="{Binding LogoutCommand}"
+                HeightRequest="48"
+                HorizontalOptions="Center"
+                Text="ログアウト"
+                VerticalOptions="Start"
+                WidthRequest="310" />
+
+            <Button
+                x:Name="btnMap"
+                Margin="0,180,0,0"
+                Command="{Binding MainCommand}"
+                HeightRequest="48"
+                HorizontalOptions="Center"
+                Text="マップ検査"
+                VerticalOptions="Start"
+                WidthRequest="310" />
+
+            <Button
+                x:Name="btnClose"
+                Margin="0,270,0,0"
+                Command="{Binding ExitCommand}"
+                HeightRequest="48"
+                HorizontalOptions="Center"
+                Text="終了"
+                VerticalOptions="Start"
+                WidthRequest="310" />
+        </Grid>
+    </ScrollView>
+</ContentPage>

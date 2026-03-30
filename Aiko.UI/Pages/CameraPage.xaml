@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.CameraPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+    xmlns:local="clr-namespace:Aiko.UI.CustomControls"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_camera"
+    x:DataType="vm:CameraPageVM"
+    Shell.NavBarIsVisible="False">
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsEnabled="False" IsVisible="False" />
+    </Shell.BackButtonBehavior>
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_camera}}"
+            Command="{Binding PageLoadedCommand}"
+            EventName="Loaded" />
+    </ContentPage.Behaviors>
+    <ContentPage.Resources>
+        <Style x:Key="CustomButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderColor" Value="Blue" />
+            <Setter Property="BorderWidth" Value="2" />
+            <Setter Property="TextColor" Value="Blue" />
+            <Setter Property="FontFamily" Value="Segoe UI Symbol" />
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="CornerRadius" Value="20" />
+        </Style>
+
+    </ContentPage.Resources>
+    <Grid RowDefinitions="8*,60">
+        <Grid x:Name="gridRoot">
+            <toolkit:CameraView
+                x:Name="camera"
+                ImageCaptureResolution="{Binding SelectedResolution}"
+                SelectedCamera="{Binding SelectedCamera}"
+                ZoomFactor="{Binding CurrentZoom}">
+                <toolkit:CameraView.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        x:TypeArguments="system:EventArgs"
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference camera}, x:DataType=toolkit:CameraView}"
+                        Command="{Binding MediaCapturedCommand}"
+                        EventName="MediaCaptured" />
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference camera}, x:DataType=toolkit:CameraView}"
+                        Command="{Binding CameraViewSizeChangedCommand}"
+                        CommandParameter="{Binding Source={x:Reference camera}}"
+                        EventName="SizeChanged" />
+                </toolkit:CameraView.Behaviors>
+                <toolkit:CameraView.GestureRecognizers>
+                    <PinchGestureRecognizer PinchUpdated="PinchGestureRecognizer_PinchUpdated" />
+                </toolkit:CameraView.GestureRecognizers>
+            </toolkit:CameraView>
+
+            <Grid
+                x:Name="rectGrid"
+                HorizontalOptions="Start"
+                VerticalOptions="Start">
+                <Grid.GestureRecognizers>
+                    <PanGestureRecognizer PanUpdated="PanGestureRecognizer_PanUpdated" />
+                </Grid.GestureRecognizers>
+                <local:EditView_IncludingImage
+                    ConfirmProject="{Binding GreenBackgroundModel.ConfirmProject}"
+                    ConstructionName="{Binding GreenBackgroundModel.ConstructionName}"
+                    Constructor="{Binding GreenBackgroundModel.Constructor}"
+                    Describe="{Binding GreenBackgroundModel.Describe}"
+                    DescribeDetail="{Binding GreenBackgroundModel.DescribeDetail}"
+                    GlobalFontSize="{Binding GreenBackgroundModel.FontSize}"
+                    IsSectionalDrawingVisible="{Binding GreenBackgroundModel.IsSectionalDrawingVisible}"
+                    IsVisible="{Binding BlackboardDisplay}"
+                    Position="{Binding GreenBackgroundModel.Position}"
+                    ProjectName="{Binding GreenBackgroundModel.ProjectName}"
+                    RegionalName="{Binding GreenBackgroundModel.RegionalName}"
+                    SectionName="{Binding GreenBackgroundModel.SectionName}"
+                    SectionalDrawing="{Binding GreenBackgroundModel.SectionalDrawing}"
+                    ShootingDate="{Binding GreenBackgroundModel.ShootingDate}"
+                    WorkAreaName="{Binding GreenBackgroundModel.WorkAreaName}" />
+            </Grid>
+        </Grid>
+        <Grid
+            Grid.Row="1"
+            BackgroundColor="LightGray"
+            ColumnDefinitions="auto,*"
+            ColumnSpacing="15">
+            <HorizontalStackLayout Margin="10,0,0,0">
+                <Label
+                    FontSize="18"
+                    Text="撮影方向："
+                    VerticalOptions="Center" />
+                <Picker
+                    x:Name="pik_ReinforcementType"
+                    ItemDisplayBinding="{Binding DisplyName}"
+                    ItemsSource="{Binding ReinforcementTypeList}"
+                    SelectedItem="{Binding ReinforcementTypeSelectedItem}"
+                    VerticalOptions="Center"
+                    WidthRequest="160" />
+
+                <Label
+                    Margin="2,0,0,0"
+                    FontSize="18"
+                    Text="備考："
+                    VerticalOptions="Center" />
+                <Entry
+                    x:Name="ety_remark"
+                    Background="White"
+                    Text="{Binding Remark}"
+                    VerticalOptions="Center"
+                    WidthRequest="200">
+                    <Entry.Behaviors>
+                        <toolkit:EventToCommandBehavior
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference ety_remark}}"
+                            Command="{Binding RemarkTextChangedCommand}"
+                            EventName="TextChanged" />
+                    </Entry.Behaviors>
+
+                </Entry>
+                <CheckBox
+                    x:Name="chk_confirmer"
+                    Margin="25,0,0,0"
+                    IsChecked="True"
+                    VerticalOptions="Center">
+                    <CheckBox.Behaviors>
+                        <toolkit:EventToCommandBehavior
+                            x:TypeArguments="system:EventArgs"
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference chk_confirmer}}"
+                            Command="{Binding ChangeRemarkOrConfirmerCommand}"
+                            EventName="CheckedChanged" />
+                    </CheckBox.Behaviors>
+                </CheckBox>
+                <Label
+                    Margin="-10,0,0,0"
+                    FontSize="18"
+                    Text="確認者"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Grid.Column="1" HorizontalOptions="End">
+                <ImageButton
+                    x:Name="imgBtn_TakePhoto"
+                    BackgroundColor="{DynamicResource ButtonBackgroundColor}"
+                    Command="{Binding CaptureImageCommand, Source={x:Reference camera}, x:DataType=toolkit:CameraView}"
+                    CommandParameter="{Binding Token}"
+                    CornerRadius="8"
+                    HeightRequest="44"
+                    HorizontalOptions="Center"
+                    Source="darkcamera.png"
+                    VerticalOptions="Center"
+                    WidthRequest="105">
+                    <ImageButton.Aspect>
+                        <OnPlatform x:TypeArguments="Aspect">
+                            <On Platform="iOS, MacCatalyst" Value="Center" />
+                            <On Platform="WinUI" Value="AspectFit" />
+                        </OnPlatform>
+                    </ImageButton.Aspect>
+                </ImageButton>
+
+                <ffimageloading:SvgCachedImage
+                    x:Name="image"
+                    Margin="20,0,10,0"
+                    HorizontalOptions="Fill"
+                    Source="{Binding PhotoScreenshot}"
+                    VerticalOptions="Fill"
+                    WidthRequest="105">
+                    <ffimageloading:SvgCachedImage.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToImageViewPageCommand}" />
+                    </ffimageloading:SvgCachedImage.GestureRecognizers>
+                </ffimageloading:SvgCachedImage>
+
+                <Button
+                    x:Name="btn_back"
+                    Margin="15,0,10,0"
+                    Command="{Binding BackCommand}"
+                    FontSize="Body"
+                    HorizontalOptions="Start"
+                    Text="戻る"
+                    VerticalOptions="Center"
+                    WidthRequest="105" />
+            </HorizontalStackLayout>
+        </Grid>
+        <VerticalStackLayout
+            x:Name="MainControlsPanel"
+            Margin="10"
+            HorizontalOptions="Start"
+            VerticalOptions="Start">
+            <HorizontalStackLayout
+                Margin="0,10,0,0"
+                HorizontalOptions="Start"
+                VerticalOptions="Start">
+                <Button
+                    x:Name="btn_backgroundRect"
+                    Command="{Binding BackgroundRectClickCommand}"
+                    Style="{StaticResource CustomButtonStyle}"
+                    Text="黒" />
+                <HorizontalStackLayout
+                    x:Name="hsStack_backgroundRect"
+                    HeightRequest="50"
+                    IsVisible="{Binding BackgroundRectHsStackIsVisible}"
+                    WidthRequest="300">
+                    <CheckBox
+                        x:Name="chk_rectGridVisibly"
+                        IsChecked="True"
+                        VerticalOptions="Center"
+                        Color="Blue">
+                        <CheckBox.Behaviors>
+                            <toolkit:EventToCommandBehavior
+                                BindingContext="{Binding Path=BindingContext, Source={x:Reference chk_rectGridVisibly}}"
+                                Command="{Binding SetBlackboardDisplayCommand}"
+                                EventName="CheckedChanged" />
+                        </CheckBox.Behaviors>
+                    </CheckBox>
+                    <Label
+                        Margin="-10,0,0,0"
+                        Text="黑板"
+                        TextColor="White"
+                        VerticalOptions="Center" />
+                    <RadioButton
+                        x:Name="rdb_yes"
+                        Margin="20,10,0,0"
+                        Content="あり"
+                        HorizontalOptions="Center"
+                        IsChecked="{Binding GreenBackgroundImageIsVisible}"
+                        IsEnabled="{Binding BgRectTypeRadioButtonIsEnable}"
+                        TextColor="White">
+                        <RadioButton.Behaviors>
+                            <toolkit:EventToCommandBehavior
+                                x:TypeArguments="system:EventArgs"
+                                BindingContext="{Binding Path=BindingContext, Source={x:Reference rdb_yes}}"
+                                Command="{Binding IsSectionalDrawingVisibleChangedCommand}"
+                                EventName="CheckedChanged" />
+                        </RadioButton.Behaviors>
+                    </RadioButton>
+
+                    <RadioButton
+                        x:Name="rdb_nomarl"
+                        Margin="20,10,0,0"
+                        Content="なし"
+                        HeightRequest="30"
+                        IsEnabled="{Binding BgRectTypeRadioButtonIsEnable}"
+                        TextColor="White" />
+
+                </HorizontalStackLayout>
+            </HorizontalStackLayout>
+            <HorizontalStackLayout
+                Margin="0,10,0,0"
+                HorizontalOptions="Start"
+                VerticalOptions="Start">
+                <Button
+                    x:Name="btn_Resolution"
+                    Command="{Binding ResolutionClickCommand}"
+                    Style="{StaticResource CustomButtonStyle}"
+                    Text="画" />
+                <HorizontalStackLayout
+                    x:Name="hsStack_resolution"
+                    HeightRequest="50"
+                    IsVisible="{Binding ResolutionHsStackIsVisible}"
+                    WidthRequest="240">
+                    <Picker
+                        x:Name="pik_Resolutions"
+                        Margin="5,0,0,0"
+                        ItemsSource="{Binding ResolutionDisplayList, FallbackValue=''}"
+                        SelectedIndex="{Binding SelectedResolutionIndex}"
+                        TextColor="White"
+                        VerticalOptions="Center"
+                        WidthRequest="150">
+                        <Picker.Behaviors>
+                            <toolkit:EventToCommandBehavior
+                                BindingContext="{Binding Path=BindingContext, Source={x:Reference pik_Resolutions}}"
+                                Command="{Binding ResolutionsSelectedIndexChangedCommand}"
+                                EventName="SelectedIndexChanged" />
+                        </Picker.Behaviors>
+                    </Picker>
+
+                </HorizontalStackLayout>
+            </HorizontalStackLayout>
+            <HorizontalStackLayout
+                Margin="0,10,0,0"
+                HorizontalOptions="Start"
+                VerticalOptions="Start">
+                <Button
+                    x:Name="btn_cameraPosition"
+                    Command="{Binding CameraPositionClickCommand}"
+                    Style="{StaticResource CustomButtonStyle}"
+                    Text="替" />
+                <HorizontalStackLayout
+                    x:Name="hsStack_cameraPosition"
+                    HeightRequest="50"
+                    IsVisible="{Binding CameraPositionHsStackIsVisible}"
+                    WidthRequest="300">
+                    <Label
+                        Grid.Column="3"
+                        Text="カメラ"
+                        TextColor="White"
+                        VerticalOptions="Center" />
+                    <RadioButton
+                        x:Name="rdb_Back"
+                        Margin="20,10,0,0"
+                        Content="1"
+                        HeightRequest="30"
+                        HorizontalOptions="Center"
+                        IsChecked="True"
+                        TextColor="White">
+                        <RadioButton.Behaviors>
+                            <toolkit:EventToCommandBehavior
+                                x:TypeArguments="system:EventArgs"
+                                BindingContext="{Binding Path=BindingContext, Source={x:Reference rdb_Back}}"
+                                Command="{Binding ChangeCameraCommand}"
+                                EventName="CheckedChanged" />
+                        </RadioButton.Behaviors>
+                    </RadioButton>
+                    <RadioButton
+                        Margin="20,10,0,0"
+                        Content="2"
+                        HorizontalOptions="Center"
+                        IsChecked="False"
+                        TextColor="White" />
+                </HorizontalStackLayout>
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+        <Slider
+            x:Name="slider"
+            Margin="-105,0,0,150"
+            HorizontalOptions="Start"
+            Maximum="{Binding SelectedCamera.MaximumZoomFactor, FallbackValue=1}"
+            Minimum="{Binding SelectedCamera.MinimumZoomFactor, FallbackValue=1}"
+            Rotation="-90"
+            VerticalOptions="End"
+            WidthRequest="300"
+            Value="{Binding CurrentZoom}" />
+
+    </Grid>
+</ContentPage>

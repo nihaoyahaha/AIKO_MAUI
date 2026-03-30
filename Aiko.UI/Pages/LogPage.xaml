@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.LogPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    Title="LogPage"
+    x:DataType="vm:LogPageVM">
+    <ScrollView Orientation="Both">
+        <Grid MinimumHeightRequest="600" MinimumWidthRequest="600">
+            <Button
+                x:Name="btnUpload"
+                Command="{Binding UploadLogCommand}"
+                HorizontalOptions="Center"
+                IsEnabled="{Binding IsEnabled}"
+                IsVisible="True"
+                Text="アップロード"
+                VerticalOptions="Center"
+                WidthRequest="150" />
+
+        </Grid>
+    </ScrollView>
+</ContentPage>

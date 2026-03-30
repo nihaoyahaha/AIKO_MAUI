@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    x:Class="Aiko.UI.LightTheme"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Color x:Key="ActivityIndicatorColor">#512BD4</Color>
+
+    <Color x:Key="IndicatorViewIndicatorColor">#C8C8C8</Color>
+    <Color x:Key="IndicatorViewSelectedIndicatorColor">#141414</Color>
+
+    <Color x:Key="BorderStroke">#C8C8C8</Color>
+
+    <Color x:Key="BoxViewColor">#141414</Color>
+
+    <Color x:Key="ButtonTextColor">white</Color>
+    <Color x:Key="ButtonBackgroundColor">#512BD4</Color>
+    <Color x:Key="ButtonDisabledTextColor">#141414</Color>
+    <Color x:Key="ButtonDisabledBackgroundColor">#C8C8C8</Color>
+
+    <Color x:Key="CheckBoxColor">black</Color>
+    <Color x:Key="CheckBoxDisabledColor">#ACACAC</Color>
+
+    <Color x:Key="DatePickerTextColor">#212121</Color>
+    <Color x:Key="DatePickerDisabledTextColor">#C8C8C8</Color>
+
+    <Color x:Key="EditorTextColor">Black</Color>
+    <Color x:Key="EditorPlaceholderColor">#C8C8C8</Color>
+    <Color x:Key="EditorDisabledTextColor">#ACACAC</Color>
+
+    <Color x:Key="EntryTextColor">black</Color>
+    <Color x:Key="EntryBackgroundColor">transparent</Color>
+    <Color x:Key="EntryPlaceholderColor">#C8C8C8</Color>
+    <Color x:Key="EntryDisabledTextColor">#ACACAC</Color>
+
+    <Color x:Key="FrameBorderColor">#C8C8C8</Color>
+
+    <Color x:Key="LabelTextColor">#212121</Color>
+    <Color x:Key="LabelDisabledTextColor">#ACACAC</Color>
+
+    <Color x:Key="ListViewSeparatorColor">#C8C8C8</Color>
+    <Color x:Key="ListViewRefreshControlColor">#212121</Color>
+
+    <Color x:Key="PickerTextColor">#212121</Color>
+    <Color x:Key="PickerBackgroundColor">transparent</Color>
+    <Color x:Key="PickerTitleColor">#212121</Color>
+    <Color x:Key="PickerDisabledTextColor">#ACACAC</Color>
+    <Color x:Key="PickerDisabledTitleColor">#ACACAC</Color>
+
+    <Color x:Key="ProgressBarProgressColor">#512BD4</Color>
+    <Color x:Key="ProgressBarDisabledProgressColor">#ACACAC</Color>
+
+    <Color x:Key="RadioButtonTextColor">black</Color>
+    <Color x:Key="RadioButtonDisabledTextColor">#ACACAC</Color>
+
+    <Color x:Key="RefreshViewRefreshColor">#212121</Color>
+
+    <Color x:Key="SearchBarTextColor">#212121</Color>
+    <Color x:Key="SearchBarDisabledTextColor">#ACACAC</Color>
+    <Color x:Key="SearchBarDisabledPlaceholderColor">#ACACAC</Color>
+
+    <Color x:Key="SearchHandlerTextColor">#212121</Color>
+    <Color x:Key="SearchHandlerDisabledTextColor">#ACACAC</Color>
+    <Color x:Key="SearchHandlerDisabledPlaceholderColor">#ACACAC</Color>
+
+    <Color x:Key="ShadowBrush">white</Color>
+
+    <Color x:Key="SliderMinimumTrackColor">#512BD4</Color>
+    <Color x:Key="SliderMaximumTrackColor">#C8C8C8</Color>
+    <Color x:Key="SliderThumbColor">#512BD4</Color>
+    <Color x:Key="SliderDisabledMinimumTrackColor">#ACACAC</Color>
+    <Color x:Key="SliderDisabledMaximumTrackColor">#ACACAC</Color>
+    <Color x:Key="SliderDisabledThumbColor">#ACACAC</Color>
+
+    <Color x:Key="SwipeItemBackgroundColor">white</Color>
+
+    <Color x:Key="SwitchOnColor">#512BD4</Color>
+    <Color x:Key="SwitchDisabledOnColor">#ACACAC</Color>
+    <Color x:Key="SwitchDisabledThumbColor">#ACACAC</Color>
+    <Color x:Key="SwitchOnOnColor">#DFD8F7</Color>
+    <Color x:Key="SwitchOnThumbColor">#512BD4</Color>
+    <Color x:Key="SwitchOffThumbColor">#919191</Color>
+
+    <Color x:Key="TimePickerTextColor">#212121</Color>
+    <Color x:Key="TimePickerDisabledTextColor">#ACACAC</Color>
+
+    <Color x:Key="PageBackgroundColor">white</Color>
+
+    <Color x:Key="ShellBackgroundColor">#512BD4</Color>
+    <Color x:Key="ShellForegroundColor">#512BD4</Color>
+    <Color x:Key="ShellTitleColor">white</Color>
+    <Color x:Key="ShellDisabledColor">#C8C8C8</Color>
+    <Color x:Key="ShellUnselectedColor">#C8C8C8</Color>
+    <Color x:Key="ShellTabBarBackgroundColor">white</Color>
+    <Color x:Key="ShellTabBarForegroundColor">#512BD4</Color>
+    <Color x:Key="ShellTabBarTitleColor">#512BD4</Color>
+    <Color x:Key="ShellTabBarUnselectedColor">#212121</Color>
+
+    <Color x:Key="NavigationPageBarBackgroundColor">#512BD4</Color>
+    <Color x:Key="NavigationPageBarTextColor">#C8C8C8</Color>
+    <Color x:Key="NavigationPageIconColor">#C8C8C8</Color>
+
+    <Color x:Key="TabbedPageBarBackgroundColor">white</Color>
+    <Color x:Key="TabbedPageBarTextColor">#512BD4</Color>
+    <Color x:Key="TabbedPageUnselectedTabColor">#C8C8C8</Color>
+    <Color x:Key="TabbedPageSelectedTabColor">#141414</Color>
+
+    <x:String x:Key="LoginHomeIcon">home.png</x:String>
+    <x:String x:Key="LoginUserIcon">useridchg.png</x:String>
+    <x:String x:Key="LoginPwdIcon">key.png</x:String>
+
+    <x:String x:Key="ProgressIcon">progress.png</x:String>
+    <x:String x:Key="SettingIcon">setting.png</x:String>
+
+    <Color x:Key="ShellFlyoutBackgroundColor">#E1E1E1</Color>
+
+    <x:String x:Key="UpIcon">up.png</x:String>
+    <x:String x:Key="DownIcon">down.png</x:String>
+
+    <Color x:Key="GridCheckrslBackgroundColor">#E1E1E1</Color>
+
+    <x:String x:Key="CameraIcon">camera.png</x:String>
+
+    <x:String x:Key="FileIcon">file.png</x:String>
+
+    <Color x:Key="Primary">#512BD4</Color>
+    <Color x:Key="Secondary">#DFD8F7</Color>
+    <Color x:Key="Tertiary">#2B0B98</Color>
+    <Color x:Key="White">White</Color>
+    <Color x:Key="Black">Black</Color>
+    <Color x:Key="Gray100">#E1E1E1</Color>
+    <Color x:Key="Gray200">#C8C8C8</Color>
+    <Color x:Key="Gray300">#ACACAC</Color>
+    <Color x:Key="Gray400">#919191</Color>
+    <Color x:Key="Gray500">#6E6E6E</Color>
+    <Color x:Key="Gray600">#404040</Color>
+    <Color x:Key="Gray900">#212121</Color>
+    <Color x:Key="Gray950">#141414</Color>
+</ResourceDictionary>

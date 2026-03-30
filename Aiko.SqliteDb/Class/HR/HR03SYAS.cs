@@ -1,0 +1,119 @@
+﻿using SQLite;
+
+namespace Aiko.SqliteDb;
+
+public class HR03SYAS
+{
+	[PrimaryKey]
+	/// <summary>
+	/// 工事コード
+	/// </summary>
+	public string HR03001 { get; set; }
+
+	[PrimaryKey]
+	/// <summary>
+	/// 写真コード
+	/// </summary>
+	public string HR03002 { get; set; }
+
+    /// <summary>
+    /// アイテムコード
+    /// </summary>
+    public string HR03003 { get; set; }
+
+    /// <summary>
+    /// 確認項目コード
+    /// </summary>
+    public string HR03004 { get; set; }
+
+    /// <summary>
+    /// 並び順
+    /// </summary>
+    public string HR03005 { get; set; }
+
+    /// <summary>
+    /// 分類
+    /// </summary>
+    public int HR03006 { get; set; }
+
+    /// <summary>
+    /// 方向
+    /// </summary>
+    public int HR03007 { get; set; }
+
+    /// <summary>
+    /// コメント
+    /// </summary>
+    public string HR03008 { get; set; }
+
+    /// <summary>
+    /// 撮影日付
+    /// </summary>
+    public int HR03009 { get; set; }
+
+    /// <summary>
+    /// 撮影時刻
+    /// </summary>
+    public int HR03010 { get; set; }
+
+    /// <summary>
+    /// 作成日時
+    /// </summary>
+    public string HR03011 { get; set; }
+
+    /// <summary>
+    /// 作成オペレータ
+    /// </summary>
+    public string HR03012 { get; set; }
+
+    /// <summary>
+    /// 更新日時
+    /// </summary>
+    public string HR03013 { get; set; }
+
+    /// <summary>
+    /// 更新オペレータ
+    /// </summary>
+    public string HR03014 { get; set; }
+
+    /// <summary>
+    /// 同期日時
+    /// </summary>
+    public string HR03015 { get; set; }
+
+    /// <summary>
+    /// 同期オペレータ
+    /// </summary>
+    public string HR03016 { get; set; }
+
+	/// <summary>
+	/// 写真方式 0：JPG 1：SVG
+	/// </summary>
+	public int HR03017 { get; set; }
+
+	/// <summary>
+	/// //SVGレイヤ表示
+	//      写真    黒板   注釈
+	//7：　　〇      〇     〇
+	//3：　　〇      〇     ×
+	//5：　　〇      ×     〇
+	//1：　　〇      ×     ×
+	/// </summary>
+	public int HR03018 { get; set; }
+
+	/// <summary>
+	/// 撮影方向
+	/// </summary>
+	public string HR03019 { get; set; }
+	/// <summary>
+	/// 写真更新日時
+	/// </summary>
+	public string HR03020 { get; set; }
+
+	/// <summary>
+	/// 図面状態
+	/// </summary>
+	[Ignore]
+	public string CHANGE { get; set; }
+}
+

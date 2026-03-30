@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Aiko.Common/Aiko.Common.csproj" />
+  <Project Path="Aiko.IServices/Aiko.IServices.csproj" />
+  <Project Path="Aiko.Services/Aiko.Services.csproj" />
+  <Project Path="Aiko.SqliteDb/Aiko.SqliteDb.csproj" />
+  <Project Path="Aiko.UI/Aiko.UI.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>

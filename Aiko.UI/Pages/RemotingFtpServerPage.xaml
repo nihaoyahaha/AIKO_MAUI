@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.RemotingFtpServerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:Aiko.UI.Behaviors"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_RemotingFtpServer"
+    Title="FTP接続"
+    x:DataType="vm:RemotingFtpServerPageVM">
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_RemotingFtpServer}}"
+            Command="{Binding PageLoadCommand}"
+            EventName="Loaded" />
+    </ContentPage.Behaviors>
+    <ScrollView>
+        <Grid
+            Margin="70,80,0,0"
+            ColumnDefinitions="170,auto"
+            RowDefinitions="auto,auto,auto,auto,auto"
+            RowSpacing="15">
+            <Label
+                FontSize="Body"
+                HorizontalTextAlignment="Start"
+                Text="プロキシタイプの選択"
+                VerticalTextAlignment="Center" />
+            <Picker
+                x:Name="pik_FtpServerProxyType"
+                Grid.Column="1"
+                FontSize="Body"
+                SelectedItem="{Binding FtpServerProxyType}"
+                WidthRequest="300">
+                <Picker.ItemsSource>
+                    <x:Array Type="{x:Type x:String}">
+                        <x:String>なし</x:String>
+                        <x:String>Https</x:String>
+                    </x:Array>
+                </Picker.ItemsSource>
+            </Picker>
+
+            <Label
+                Grid.Row="1"
+                FontSize="Body"
+                HorizontalTextAlignment="Start"
+                Text="プロキシ サーバー"
+                VerticalTextAlignment="Center" />
+            <Entry
+                x:Name="ety_FtpServerProxy"
+                Grid.Row="1"
+                Grid.Column="1"
+                FontSize="Body"
+                Text="{Binding FtpServerProxy}"
+                WidthRequest="300" />
+
+            <Label
+                Grid.Row="2"
+                FontSize="Body"
+                HorizontalTextAlignment="Start"
+                Text="プロキシ ボート"
+                VerticalTextAlignment="Center" />
+            <Entry
+                x:Name="ety_FtpServerProxyPort"
+                Grid.Row="2"
+                Grid.Column="1"
+                FontSize="Body"
+                Text="{Binding FtpServerProxyPort}"
+                WidthRequest="300">
+                <Entry.Behaviors>
+                    <behaviors:NumericOnlyBehavior MaxLength="5" />
+                </Entry.Behaviors>
+            </Entry>
+
+            <Label
+                Grid.Row="3"
+                Grid.ColumnSpan="2"
+                FontSize="Body"
+                HorizontalOptions="Start"
+                Text="（LANにプロキシ　サーバーを使用する場合、設定してください。）"
+                VerticalTextAlignment="Center" />
+
+            <Button
+                x:Name="btn_Save"
+                Grid.Row="4"
+                Grid.Column="1"
+                Margin="0,50,0,0"
+                Command="{Binding SaveCommand}"
+                FontSize="Body"
+                HorizontalOptions="End"
+                Text="保存"
+                WidthRequest="100" />
+        </Grid>
+
+    </ScrollView>
+</ContentPage>

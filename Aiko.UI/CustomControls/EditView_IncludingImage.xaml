@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="Aiko.UI.CustomControls.EditView_IncludingImage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Name="this"
+    Loaded="this_Loaded">
+
+    <ContentView.Resources>
+        <Style TargetType="Border">
+            <Setter Property="Stroke" Value="White" />
+            <Setter Property="StrokeThickness" Value="1" />
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="FontSize" Value="{Binding GlobalFontSize, Source={x:Reference this}}" />
+            <Setter Property="HeightRequest" Value="{Binding GlobalLabelHeight, Source={x:Reference this}}" />
+            <Setter Property="Padding" Value="8,10,30,10" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="VerticalTextAlignment" Value="Center" />
+        </Style>
+    </ContentView.Resources>
+
+    <Grid
+        x:Name="grid_root"
+        Background="#314029"
+        IsVisible="{Binding IsVisible, FallbackValue=true}">
+        <Grid
+            Margin="5"
+            ColumnDefinitions="auto,auto,2*"
+            RowDefinitions="auto,auto, auto, auto, auto, auto,auto,auto,auto,auto">
+            <Grid.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Stroke" Value="White" />
+                    <Setter Property="StrokeThickness" Value="1" />
+                </Style>
+            </Grid.Style>
+            <Border Grid.ColumnSpan="3">
+                <Label
+                    x:Name="lb_ConstructionName"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding ConstructionName, FallbackValue='工事名'}" />
+            </Border>
+
+            <Border
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="0,-2,0,0">
+                <Label Text="工区" />
+            </Border>
+
+            <Border
+                x:Name="border_WorkArea"
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="-2,-2,0,0">
+                <Label
+                    x:Name="lb_WorkAreaName"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding WorkAreaName, FallbackValue='工区名'}" />
+            </Border>
+
+            <Border
+                x:Name="border_SectionalDrawing"
+                Grid.Row="1"
+                Grid.RowSpan="5"
+                Grid.Column="2"
+                Margin="-2,-2,0,0"
+                IsVisible="{Binding IsSectionalDrawingVisible}">
+                <Image
+                    x:Name="img_SectionalDrawing"
+                    Aspect="AspectFit"
+                    HorizontalOptions="Center"
+                    Opacity="0.9"
+                    Source="{Binding SectionalDrawing}"
+                    VerticalOptions="Center" />
+
+            </Border>
+
+            <Border Grid.Row="2" Margin="0,-2,0,0">
+                <Label Text="部位" />
+            </Border>
+            <Border
+                x:Name="border_Regional"
+                Grid.Row="2"
+                Grid.Column="1"
+                Margin="-2,-2,0,0">
+                <Label
+                    x:Name="lb_RegionalName"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding RegionalName, FallbackValue='部位名'}" />
+            </Border>
+
+            <Border Grid.Row="3" Margin="0,-2,0,0">
+                <Label Text="断面名" />
+            </Border>
+
+            <Border
+                x:Name="border_SectionName"
+                Grid.Row="3"
+                Grid.Column="1"
+                Margin="-2,-2,0,0">
+                <Label
+                    x:Name="lb_SectionName"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding SectionName, FallbackValue='断面名'}" />
+            </Border>
+
+            <Border Grid.Row="4" Margin="0,-2,0,0">
+                <Label Text="位置" />
+            </Border>
+
+            <Border
+                x:Name="border_Position"
+                Grid.Row="4"
+                Grid.Column="1"
+                Margin="-2,-2,0,0">
+                <Label
+                    x:Name="lb_Position"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding Position, FallbackValue='X1,Y1'}" />
+            </Border>
+
+            <Border Grid.Row="5" Margin="0,-2,0,0">
+                <Label Text="工程" />
+            </Border>
+
+            <Border
+                x:Name="border_ProjectName"
+                Grid.Row="5"
+                Grid.Column="1"
+                Margin="-2,-2,0,0">
+                <Label
+                    x:Name="lb_ProjectName"
+                    LineBreakMode="NoWrap"
+                    Text="{Binding ProjectName, FallbackValue='工程名'}" />
+            </Border>
+
+            <Border Grid.Row="6" Margin="0,-2,0,0">
+                <Label Text="確認項目" />
+            </Border>
+
+            <Border
+                Grid.Row="6"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Margin="-2,-2,0,0">
+                <Label
+                    x:Name="lb_ConfirmProject"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding ConfirmProject, FallbackValue='確認項目'}" />
+            </Border>
+
+            <Border Grid.Row="7" Margin="0,-2,0,0">
+                <Label Margin="-5,0,0,0" Text=" 撮影日" />
+            </Border>
+
+            <Border
+                Grid.Row="7"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Margin="-2,-2,0,0">
+                <Label
+                    x:Name="lb_ShootingDate"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding ShootingDate, FallbackValue='2017/08/08（月）'}" />
+            </Border>
+
+            <Border Grid.Row="8" Margin="0,-2,0,0">
+                <Label x:Name="lb_Describe" Text="{Binding Describe, FallbackValue='備考'}" />
+            </Border>
+
+            <Border
+                Grid.Row="8"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Margin="-2,-2,0,0">
+                <Label x:Name="lb_DescribeDetail" Text="{Binding DescribeDetail, FallbackValue=''}" />
+            </Border>
+
+            <Border Grid.Row="9" Margin="0,-2,0,0">
+                <Label Text="施工者" />
+            </Border>
+
+            <Border
+                Grid.Row="9"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Margin="-2,-2,0,0">
+                <Label
+                    x:Name="lb_Constructor"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding Constructor, FallbackValue='事務所名＿庄司建物'}" />
+            </Border>
+        </Grid>
+    </Grid>
+
+
+</ContentView>

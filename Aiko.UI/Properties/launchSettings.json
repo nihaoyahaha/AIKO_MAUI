@@ -1,0 +1,18 @@
+{
+  "profiles": {
+    "Windows Machine": {
+      "commandName": "MsixPackage",
+      "nativeDebugging": false
+    },
+    "windows平板": {
+      "commandName": "MsixPackage",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "172.29.2.236:4026",
+      "authenticationMode": "None",
+      "nativeDebugging": true
+    },
+    "配置文件 1": {
+      "commandName": "Executable"
+    }
+  }
+}

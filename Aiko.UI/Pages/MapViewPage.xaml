@@ -1,0 +1,392 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.MapViewPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Aiko.UI"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_MapView"
+    x:DataType="vm:MapViewPageVM" 
+    Shell.NavBarIsVisible="False">
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsVisible="False" IsEnabled="False" />
+    </Shell.BackButtonBehavior>
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_MapView}}"
+            EventName="Loaded" />
+    </ContentPage.Behaviors>
+    <Grid RowDefinitions="65,*">
+        <Grid
+            Margin="10"
+            ColumnDefinitions="0.1*,0.1*,0.1*,0.1*,0.1*,0.1*,0.12*"
+            ColumnSpacing="30">
+            <Picker
+                x:Name="pck_Floor"
+                Margin="10,0,0,0"
+                FontSize="Body"
+                HorizontalTextAlignment="Center"
+                ItemDisplayBinding="{Binding DisplyName}"
+                ItemsSource="{Binding Floors}"
+                SelectedIndex="{Binding FloorSelectIndex}">
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Floor}}"
+                        Command="{Binding FloorSelectedIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
+
+            <Picker
+                x:Name="pck_Map"
+                Grid.Column="1"
+                FontSize="Body"
+                HorizontalTextAlignment="Center"
+                ItemDisplayBinding="{Binding DisplyName}"
+                ItemsSource="{Binding Maps}"
+                SelectedIndex="{Binding MapSelectIndex}">
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Map}}"
+                        Command="{Binding MapSelectedIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
+
+            <Picker
+                x:Name="pck_Area"
+                Grid.Column="2"
+                FontSize="Body"
+                HorizontalTextAlignment="Center"
+                IsEnabled="{Binding AreaEnable}"
+                ItemDisplayBinding="{Binding DisplyName}"
+                ItemsSource="{Binding Areas}"
+                SelectedIndex="{Binding AreaSelectIndex}">
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Area}}"
+                        Command="{Binding AreaSelectedIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
+
+            <Picker
+                x:Name="pck_Position"
+                Grid.Column="3"
+                FontSize="Body"
+                HorizontalTextAlignment="Center"
+                IsEnabled="{Binding PositionEnable}"
+                ItemDisplayBinding="{Binding DisplyName}"
+                ItemsSource="{Binding Positions}"
+                SelectedIndex="{Binding PositionSelectIndex}">
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                     BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Position}}"
+                     Command="{Binding PositionSelectIndexChangedCommand}"
+                     EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
+
+            <Picker
+                x:Name="pck_Proc"
+                Grid.Column="4"
+                FontSize="Body"
+                HorizontalTextAlignment="Center"
+                IsEnabled="{Binding ProckEnable}"
+                ItemDisplayBinding="{Binding DisplyName}"
+                ItemsSource="{Binding Procks}"
+                SelectedIndex="{Binding ProckSelectIndex}" >
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                     BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Proc}}"
+                     Command="{Binding ProckSelectIndexChangedCommand}"
+                     EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
+            
+            <Picker
+                x:Name="pck_Class"
+                Grid.Column="5"
+                FontSize="Body"
+                HorizontalTextAlignment="Center"
+                ItemDisplayBinding="{Binding DisplyName}"
+                ItemsSource="{Binding Classs}"
+                SelectedIndex="{Binding ClassSelectIndex}" >
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                     BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Class}}"
+                     Command="{Binding ClassSelectIndexChangedCommand}"
+                     EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
+                <Grid
+                Grid.Column="6"
+                ColumnDefinitions="0.1*,0.1*,0.1*"
+                HeightRequest="48"
+                HorizontalOptions="End">
+                <ImageButton
+                    x:Name="imgBtn_Home"
+                    Command="{Binding HomeCommand}"
+                    Source="{DynamicResource LoginHomeIcon}">
+                    <ImageButton.Aspect>
+                        <OnPlatform x:TypeArguments="Aspect">
+                            <On Platform="iOS, MacCatalyst" Value="Center" />
+                            <On Platform="WinUI" Value="AspectFit" />
+                        </OnPlatform>
+                    </ImageButton.Aspect>
+                </ImageButton>
+
+                <ImageButton
+                    x:Name="imgBtn_Progress"
+                    Grid.Column="1"
+                    Source="{DynamicResource ProgressIcon}">
+                    <ImageButton.Aspect>
+                        <OnPlatform x:TypeArguments="Aspect">
+                            <On Platform="iOS, MacCatalyst" Value="Center" />
+                            <On Platform="WinUI" Value="AspectFit" />
+                        </OnPlatform>
+                    </ImageButton.Aspect>
+                </ImageButton>
+
+                <ImageButton
+                    x:Name="imgBtn_Set"
+                    Grid.Column="2"
+                    Command="{Binding ToggleSettingCommand}"
+                    Source="{DynamicResource SettingIcon}">
+                    <ImageButton.Aspect>
+                        <OnPlatform x:TypeArguments="Aspect">
+                            <On Platform="iOS, MacCatalyst" Value="Center" />
+                            <On Platform="WinUI" Value="AspectFit" />
+                        </OnPlatform>
+                    </ImageButton.Aspect>
+                </ImageButton>
+            </Grid>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid BackgroundColor="#FF8B8B8B">
+
+                <!-- 顶部 X guide -->
+                <AbsoluteLayout
+                    x:Name="GuideXLayer"
+                    Margin="80,0,80,0"
+                    HeightRequest="48"
+                    VerticalOptions="Start"
+                    ZIndex="99" InputTransparent="True">
+                </AbsoluteLayout>
+
+                <!-- 左侧 Y guide -->
+                <AbsoluteLayout
+                    x:Name="GuideYLayer"
+                    Margin="0,48,0,0"
+                    HorizontalOptions="Start"
+                    WidthRequest="80"
+                    ZIndex="99" InputTransparent="True">
+                </AbsoluteLayout>
+
+                <!-- 右侧 Y2 guide -->
+                <AbsoluteLayout
+                    x:Name="GuideY2Layer"
+                    Margin="0,48,0,0"
+                    HorizontalOptions="End"
+                    WidthRequest="80"
+                    ZIndex="99" InputTransparent="True">
+                </AbsoluteLayout>
+                <Grid
+                    x:Name="MainGridView"
+                    Margin="80,48,80,0"
+                    Background="#FF8B8B8B"
+                    IsClippedToBounds="True">
+                    <local:PinchToZoomContainer x:Name="pinchToZoom">
+                        <AbsoluteLayout x:Name="ZoomLayer">
+                            <Image
+                                x:Name="ContainerImg"
+                                Loaded="OnContainerImgLoaded"
+                                Source="{Binding ImageSource}" 
+                                Aspect="Fill"
+                                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                AbsoluteLayout.LayoutFlags="All" />
+                        </AbsoluteLayout>
+                    </local:PinchToZoomContainer>
+                </Grid>
+            </Grid>
+
+            <Image
+                x:Name="imgXY"
+                Margin="85,0,0,5"
+                HeightRequest="32"
+                HorizontalOptions="Start"
+                Source="xy.png"
+                VerticalOptions="End"
+                WidthRequest="32" />
+
+            <!--  设置弹窗  -->
+            <Border
+                x:Name="settingPopup"
+                Margin="0,0,0,0"
+                Padding="1"
+                BackgroundColor="White"
+                HeightRequest="350"
+                HorizontalOptions="End"
+                IsVisible="{Binding IsSettingVisible}"
+                Stroke="#E0E0E0"
+                StrokeShape="RoundRectangle 5"
+                StrokeThickness="1"
+                VerticalOptions="Start"
+                WidthRequest="200"
+                ZIndex="999">
+
+                <Grid RowDefinitions="Auto" RowSpacing="0">
+
+                    <ScrollView Grid.Row="0">
+                        <StackLayout Padding="10" Spacing="10">
+
+                            <!--  テーマ (主题)  -->
+                            <Grid
+                                ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
+                                HeightRequest="35"
+                                VerticalOptions="Center">
+                                <Label
+                                    Grid.Column="0"
+                                    FontSize="14"
+                                    HorizontalOptions="End"
+                                    Text="テーマ"
+                                    VerticalOptions="Center" />
+                                <Switch
+                                    Grid.Column="1"
+                                    OnColor="#87CEEB"
+                                    VerticalOptions="Center" IsToggled="{Binding ThemeFlag}" />
+                            </Grid>
+
+                            <!--  アイテムNo (项目编号)  -->
+                            <Grid
+                                ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
+                                HeightRequest="35"
+                                VerticalOptions="Center">
+                                <Label
+                                    Grid.Column="0"
+                                    FontSize="14"
+                                    HorizontalOptions="End"
+                                    Text="アイテムNo"
+                                    VerticalOptions="Center" />
+                                <Switch
+                                    Grid.Column="1"
+                                    OnColor="#87CEEB"
+                                    VerticalOptions="Center"  IsToggled="{Binding Hr01003Flag}"/>
+                            </Grid>
+
+                            <!--  断面符号 (断面符号)  -->
+                            <Grid
+                                ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
+                                HeightRequest="35"
+                                VerticalOptions="Center">
+                                <Label
+                                    Grid.Column="0"
+                                    FontSize="14"
+                                    HorizontalOptions="End"
+                                    Text="断面符号"
+                                    VerticalOptions="Center" />
+                                <Switch
+                                    Grid.Column="1"
+                                    OnColor="#87CEEB"
+                                    VerticalOptions="Center"  IsToggled="{Binding Hr01020Flag}"/>
+                            </Grid>
+
+                            <!--  工区名 (工区名称)  -->
+                            <Grid
+                                ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
+                                HeightRequest="35"
+                                VerticalOptions="Center">
+                                <Label
+                                    Grid.Column="0"
+                                    FontSize="14"
+                                    HorizontalOptions="End"
+                                    Text="工区名"
+                                    VerticalOptions="Center" />
+                                <Switch
+                                    Grid.Column="1"
+                                    OnColor="#87CEEB"
+                                    VerticalOptions="Center"  IsToggled="{Binding Hr01007Flag}"/>
+                            </Grid>
+
+                            <!--  サイズ拡大 (尺寸放大)  -->
+                            <Grid
+                                ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
+                                HeightRequest="35"
+                                VerticalOptions="Center">
+                                <Label
+                                    Grid.Column="0"
+                                    FontSize="14"
+                                    HorizontalOptions="End"
+                                    Text="サイズ拡大"
+                                    VerticalOptions="Center" />
+                                <Switch
+                                    Grid.Column="1"
+                                    OnColor="#87CEEB"
+                                    VerticalOptions="Center" IsToggled="{Binding SizeFlag}"/>
+                            </Grid>
+
+                            <!--  採用枚数/枚 (采用张数/张)  -->
+                            <Grid
+                                ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
+                                HeightRequest="35"
+                                VerticalOptions="Center">
+                                <Label
+                                    Grid.Column="0"
+                                    FontSize="14"
+                                    HorizontalOptions="End"
+                                    Text="採用枚数/枚"
+                                    VerticalOptions="Center" />
+                                <Switch
+                                    Grid.Column="1"
+                                    OnColor="#87CEEB"
+                                    VerticalOptions="Center" IsToggled="{Binding PhotoCountFlag}"/>
+                            </Grid>
+
+                            <!--  ガイド (指南/引导)  -->
+                            <Grid
+                                ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
+                                HeightRequest="45"
+                                VerticalOptions="Center">
+                                <Label
+                                    Grid.Column="0"
+                                    FontSize="14"
+                                    HorizontalOptions="End"
+                                    Text="ガイド"
+                                    VerticalOptions="Center" />
+                                <Picker
+                                    x:Name="pck_Guide"
+                                    Grid.Column="1"
+                                    FontSize="14"
+                                    HeightRequest="35"
+                                    VerticalOptions="Center"                                     
+                                    ItemDisplayBinding="{Binding DisplyName}"
+                                    ItemsSource="{Binding Guide}"
+                                    SelectedIndex="{Binding GuideSelectIndex}">
+                                    <Picker.Behaviors>
+                                        <toolkit:EventToCommandBehavior
+                                         BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Guide}}"
+                                         Command="{Binding GuideSelectedIndexChangedCommand}"
+                                         EventName="SelectedIndexChanged" />
+                                    </Picker.Behaviors>
+                                </Picker>
+                                
+                            </Grid>
+
+                        </StackLayout>
+                    </ScrollView>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+
+</ContentPage>

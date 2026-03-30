@@ -1,0 +1,415 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Application
+    x:Class="Aiko.UI.App"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Aiko.UI">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary Source="Themes/LightTheme.xaml" />
+
+            <Style TargetType="ActivityIndicator">
+                <Setter Property="Color" Value="{DynamicResource ActivityIndicatorColor}" />
+            </Style>
+
+            <Style TargetType="IndicatorView">
+                <Setter Property="IndicatorColor" Value="{DynamicResource IndicatorViewIndicatorColor}" />
+                <Setter Property="SelectedIndicatorColor" Value="{DynamicResource IndicatorViewSelectedIndicatorColor}" />
+            </Style>
+
+            <Style TargetType="Border">
+                <Setter Property="Stroke" Value="{DynamicResource BorderStroke}" />
+                <Setter Property="StrokeShape" Value="Rectangle" />
+                <Setter Property="StrokeThickness" Value="1" />
+            </Style>
+
+            <Style TargetType="BoxView">
+                <Setter Property="Color" Value="{DynamicResource BoxViewColor}" />
+            </Style>
+
+            <Style TargetType="Button">
+                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}" />
+                <Setter Property="BackgroundColor" Value="{DynamicResource ButtonBackgroundColor}" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="14,10" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource ButtonDisabledTextColor}" />
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource ButtonDisabledBackgroundColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="CheckBox">
+                <Setter Property="Color" Value="{DynamicResource CheckBoxColor}" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="Color" Value="{DynamicResource CheckBoxDisabledColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="DatePicker">
+                <Setter Property="TextColor" Value="{DynamicResource DatePickerTextColor}" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource DatePickerDisabledTextColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="Editor">
+                <Setter Property="TextColor" Value="{DynamicResource EditorTextColor}" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="PlaceholderColor" Value="{DynamicResource EditorPlaceholderColor}" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource EditorDisabledTextColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="Entry">
+                <Setter Property="TextColor" Value="{DynamicResource EntryTextColor}" />
+                <Setter Property="BackgroundColor" Value="{DynamicResource EntryBackgroundColor}" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="PlaceholderColor" Value="{DynamicResource EntryPlaceholderColor}" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource EntryDisabledTextColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="Frame">
+                <Setter Property="HasShadow" Value="False" />
+                <Setter Property="BorderColor" Value="{DynamicResource FrameBorderColor}" />
+                <Setter Property="CornerRadius" Value="8" />
+            </Style>
+
+            <Style TargetType="ImageButton">
+                <Setter Property="Opacity" Value="1" />
+                <Setter Property="BorderColor" Value="Transparent" />
+                <Setter Property="BorderWidth" Value="0" />
+                <Setter Property="CornerRadius" Value="0" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="{DynamicResource LabelTextColor}" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource LabelDisabledTextColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="ListView">
+                <Setter Property="SeparatorColor" Value="{DynamicResource ListViewSeparatorColor}" />
+                <Setter Property="RefreshControlColor" Value="{DynamicResource ListViewRefreshControlColor}" />
+            </Style>
+
+            <Style TargetType="Picker">
+                <Setter Property="TextColor" Value="{DynamicResource PickerTextColor}" />
+                <Setter Property="TitleColor" Value="{DynamicResource TextColorTitleColor}" />
+                <Setter Property="BackgroundColor" Value="{DynamicResource PickerBackgroundColor}" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource PickerDisabledTextColor}" />
+                                    <Setter Property="TitleColor" Value="{DynamicResource PickerDisabledTitleColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="ProgressBar">
+                <Setter Property="ProgressColor" Value="{DynamicResource ProgressBarProgressColor}" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="ProgressColor" Value="{DynamicResource ProgressBarDisabledProgressColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="RadioButton">
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="TextColor" Value="{DynamicResource RadioButtonTextColor}" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource RadioButtonDisabledTextColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="RefreshView">
+                <Setter Property="RefreshColor" Value="{DynamicResource RefreshViewRefreshColor}" />
+            </Style>
+
+            <Style TargetType="SearchBar">
+                <Setter Property="TextColor" Value="{DynamicResource SearchBarTextColor}" />
+                <Setter Property="PlaceholderColor" Value="{DynamicResource SearchBarPlaceholderColor}" />
+                <Setter Property="CancelButtonColor" Value="{DynamicResource SearchBarCancelButtonColor}" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource SearchBarDisabledTextColor}" />
+                                    <Setter Property="PlaceholderColor" Value="{DynamicResource SearchBarDisabledPlaceholderColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="SearchHandler">
+                <Setter Property="TextColor" Value="{DynamicResource SearchHandlerTextColor}" />
+                <Setter Property="PlaceholderColor" Value="{DynamicResource SearchHandlerPlaceholderColor}" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource SearchHandlerDisabledTextColor}" />
+                                    <Setter Property="PlaceholderColor" Value="{DynamicResource SearchHandlerDisabledPlaceholderColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="Shadow">
+                <Setter Property="Radius" Value="15" />
+                <Setter Property="Opacity" Value="0.5" />
+                <Setter Property="Brush" Value="{DynamicResource ShadowBrush}" />
+                <Setter Property="Offset" Value="10,10" />
+            </Style>
+
+            <Style TargetType="Slider">
+                <Setter Property="MinimumTrackColor" Value="{DynamicResource SliderMinimumTrackColor}" />
+                <Setter Property="MaximumTrackColor" Value="{DynamicResource SliderMaximumTrackColor}" />
+                <Setter Property="ThumbColor" Value="{DynamicResource SliderThumbColor}" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="MinimumTrackColor" Value="{DynamicResource SliderDisabledMinimumTrackColor}" />
+                                    <Setter Property="MaximumTrackColor" Value="{DynamicResource SliderDisabledMaximumTrackColor}" />
+                                    <Setter Property="ThumbColor" Value="{DynamicResource SliderDisabledThumbColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="SwipeItem">
+                <Setter Property="BackgroundColor" Value="{DynamicResource SwipeItemBackgroundColor}" />
+            </Style>
+
+            <Style TargetType="Switch">
+                <Setter Property="OnColor" Value="{DynamicResource SwitchOnColor}" />
+                <Setter Property="ThumbColor" Value="{DynamicResource SwitchThumbColor}" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="OnColor" Value="{DynamicResource SwitchDisabledOnColor}" />
+                                    <Setter Property="ThumbColor" Value="{DynamicResource SwitchDisabledThumbColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="On">
+                                <VisualState.Setters>
+                                    <Setter Property="OnColor" Value="{DynamicResource SwitchOnOnColor}" />
+                                    <Setter Property="ThumbColor" Value="{DynamicResource SwitchOnThumbColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Off">
+                                <VisualState.Setters>
+                                    <Setter Property="ThumbColor" Value="{DynamicResource SwitchOffThumbColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style TargetType="TimePicker">
+                <Setter Property="TextColor" Value="{DynamicResource TimePickerTextColor}" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
+                <Setter Property="MinimumWidthRequest" Value="44" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource TimePickerDisabledTextColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style ApplyToDerivedTypes="True" TargetType="Page">
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="BackgroundColor" Value="{DynamicResource PageBackgroundColor}" />
+            </Style>
+
+            <Style ApplyToDerivedTypes="True" TargetType="Shell">
+                <Setter Property="Shell.BackgroundColor" Value="{DynamicResource ShellBackgroundColor}" />
+                <Setter Property="Shell.ForegroundColor" Value="{OnPlatform WinUI={StaticResource Primary}, Default={StaticResource White}}" />
+                <Setter Property="Shell.TitleColor" Value="{DynamicResource ShellTitleColor}" />
+                <Setter Property="Shell.DisabledColor" Value="{DynamicResource ShellDisabledColor}" />
+                <Setter Property="Shell.UnselectedColor" Value="{DynamicResource ShellUnselectedColor}" />
+                <Setter Property="Shell.NavBarHasShadow" Value="False" />
+                <Setter Property="Shell.TabBarBackgroundColor" Value="{DynamicResource ShellTabBarBackgroundColor}" />
+                <Setter Property="Shell.TabBarForegroundColor" Value="{DynamicResource ShellTabBarForegroundColor}" />
+                <Setter Property="Shell.TabBarTitleColor" Value="{DynamicResource ShellTabBarTitleColor}" />
+                <Setter Property="Shell.TabBarUnselectedColor" Value="{DynamicResource ShellTabBarUnselectedColor}" />
+            </Style>
+
+            <Style TargetType="NavigationPage">
+                <Setter Property="BarBackgroundColor" Value="{DynamicResource NavigationPageBarBackgroundColor}" />
+                <Setter Property="BarTextColor" Value="{DynamicResource NavigationPageBarTextColor}" />
+                <Setter Property="IconColor" Value="{DynamicResource NavigationPageIconColor}" />
+            </Style>
+
+            <Style TargetType="TabbedPage">
+                <Setter Property="BarBackgroundColor" Value="{DynamicResource TabbedPageBarBackgroundColor}" />
+                <Setter Property="BarTextColor" Value="{DynamicResource TabbedPageBarTextColor}" />
+                <Setter Property="UnselectedTabColor" Value="{DynamicResource TabbedPageUnselectedTabColor}" />
+                <Setter Property="SelectedTabColor" Value="{DynamicResource TabbedPageSelectedTabColor}" />
+            </Style>
+
+
+
+        </ResourceDictionary>
+
+    </Application.Resources>
+</Application>
+

@@ -1,0 +1,737 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.CheckPointPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:common="clr-namespace:Aiko.Common.Converters;assembly=Aiko.Common"
+    xmlns:local="clr-namespace:Aiko.UI"
+    xmlns:model="clr-namespace:Aiko.Common.Models;assembly=Aiko.Common"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_checkPoint"
+    x:DataType="vm:CheckPointPageVM"
+    Shell.NavBarIsVisible="False">
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsEnabled="False" IsVisible="False" />
+    </Shell.BackButtonBehavior>
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_checkPoint}}"
+            Command="{Binding PageLoadedCommand}"
+            EventName="Loaded" />
+    </ContentPage.Behaviors>
+    <ContentPage.Resources>
+        <DataTemplate x:Key="SelectionButtonTemplate" x:DataType="model:SelectionButtonModel">
+            <Button
+                Margin="0,2,0,0"
+                BackgroundColor="{Binding BackgroundColor}"
+                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=SectionButtonClickCommand}"
+                CommandParameter="{Binding Id}"
+                Text="{Binding Text}"
+                WidthRequest="140" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="DataTemplateDark" x:DataType="model:InspectionItem">
+            <Grid HeightRequest="40" RowDefinitions="*, Auto">
+                <Grid
+                    BackgroundColor="{AppThemeBinding Dark=#111827,
+                                                      Light=#FFFFFF}"
+                    ColumnDefinitions="1*,4*,1*"
+                    RowDefinitions="Auto"
+                    VerticalOptions="Center">
+                    <Image HeightRequest="20" Source="{Binding CheckResultImage}">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=InspectionItemSelectedItemCheckResultImageTappedCommand}" />
+                        </Image.GestureRecognizers>
+                    </Image>
+                    <StackLayout Grid.Column="1">
+                        <Label FontAttributes="Bold" Text="{Binding ArtistName}" />
+                    </StackLayout>
+                    <StackLayout
+                        Grid.Column="2"
+                        HorizontalOptions="Center"
+                        Orientation="Horizontal">
+                        <Border BackgroundColor="{Binding CameraColor}" Stroke="Transparent">
+                            <Image
+                                HeightRequest="20"
+                                Source="ca.png"
+                                WidthRequest="20">
+                                <Image.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=NavigateToDetailsCommand}" NumberOfTapsRequired="1" />
+                                </Image.GestureRecognizers>
+                            </Image>
+                        </Border>
+                        <Label
+                            HorizontalTextAlignment="End"
+                            Text="{Binding PicNumInfo}"
+                            WidthRequest="60" />
+                    </StackLayout>
+                </Grid>
+                <BoxView
+                    Grid.Row="1"
+                    Margin="0"
+                    BackgroundColor="White"
+                    HeightRequest="1" />
+                <!--  选中态背景色  -->
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="Transparent" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState Name="Selected">
+                            <VisualState.Setters>
+                                <!--  你想要的选中颜色  -->
+                                <Setter Property="BackgroundColor" Value="#334155" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DataTemplateLight" x:DataType="model:InspectionItem">
+            <Grid HeightRequest="40" RowDefinitions="*, Auto">
+                <Grid
+                    ColumnDefinitions="0.8*,4*,1*,0.5*"
+                    RowDefinitions="Auto"
+                    VerticalOptions="Center">
+                    <Image HeightRequest="20" Source="{Binding CheckResultImage}">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=InspectionItemSelectedItemCheckResultImageTappedCommand}" />
+                        </Image.GestureRecognizers>
+                    </Image>
+                    <StackLayout Grid.Column="1">
+                        <Label
+                            FontAttributes="Bold"
+                            LineBreakMode="WordWrap"
+                            Text="{Binding ArtistName}" />
+
+                    </StackLayout>
+                    <StackLayout
+                        Grid.Column="2"
+                        HorizontalOptions="Center"
+                        Orientation="Horizontal">
+                        <Border BackgroundColor="{Binding CameraColor}" Stroke="Transparent">
+                            <Image
+                                HeightRequest="20"
+                                Source="ca.png"
+                                WidthRequest="20">
+                                <Image.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=NavigateToDetailsCommand}" NumberOfTapsRequired="1" />
+                                </Image.GestureRecognizers>
+                            </Image>
+                        </Border>
+                        <Label
+                            HorizontalTextAlignment="End"
+                            Text="{Binding PicNumInfo}"
+                            WidthRequest="60" />
+                    </StackLayout>
+                </Grid>
+                <BoxView
+                    Grid.Row="1"
+                    Margin="0"
+                    BackgroundColor="Black"
+                    HeightRequest="1" />
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="Transparent" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState Name="Selected">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#FEB2B2" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+            </Grid>
+        </DataTemplate>
+
+        <local:MyDataTemplateSelector
+            x:Key="MyDataTemplateSelector"
+            DataTemplateDark="{StaticResource DataTemplateDark}"
+            DataTemplateLight="{StaticResource DataTemplateLight}" />
+    </ContentPage.Resources>
+
+    <Grid x:Name="GridAll" RowSpacing="2">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="50" />
+            <RowDefinition Height="0.6*" />
+            <RowDefinition Height="0.34*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.8*" />
+            <ColumnDefinition Width="0.77*" />
+        </Grid.ColumnDefinitions>
+
+        <!--  顶部 拍照、保存、完了按钮  -->
+        <Grid Grid.ColumnSpan="2" VerticalOptions="End">
+            <Button
+                x:Name="btn_back"
+                Margin="15,0,0,0"
+                Command="{Binding BackCommand}"
+                FontSize="Body"
+                HorizontalOptions="Start"
+                Text="戻る"
+                WidthRequest="105"
+                ZIndex="10" />
+            <Label
+                x:Name="tbDanmNm"
+                FontSize="20"
+                HeightRequest="32"
+                HorizontalTextAlignment="Center"
+                Text="{Binding DanmTitleName}"
+                TextColor="#FF8B8B8B"
+                VerticalTextAlignment="Center"
+                WidthRequest="200" />
+
+            <Grid
+                Margin="0,0,20,0"
+                ColumnSpacing="5"
+                HorizontalOptions="End">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <ImageButton
+                    x:Name="ImgBtn_Camera"
+                    BackgroundColor="{DynamicResource ButtonBackgroundColor}"
+                    Command="{Binding GotoCameraPageCommand}"
+                    CornerRadius="8"
+                    HeightRequest="44"
+                    HorizontalOptions="Center"
+                    Source="darkcamera.png"
+                    VerticalOptions="Center"
+                    WidthRequest="105">
+                    <ImageButton.Aspect>
+                        <OnPlatform x:TypeArguments="Aspect">
+                            <On Platform="iOS, MacCatalyst" Value="Center" />
+                            <On Platform="WinUI" Value="AspectFit" />
+                        </OnPlatform>
+                    </ImageButton.Aspect>
+                </ImageButton>
+
+                <Button
+                    x:Name="btn_Save"
+                    Grid.Column="1"
+                    Command="{Binding SaveDataCommand}"
+                    FontSize="Body"
+                    Text="保存"
+                    WidthRequest="105" />
+
+                <Button
+                    x:Name="btn_Exit"
+                    Grid.Column="2"
+                    Command="{Binding CompleteCommand}"
+                    FontSize="Body"
+                    Text="完了"
+                    WidthRequest="105" />
+            </Grid>
+        </Grid>
+
+        <!--  中间 部位、工区、階・グループ...选择框  -->
+        <Grid
+            Grid.Row="1"
+            Grid.ColumnSpan="2"
+            ColumnSpacing="10">
+            <Grid.Resources>
+                <Style TargetType="Label">
+                    <Setter Property="FontSize" Value="Body" />
+
+                    <Setter Property="VerticalTextAlignment" Value="Center" />
+                    <Setter Property="Margin" Value="15,0,0,0" />
+                </Style>
+                <Style TargetType="Entry">
+                    <Setter Property="FontSize" Value="Body" />
+                    <Setter Property="HeightRequest" Value="40" />
+                    <Setter Property="IsEnabled" Value="False" />
+                    <Setter Property="VerticalTextAlignment" Value="Center" />
+                    <Setter Property="Margin" Value="0,0,10,0" />
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+                </Style>
+            </Grid.Resources>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Column="0" Text="部位" />
+            <Entry
+                x:Name="ety_Buim"
+                Grid.Column="1"
+                Text="{Binding BuimName}" />
+
+            <Label Grid.Column="2" Text="階・グループ" />
+            <Entry
+                x:Name="ety_Grpl"
+                Grid.Column="3"
+                Text="{Binding FloorName}" />
+
+            <Label Grid.Column="4" Text="断面" />
+            <Entry
+                x:Name="ety_Danm"
+                Grid.Column="5"
+                Text="{Binding DanmName}" />
+
+            <Label Grid.Column="6" Text="工区" />
+            <Entry
+                x:Name="ety_Koku"
+                Grid.Column="7"
+                Text="{Binding KokuName}" />
+
+            <Label Grid.Column="8" Text="位置" />
+            <Entry
+                x:Name="ety_Location"
+                Grid.Column="9"
+                MaxLength="20"
+                Text="{Binding LocationName}" />
+        </Grid>
+
+        <!--  下左 按钮 图片  -->
+        <Grid
+            x:Name="GridTab"
+            Grid.Row="2"
+            Grid.RowSpan="2"
+            Margin="10,0,0,0"
+            RowDefinitions="auto,auto,auto,*"
+            WidthRequest="600">
+            <HorizontalStackLayout
+                x:Name="row1Layout"
+                Margin="5,0,0,0"
+                BindableLayout.ItemTemplate="{StaticResource SelectionButtonTemplate}"
+                BindableLayout.ItemsSource="{Binding Row1Buttons}"
+                Spacing="10"
+                ZIndex="10" />
+            <HorizontalStackLayout
+                x:Name="row2Layout"
+                Grid.Row="1"
+                Margin="5,0,0,0"
+                BindableLayout.ItemTemplate="{StaticResource SelectionButtonTemplate}"
+                BindableLayout.ItemsSource="{Binding Row2Buttons}"
+                Spacing="10"
+                ZIndex="10" />
+            <HorizontalStackLayout
+                x:Name="row3Layout"
+                Grid.Row="2"
+                Margin="5,0,0,0"
+                BindableLayout.ItemTemplate="{StaticResource SelectionButtonTemplate}"
+                BindableLayout.ItemsSource="{Binding Row3Buttons}"
+                Spacing="10"
+                ZIndex="10" />
+            <Border
+                Grid.Row="3"
+                Margin="0,5,5,5"
+                Stroke="Black"
+                StrokeThickness="1"
+                ZIndex="0">
+                <Grid
+                    x:Name="MainGridView"
+                    Background="#e8e8e8"
+                    IsClippedToBounds="True">
+                    <local:PinchToZoomContainer x:Name="pinchToZoom">
+                        <AbsoluteLayout x:Name="ZoomLayer">
+                            <Image 
+                                x:Name="ContainerImg" 
+                                Source="{Binding ContainerImageSource}" 
+                                Aspect="Fill"
+                                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                AbsoluteLayout.LayoutFlags="All"/>
+                        </AbsoluteLayout>
+                    </local:PinchToZoomContainer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!--  下右 检查表格  -->
+        <Grid
+            x:Name="right1"
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="10,0,10,0"
+            HorizontalOptions="Start"
+            RowDefinitions="Auto,*">
+            <Grid ColumnDefinitions="auto,*,auto">
+                <Grid
+                    x:Name="CheckOptions"
+                    Margin="10,0,10,0"
+                    BackgroundColor="#FFCCCCCC"
+                    ColumnSpacing="10"
+                    HeightRequest="33"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Margin="3,0,0,0"
+                        HeightRequest="26"
+                        Stroke="Blue"
+                        StrokeThickness="{Binding Checkrsl1StrokeThickness}"
+                        WidthRequest="26">
+                        <Image
+                            x:Name="imgBtn_rsl1"
+                            Aspect="Fill"
+                            HeightRequest="16"
+                            HorizontalOptions="Center"
+                            Source="checkrsl1.png"
+                            ToolTipProperties.Text="未確認"
+                            VerticalOptions="Center"
+                            WidthRequest="16">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ChangeCheckResultImageCommand}" CommandParameter="checkrsl1.png,0" />
+                            </Image.GestureRecognizers>
+                        </Image>
+                    </Border>
+                    <Border
+                        Grid.Column="1"
+                        HeightRequest="26"
+                        Stroke="Blue"
+                        StrokeThickness="{Binding Checkrsl2StrokeThickness}"
+                        WidthRequest="26">
+                        <Image
+                            x:Name="imgBtn_rsl2"
+                            Aspect="Fill"
+                            HeightRequest="16"
+                            HorizontalOptions="Center"
+                            Source="checkrsl2.png"
+                            ToolTipProperties.Text="不合格"
+                            VerticalOptions="Center"
+                            WidthRequest="16">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ChangeCheckResultImageCommand}" CommandParameter="checkrsl2.png,1" />
+                            </Image.GestureRecognizers>
+                        </Image>
+                    </Border>
+                    <Border
+                        Grid.Column="2"
+                        HeightRequest="26"
+                        Stroke="Blue"
+                        StrokeThickness="{Binding Checkrsl3StrokeThickness}"
+                        WidthRequest="26">
+                        <Image
+                            x:Name="imgBtn_rsl3"
+                            Grid.Column="2"
+                            Aspect="Fill"
+                            HeightRequest="16"
+                            HorizontalOptions="Center"
+                            Source="checkrsl3.png"
+                            ToolTipProperties.Text="対象外"
+                            VerticalOptions="Center"
+                            WidthRequest="16">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ChangeCheckResultImageCommand}" CommandParameter="checkrsl3.png,2" />
+                            </Image.GestureRecognizers>
+                        </Image>
+                    </Border>
+                    <Border
+                        Grid.Column="3"
+                        HeightRequest="26"
+                        Stroke="Blue"
+                        StrokeThickness="{Binding Checkrsl4StrokeThickness}"
+                        WidthRequest="26">
+                        <Image
+                            x:Name="imgBtn_rsl4"
+                            Grid.Column="3"
+                            Aspect="Fill"
+                            HeightRequest="16"
+                            HorizontalOptions="Center"
+                            Source="checkrsl4.png"
+                            ToolTipProperties.Text="合格"
+                            VerticalOptions="Center"
+                            WidthRequest="16">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ChangeCheckResultImageCommand}" CommandParameter="checkrsl4.png,3" />
+                            </Image.GestureRecognizers>
+                        </Image>
+                    </Border>
+                    <Border
+                        Grid.Column="4"
+                        Margin="0,0,2,0"
+                        HeightRequest="26"
+                        Stroke="Blue"
+                        StrokeThickness="{Binding Checkrsl5StrokeThickness}"
+                        WidthRequest="26">
+                        <Image
+                            x:Name="imgBtn_rsl5"
+                            Grid.Column="4"
+                            Aspect="Fill"
+                            HeightRequest="16"
+                            HorizontalOptions="Center"
+                            Source="checkrsl5.png"
+                            ToolTipProperties.Text="是正済"
+                            VerticalOptions="Center"
+                            WidthRequest="16">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ChangeCheckResultImageCommand}" CommandParameter="checkrsl5.png,4" />
+                            </Image.GestureRecognizers>
+                        </Image>
+                    </Border>
+                </Grid>
+                <Button
+                    x:Name="btn_CheckAll"
+                    Grid.Column="1"
+                    Margin="10,0,0,0"
+                    Command="{Binding BatchSetConfirmationProjectPropertiesValueAndEnabledStatusCommand}"
+                    FontSize="Body"
+                    HeightRequest="30"
+                    HorizontalOptions="Center"
+                    Text="一括"
+                    VerticalOptions="Center"
+                    WidthRequest="65" />
+                <Picker
+                    x:Name="pck_Proc"
+                    Grid.Column="2"
+                    FontSize="Body"
+                    HeightRequest="30"
+                    HorizontalOptions="End"
+                    ItemDisplayBinding="{Binding DisplyName}"
+                    ItemsSource="{Binding Projects}"
+                    SelectedIndex="{Binding ProjectSelectedIndex}"
+                    WidthRequest="200">
+                    <Picker.Behaviors>
+                        <toolkit:EventToCommandBehavior
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Proc}}"
+                            Command="{Binding ProjectSelectedIndexChangedCommand}"
+                            EventName="SelectedIndexChanged" />
+                    </Picker.Behaviors>
+                </Picker>
+
+            </Grid>
+            <Grid Grid.Row="1" RowDefinitions="Auto, *">
+                <Grid Grid.Row="1" ColumnDefinitions="0.8*,4*,1*,0.5*">
+                    <Label
+                        Grid.Column="0"
+                        FontSize="Body"
+                        HorizontalOptions="Center"
+                        Text="結果" />
+                    <Label
+                        Grid.Column="1"
+                        FontSize="Body"
+                        Text="確認项目" />
+                    <Label
+                        Grid.Column="2"
+                        FontSize="Body"
+                        HorizontalOptions="Center"
+                        Text="写真" />
+                </Grid>
+                <CollectionView
+                    x:Name="lvDataList"
+                    Grid.Row="2"
+                    Margin="0,30,0,40"
+                    ItemTemplate="{StaticResource MyDataTemplateSelector}"
+                    ItemsSource="{Binding InspectionItems}"
+                    SelectedItem="{Binding InspectionItemSelectedItem}"
+                    SelectionMode="Single">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout ItemSpacing="0" Orientation="Vertical" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.Behaviors>
+                        <toolkit:EventToCommandBehavior
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference lvDataList}}"
+                            Command="{Binding ProjectCodeSelectionChangedCommand}"
+                            EventName="SelectionChanged" />
+                    </CollectionView.Behaviors>
+                </CollectionView>
+            </Grid>
+        </Grid>
+
+        <Grid
+            x:Name="right2"
+            Grid.Row="3"
+            Grid.Column="1"
+            Margin="10,0,10,0"
+            ColumnSpacing="10"
+            RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+            RowSpacing="2">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Label
+                HorizontalTextAlignment="End"
+                Text="判定基準"
+                VerticalTextAlignment="Center" />
+            <Entry
+                x:Name="ety_Sem"
+                Grid.Column="1"
+                Grid.ColumnSpan="4"
+                HorizontalOptions="Fill"
+                IsReadOnly="True"
+                Text="{Binding Criterion}" />
+
+            <Label
+                Grid.Row="1"
+                HorizontalTextAlignment="End"
+                Text="確認日"
+                VerticalTextAlignment="Center" />
+            <Entry
+                x:Name="ety_ConfirmedDate"
+                Grid.Row="1"
+                Grid.Column="1"
+                IsEnabled="{Binding ConfirmationDateIsEnabled}"
+                Placeholder="确认日"
+                Text="{Binding ConfirmationDate}" />
+
+            <Label
+                Grid.Row="1"
+                Grid.Column="2"
+                Text="確認者"
+                VerticalTextAlignment="Center" />
+            <Entry
+                x:Name="ety_Confirmer"
+                Grid.Row="1"
+                Grid.Column="3"
+                IsEnabled="{Binding ConfirmerIsEnabled}"
+                Placeholder="确认者"
+                Text="{Binding Confirmer}" />
+
+            <Grid
+                Grid.Row="1"
+                Grid.Column="4"
+                ColumnDefinitions="Auto,*"
+                ColumnSpacing="5">
+                <Label Text="値" VerticalTextAlignment="Center" />
+                <Entry
+                    x:Name="ety_Ti"
+                    Grid.Column="1"
+                    IsEnabled="{Binding TiIsEnabled}"
+                    Placeholder="值"
+                    Text="{Binding Ti}">
+                    <Entry.Behaviors>
+                        <toolkit:EventToCommandBehavior
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference ety_Ti}}"
+                            Command="{Binding TiTextChangedCommand}"
+                            EventName="TextChanged" />
+                    </Entry.Behaviors>
+                </Entry>
+            </Grid>
+
+            <Label
+                Grid.Row="2"
+                HorizontalTextAlignment="End"
+                Text="指摘日"
+                VerticalTextAlignment="Center" />
+            <Entry
+                x:Name="ety_IndicationDate"
+                Grid.Row="2"
+                Grid.Column="1"
+                IsEnabled="{Binding IndicationDateIsEnabled}"
+                Placeholder="指摘日"
+                Text="{Binding IndicationDate}" />
+
+            <Label
+                Grid.Row="2"
+                Grid.Column="2"
+                Text="指摘者"
+                VerticalTextAlignment="Center" />
+            <Entry
+                x:Name="ety_ndicationer"
+                Grid.Row="2"
+                Grid.Column="3"
+                IsEnabled="{Binding NdicationerIsEnabled}"
+                Placeholder="指摘者"
+                Text="{Binding Ndicationer}" />
+
+            <Picker
+                x:Name="pck_Check"
+                Grid.Row="2"
+                Grid.Column="4"
+                IsEnabled="{Binding ConfirmationMethodIsEnabled}"
+                SelectedIndex="{Binding ConfirmationMethodSelectedIndex}">
+                <Picker.ItemsSource>
+                    <x:Array Type="{x:Type x:String}">
+                        <x:String>検査者が目視で確認</x:String>
+                        <x:String>検査者が写真で確認</x:String>
+                        <x:String>轻微事项报告不要</x:String>
+                    </x:Array>
+                </Picker.ItemsSource>
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Check}}"
+                        Command="{Binding CheckSelectedIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
+
+            <Label
+                Grid.Row="3"
+                HorizontalTextAlignment="End"
+                Text="是正方法"
+                VerticalTextAlignment="Center" />
+            <Entry
+                x:Name="ety_Sri"
+                Grid.Row="3"
+                Grid.Column="1"
+                Grid.ColumnSpan="4"
+                HorizontalOptions="Fill"
+                IsEnabled="{Binding CorrectionMethodIsEnabled}"
+                Text="{Binding CorrectionMethod}">
+                <Entry.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference ety_Sri}}"
+                        Command="{Binding CorrectionMethodTextChangedCommand}"
+                        EventName="TextChanged" />
+                </Entry.Behaviors>
+            </Entry>
+
+            <Label
+                Grid.Row="4"
+                HorizontalTextAlignment="End"
+                Text="指摘事項"
+                VerticalTextAlignment="Center" />
+            <Grid
+                Grid.Row="4"
+                Grid.Column="1"
+                Grid.ColumnSpan="4"
+                ColumnDefinitions="*,Auto"
+                ColumnSpacing="10">
+                <Entry
+                    x:Name="ety_Mem"
+                    HorizontalOptions="Fill"
+                    IsEnabled="{Binding IndicationIsEnabled}"
+                    Text="{Binding Indication}">
+                    <Entry.Behaviors>
+                        <toolkit:EventToCommandBehavior
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference ety_Mem}}"
+                            Command="{Binding IndicationTextChangedCommand}"
+                            EventName="TextChanged" />
+                    </Entry.Behaviors>
+                </Entry>
+                <Button
+                    x:Name="btn_Open"
+                    Grid.Column="1"
+                    Padding="10,0"
+                    Command="{Binding PopupPunchListCommand}"
+                    IsEnabled="{Binding OpenButtonIsEnabled}"
+                    Text="···" />
+            </Grid>
+        </Grid>
+    </Grid>
+
+</ContentPage>

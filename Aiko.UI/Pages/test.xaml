@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.test"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Aiko.UI.CustomControls"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Title="test"
+    Loaded="ContentPage_Loaded">
+    <Grid RowDefinitions="*,Auto">
+        <!--  用 AbsoluteLayout 叠加控件  -->
+        <AbsoluteLayout x:Name="RootLayout" Grid.Row="0">
+            <!--  相机预览  -->
+            <toolkit:CameraView
+                x:Name="Camera"
+                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                AbsoluteLayout.LayoutFlags="All"
+                MediaCaptured="OnMediaCaptured"
+                SizeChanged="OnCameraSizeChanged" />
+            <!--  浮动矩形（作为可拖动框）  -->
+            <Border
+                x:Name="rectGrid"
+                AbsoluteLayout.LayoutBounds="0.5,0.5,200,150"
+                AbsoluteLayout.LayoutFlags="PositionProportional"
+                BackgroundColor="#40FF0000"
+                HeightRequest="310"
+                WidthRequest="340">
+                <!--  里面可以放文字或别的控件  -->
+                <local:EditView_IncludingImage />
+            </Border>
+        </AbsoluteLayout>
+
+        <!--  分辨率选择  -->
+        <StackLayout
+            Grid.Row="1"
+            Padding="10"
+            Orientation="Horizontal"
+            Spacing="10">
+
+            <Label Text="分辨率：" VerticalOptions="Center" />
+
+            <Picker
+                x:Name="ResolutionPicker"
+                ItemDisplayBinding="{Binding Display}"
+                SelectedIndexChanged="OnResolutionChanged"
+                WidthRequest="200" />
+
+            <Button
+                Grid.Column="1"
+                Clicked="OnCaptureClicked"
+                HorizontalOptions="Center"
+                Text="拍照" />
+
+            <Image
+                x:Name="PreviewImage"
+                Grid.Column="2"
+                Aspect="AspectFill"
+                HeightRequest="80"
+                WidthRequest="80" />
+
+            <Button x:Name="btn_test" Clicked="btn_test_Clicked" />
+        </StackLayout>
+    </Grid>
+</ContentPage>

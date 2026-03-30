@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.SwitchThemePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_theme"
+    Title="トピックの切り替え"
+    x:DataType="vm:SwitchThemePageVM">
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_theme}}"
+            Command="{Binding PageLoadedCommand}"
+            EventName="Loaded" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <toolkit:DockLayout HorizontalOptions="Center" VerticalOptions="Center">
+            <Label HorizontalOptions="Center" Text="トピックの切り替え" />
+            <Picker
+                x:Name="pck_SwitchTheme"
+                Margin="0,5,0,0"
+                ItemsSource="{Binding Themes}"
+                SelectedItem="{Binding SelectedTheme}"
+                WidthRequest="200">
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_SwitchTheme}}"
+                        Command="{Binding ThemeSelectedIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
+        </toolkit:DockLayout>
+    </Grid>
+</ContentPage>

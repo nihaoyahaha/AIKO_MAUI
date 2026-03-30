@@ -1,0 +1,767 @@
+﻿using Aiko.Common;
+using Aiko.Common.Models;
+using Aiko.IServices.IServices;
+using Aiko.SqliteDb;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
+using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
+using System.Text.Json;
+
+namespace Aiko.UI.ViewModels.PageVMs;
+
+public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPageVM, ICheckPointDetailService>
+{
+    // 图片存储路径
+    public string ImageFolderPath;
+
+    // 查询参数
+    public Dictionary<string, object> Query = new Dictionary<string, object>();
+
+    // 上下文数据
+    private List<HR01ITEMPINFO> _hr01ItempInfoList = new List<HR01ITEMPINFO>();
+
+    [ObservableProperty]
+    private Toast _toast = new Toast();
+
+    // 颜料版
+    [ObservableProperty]
+    private ObservableCollection<Color> _colorPalette = new ObservableCollection<Color>();
+
+    // 图片集
+    [ObservableProperty]
+    private ObservableCollection<InkImage> _imageList = new ObservableCollection<InkImage>();
+    [ObservableProperty]
+    private List<InkImage> _original‌ImageList = new List<InkImage>();
+    public string Summary => $"{ImageList.Count}/{ImageList.Count}";
+
+    [ObservableProperty]
+    private bool _isAscending = true;
+    public string SortText => IsAscending ? "昇順 ▲" : "降順 ▼";
+
+    /// <summary>
+    /// 配筋確認
+    /// </summary>
+    [ObservableProperty]
+    private string _danmTitle = "";
+    /// <summary>
+    /// 部位
+    /// </summary>
+    [ObservableProperty]
+    private string _buim = "";
+    /// <summary>
+    /// 階・グループ
+    /// </summary>
+    [ObservableProperty]
+    private string _grpl = "";
+    /// <summary>
+    /// 断面
+    /// </summary>
+    [ObservableProperty]
+    private string _danm = "";
+    /// <summary>
+    /// 工区
+    /// </summary>
+    [ObservableProperty]
+    private string _koku = "";
+    /// <summary>
+    /// 位置
+    /// </summary>
+    [ObservableProperty]
+    private string _location = "";
+
+    /// <summary>
+    /// 工程
+    /// </summary>
+    [ObservableProperty]
+    private ListItem _proc;
+    [ObservableProperty]
+    private List<ListItem> _procList = new List<ListItem>();
+    /// <summary>
+    /// 確認項目
+    /// </summary>
+    [ObservableProperty]
+    private ListItem _proj;
+    [ObservableProperty]
+    private List<ListItem> _projList = new List<ListItem>();
+    /// <summary>
+    /// 判定基準
+    /// </summary>
+    [ObservableProperty]
+    private string _hantei;
+    [ObservableProperty]
+    private Dictionary<string, string> _hanteiDic = new Dictionary<string, string>();
+
+    /// <summary>
+    /// 撮影方向
+    /// </summary>
+    [ObservableProperty]
+    private string _dirsDisplyName;
+    [ObservableProperty]
+    private ListItem _dirs;
+    [ObservableProperty]
+    private List<ListItem> _dirsList = new List<ListItem>();
+    [ObservableProperty]
+    private List<ListItem> _dbDirsList = new List<ListItem>();
+    /// <summary>
+    /// 備考
+    /// </summary>
+    [ObservableProperty]
+    private string _comment;
+    /// <summary>
+    /// 撮影日時
+    /// </summary>
+    [ObservableProperty]
+    private string _date;
+    /// <summary>
+    /// 撮影者
+    /// </summary>
+    [ObservableProperty]
+    private string _author;
+
+    [ObservableProperty]
+    private bool _isBlackboardVisible;
+    [ObservableProperty]
+    private bool _isStrokesVisible;
+
+    [ObservableProperty]
+    private bool _isSvg;
+
+    [ObservableProperty]
+    private string _selectedTool;
+    [ObservableProperty]
+    private bool _ballpointPenSelected;
+    [ObservableProperty]
+    private bool _pencilSelected;
+    [ObservableProperty]
+    private bool _highlighterSelected;
+    [ObservableProperty]
+    private bool _lineSelected;
+    [ObservableProperty]
+    private bool _fixedRectSelected;
+    [ObservableProperty]
+    private bool _fixedCircleSelected;
+    [ObservableProperty]
+    private bool _textSelected;
+    [ObservableProperty]
+    private bool _circleTextSelected;
+    [ObservableProperty]
+    private bool _rectTextSelected;
+    [ObservableProperty]
+    private bool _acceptSelected;
+    [ObservableProperty]
+    private bool _moveSelected;
+    [ObservableProperty]
+    private bool _eraserSelected;
+    [ObservableProperty]
+    private bool _emptySelected;
+
+    public CheckPointDetailPageVM(ILogger<CheckPointDetailPageVM> logger, ICheckPointDetailService service) : base(logger, service)
+    {
+        ImageList.CollectionChanged += (s, e) =>
+        {
+            OnPropertyChanged(nameof(Summary));
+            UpdateImageLoadingPriorities();
+        };
+    }
+
+    public override async void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        ImageFolderPath = Path.Combine(Service.AppContext.ConstructionSiteFolder, "photo");
+
+        ColorPalette = new ObservableCollection<Color>(GetColorPalette());
+
+        if (query.Keys.Contains("json"))
+        {
+            Query = JsonSerializer.Deserialize<Dictionary<string, object>>(query["json"]?.ToString());
+        }
+
+        if (Query == null || Query.Count == 0)
+        {
+            Logger.LogError("クエリパラメータを取得できませんでした");
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData(Dictionary<string, object>? query = null)
+    {
+        if (query == null) query = Query;
+
+        _hr01ItempInfoList = await Service.GetHR01ITEMPINFO(query["HR01001"]?.ToString(), query["HR01003"]?.ToString(), ImageFolderPath);
+
+        await SetDirs();
+
+        DanmTitle = query["DanmTitle"]?.ToString();
+
+        Buim = query["Buim"]?.ToString();
+        Grpl = query["Grpl"]?.ToString();
+        Danm = query["Danm"]?.ToString();
+        Koku = query["Koku"]?.ToString();
+        Location = query["Location"]?.ToString();
+
+        SetProc(query["Proc"]?.ToString());
+        SetProj(query["Proc"]?.ToString(), query["Proj"]?.ToString());
+    }
+
+    private void SetProc(string proc = "")
+    {
+        var queryProcList = _hr01ItempInfoList
+            .GroupBy(p => new { Code = p.HM13003, Name = p.HM09003 })
+            .Select(g => g.First())
+            .ToList();
+
+        List<ListItem> procList = queryProcList.Select(item => new ListItem(item.HM09003, item.HM13003)).ToList();
+
+        if (procList.Count == 0) return;
+
+        ProcList = procList;
+
+        if (!string.IsNullOrEmpty(proc))
+        {
+            Proc = GetListItem(proc, ProcList);
+        }
+        else
+        {
+            Proc = ProcList[0];
+        }
+    }
+    private void SetProj(string proc, string proj = "")
+    {
+        var queryProjList = _hr01ItempInfoList
+            .Where(item => item.HM13003 == proc)
+            .Select(c => new { c.HR03004, c.HM13005, c.HM13012 })
+            .Distinct()
+            .ToList();
+
+        List<ListItem> projList = new List<ListItem>();
+        HanteiDic.Clear();
+        for (int i = 0; i < queryProjList.Count; i++)
+        {
+            projList.Add(new ListItem(queryProjList[i].HM13005, queryProjList[i].HR03004));
+            HanteiDic.Add(queryProjList[i].HR03004, queryProjList[i].HM13012);
+        }
+
+        if (projList.Count == 0) return;
+
+        ProjList = projList;
+
+        if (!string.IsNullOrEmpty(proj))
+        {
+            Proj = GetListItem(proj, ProjList);
+        }
+        else
+        {
+            Proj = ProjList[0];
+        }
+    }
+    private async Task SetDirs(Dictionary<string, object>? query = null)
+    {
+        if (query == null) query = Query;
+
+        var queryDirsList = await Service.GetHM16List(query["HR01001"]?.ToString());
+
+        List<ListItem> dirsList = queryDirsList.Select(item => new ListItem(item.HM16003, item.HM16002.ToString())).ToList();
+
+        DbDirsList = dirsList.Select(dirs => new ListItem(dirs.DisplyName, dirs.Value)).ToList();
+
+        string prefDirsListStr = Preferences.Get("DirsList", "");
+        List<string> prefDirsList = prefDirsListStr.Split(',').ToList();
+        foreach (var item in prefDirsList)
+        {
+            if (!dirsList.Any(dirs => dirs.DisplyName == item))
+            {
+                dirsList.Add(new ListItem(item, item));
+            }
+        }
+
+        if (!dirsList.Any(dirs => dirs.Value == ""))
+        {
+            dirsList.Add(new ListItem("", ""));
+        }
+
+        DirsList = dirsList;
+    }
+
+    partial void OnImageListChanged(ObservableCollection<InkImage> value)
+    {
+        OnPropertyChanged(nameof(Summary));
+        UpdateImageLoadingPriorities();
+    }
+
+    partial void OnProcChanged(ListItem value)
+    {
+
+    }
+
+    partial void OnProjChanged(ListItem value)
+    {
+        if (value != null && !string.IsNullOrEmpty(value.Value))
+        {
+            Hantei = HanteiDic[value.Value];
+        }
+    }
+
+    partial void OnDirsChanged(ListItem value)
+    {
+        if (value != null)
+        {
+            DirsDisplyName = value.DisplyName;
+        }
+        else
+        {
+            DirsDisplyName = "";
+        }
+    }
+
+    partial void OnCommentChanged(string value)
+    {
+
+    }
+
+    [RelayCommand]
+    private async Task DeleteImageAsync()
+    {
+        InkImage? image = ImageList.Where(image => image.IsSelected).FirstOrDefault();
+        if (image == null) return;
+
+        try
+        {
+            ImageList.Remove(image);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "指定されたパスの画像の削除に失敗しました: {Path}", image.FullName);
+            // 无法删除文件，请检查文件是否正在使用。
+            DialogHelper.MessageDialog("ファイルを削除できません。ファイルが他のプログラムで使用中ではないか確認してください。");
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleSort()
+    {
+        IsAscending = !IsAscending;
+
+        for (int i = 0; i < ImageList.Count - 1; i++)
+        {
+            ImageList.Move(ImageList.Count - 1, i);
+        }
+
+        OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(SortText));
+    }
+
+    /// <summary>
+    /// 後方へ移動
+    /// </summary>
+    /// <returns></returns>
+    [RelayCommand]
+    private async Task BackAsync()
+    {
+        var message = new AsyncRequestMessage("Back");
+        _ = WeakReferenceMessenger.Default.Send(message);
+        await message.Tcs.Task;
+
+        bool? success = (bool?)message.Result["success"];
+        if (success != false)
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+        else
+        {
+            await Toast.ShowToast("保存に失敗しました");
+        }
+    }
+    [RelayCommand]
+    private async Task SaveAsync()
+    {
+        var message = new AsyncRequestMessage("Save");
+        _ = WeakReferenceMessenger.Default.Send(message);
+        await message.Tcs.Task;
+
+        bool? success = (bool?)message.Result["success"];
+        if (success == true)
+        {
+            await Toast.ShowToast("正常に保存されました");
+        }
+        else if (success == false)
+        {
+            await Toast.ShowToast("保存に失敗しました");
+        }
+    }
+    [RelayCommand]
+    private async Task SaveBackAsync()
+    {
+        var message = new AsyncRequestMessage("SaveBack");
+        _ = WeakReferenceMessenger.Default.Send(message);
+        await message.Tcs.Task;
+
+        bool? success = (bool?)message.Result["success"];
+        if (success != false)
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+        else
+        {
+            await Toast.ShowToast("保存に失敗しました");
+        }
+    }
+
+    public void LoadImageInfo(InkImage image)
+    {
+        if ((Dirs = GetListItem(image.Dirs, DirsList)) == null)
+        {
+            List<ListItem> dirsList = DirsList.Select(dirs => new ListItem(dirs.DisplyName, dirs.Value)).ToList();
+            dirsList.Add(new ListItem(image.Dirs, image.Dirs));
+            DirsList = dirsList;
+            Dirs = GetListItem(image.Dirs, DirsList);
+        }
+        Comment = image.Comment;
+        Date = image.Date;
+        Author = image.Author;
+
+        IsBlackboardVisible = image.IsBlackboardVisible;
+        IsStrokesVisible = image.IsStrokesVisible;
+
+        IsSvg = image.IsSvg;
+    }
+
+    public async Task<bool> SaveImageInfo(InkImage image)
+    {
+        if (DirsDisplyName != Dirs.DisplyName && GetListItemFromDisplyName(DirsDisplyName, DirsList) == null)
+        {
+            List<ListItem> dirsList = DirsList.Select(dirs => new ListItem(dirs.DisplyName, dirs.Value)).ToList();
+            dirsList.Add(new ListItem(DirsDisplyName, DirsDisplyName));
+            DirsList = dirsList;
+            Dirs = GetListItem(DirsDisplyName, DirsList);
+        }
+
+        image.Dirs = Dirs.Value;
+        image.DirsDisplyName = Dirs.DisplyName;
+        image.Comment = Comment;
+        image.Date = Date;
+        image.Author = Author;
+
+        image.IsBlackboardVisible = IsBlackboardVisible;
+        image.IsStrokesVisible = IsStrokesVisible;
+
+        HR03SYAS hr03 = CreateDbImageInfo(image);
+
+        return await Service.UpdateHR03(new List<HR03SYAS> { hr03 }, ImageFolderPath);
+    }
+
+    public async Task<bool> SaveImageList(List<InkImage> imageList, List<InkImage>? changedImageList = null)
+    {
+        if (imageList == null) return true;
+
+        var hr03List = CreateDbImageList(imageList, changedImageList);
+
+        return await Service.UpdateHR03(hr03List, ImageFolderPath);
+    }
+    public void ResetImageList()
+    {
+        if (ImageList != null)
+        {
+            Original‌ImageList.Clear();
+            Original‌ImageList = ImageList.Select(image => image.Clone()).ToList();
+        }
+    }
+    public void RevertImageList()
+    {
+        if (Original‌ImageList != null)
+        {
+            ImageList.Clear();
+            ImageList = new ObservableCollection<InkImage>(Original‌ImageList.Select(image => image.Clone()).ToList());
+        }
+    }
+    public List<InkImage> GetChangedImageList()
+    {
+        var changedImageList = new List<InkImage>();
+
+        if (OriginalImageList == null || ImageList == null) return changedImageList;
+
+        foreach (var originalImage in OriginalImageList)
+        {
+            var current = ImageList.FirstOrDefault(x => x.Code == originalImage.Code);
+
+            if (current == null)
+            {
+                var deletedImage = originalImage.Clone();
+                deletedImage.IsDeleted = true;
+                changedImageList.Add(deletedImage);
+            }
+            else if (current.Sign != originalImage.Sign)
+            {
+                changedImageList.Add(current);
+            }
+        }
+
+        return changedImageList;
+    }
+
+    public List<HR03SYAS> CreateDbImageList(List<InkImage> imageList, List<InkImage>? changedImageList = null)
+    {
+        if (changedImageList == null) changedImageList = new List<InkImage>();
+
+        List<HR03SYAS> hr03List = new List<HR03SYAS>();
+        for (int i = 0; i < imageList.Count; i++)
+        {
+            var image = imageList[i];
+
+            string sort = IsAscending ? (i + 1).ToString().PadLeft(4, '0') : (imageList.Count - i).ToString().PadLeft(4, '0');
+
+            var changedImage = changedImageList.FirstOrDefault(x => x.Code == image.Code);
+            if (changedImage != null)
+            {
+                changedImage.Sort = sort;
+                hr03List.Add(CreateDbImageInfo(changedImage));
+            }
+            else if (sort != image.Sort)
+            {
+                image.Sort = sort;
+                hr03List.Add(CreateDbImageInfo(image));
+            }
+        }
+
+        hr03List.AddRange(changedImageList.Where(image => image.IsDeleted).Select(image => CreateDbImageInfo(image)));
+
+        return hr03List;
+    }
+    public HR03SYAS CreateDbImageInfo(InkImage image)
+    {
+        HR03SYAS hr03 = new HR03SYAS();
+        hr03.CHANGE = image.IsDeleted ? "DELETE" : "UPDATE";
+        hr03.HR03001 = Query["HR01001"]?.ToString();
+        hr03.HR03002 = image.Code.PadRight(46, ' ');
+        hr03.HR03003 = Query["HR01003"]?.ToString();
+        hr03.HR03004 = Proj.Value;
+        hr03.HR03005 = image.Sort;
+        hr03.HR03006 = image.Sign;
+        hr03.HR03007 = DbDirsList.Any(dirs => dirs.Value == image.Dirs) ? int.Parse(image.Dirs) : -1;
+        hr03.HR03008 = image.Comment;
+        hr03.HR03009 = int.Parse(DateTime.Parse(image.Date).ToString("yyyyMMdd"));
+        hr03.HR03010 = int.Parse(DateTime.Parse(image.Date).ToString("HHmmss"));
+        hr03.HR03011 = image.Date;
+        hr03.HR03012 = image.Author;
+        hr03.HR03013 = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        hr03.HR03014 = Service.AppContext.Name;
+        hr03.HR03015 = image.SyncDate;
+        hr03.HR03016 = image.SyncAuthor;
+        hr03.HR03017 = image.IsSvg ? 1 : 0;
+        hr03.HR03018 = image.IsBlackboardVisible && image.IsStrokesVisible ? 7 :
+                       image.IsBlackboardVisible ? 3 :
+                       image.IsStrokesVisible ? 5 : 1;
+        hr03.HR03019 = DbDirsList.Any(dirs => dirs.Value == image.Dirs) ? "" : image.DirsDisplyName;
+        hr03.HR03020 = image.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss");
+        return hr03;
+    }
+
+    public async Task<List<InkImage>> GetImageInfo(Dictionary<string, object> query, string proj)
+    {
+        var result = await Service.GetHR03Pic(query["HR01001"]?.ToString(), query["HR01003"]?.ToString(), proj);
+
+        return result.Select(item => new InkImage
+        {
+            Name = $"{item.HR03002}{(item.HR03017 == 0 ? ".jpg" : ".svg")}",
+
+            Dirs = item.HR03007 != -1 ? item.HR03007.ToString() : item.HR03019,
+            DirsDisplyName = item.HR03007 != -1 ? GetDisplyName(item.HR03007.ToString(), DirsList) : item.HR03019,
+            Comment = item.HR03008,
+            Date = item.HR03011,
+            Author = item.HR03012,
+
+            SyncDate = item.HR03015,
+            SyncAuthor = item.HR03016,
+
+            IsBlackboardVisible = item.HR03018 == 3 || item.HR03018 == 7,
+            IsStrokesVisible = item.HR03018 == 5 || item.HR03018 == 7,
+
+            Sign = item.HR03006,
+
+            Sort = item.HR03005
+        }).ToList();
+    }
+
+    public bool ImageInfoChanged(InkImage image)
+    {
+        return image.Dirs != Dirs.Value
+            || image.DirsDisplyName != DirsDisplyName
+            || image.Comment != Comment
+            || image.Date != Date
+            || image.Author != Author;
+    }
+
+    public bool SortChanged(List<InkImage> imageList)
+    {
+        string GetExpectedSort(int index) => IsAscending ? (index + 1).ToString().PadLeft(4, '0') : (ImageList.Count - index).ToString().PadLeft(4, '0');
+
+        return ImageList.Select((item, index) => item.Sort != GetExpectedSort(index)).Any(changed => changed);
+    }
+
+    public void UpdateDirsListPreferences(string value)
+    {
+        if (value != "" && !DbDirsList.Any(dirs => dirs.Value == value))
+        {
+            string prefDirsListStr = Preferences.Get("DirsList", "");
+            List<string> prefDirsList = prefDirsListStr.Split(',').ToList();
+            if (!prefDirsList.Contains(value))
+            {
+                prefDirsList.Add(value);
+                Preferences.Set("DirsList", string.Join(",", prefDirsList));
+            }
+        }
+    }
+
+    private void UpdateImageLoadingPriorities()
+    {
+        if (ImageList == null || ImageList.Count == 0) return;
+
+        for (int i = 0; i < ImageList.Count; i++)
+        {
+            if (i < 9)
+            {
+                ImageList[i].Priority = FFImageLoading.Work.LoadingPriority.Highest;
+            }
+            else
+            {
+                ImageList[i].Priority = FFImageLoading.Work.LoadingPriority.Lowest;
+            }
+        }
+    }
+
+    public void SetSelectedImage(InkImage image)
+    {
+        ClearSelectedImage();
+        image.IsSelected = true;
+    }
+    public void ClearSelectedImage()
+    {
+        foreach (var image in ImageList)
+        {
+            image.IsSelected = false;
+        }
+    }
+
+    private ListItem? GetListItem(string value, List<ListItem> list)
+    {
+        return list.FirstOrDefault(e => e.Value == value);
+    }
+    private ListItem? GetListItemFromDisplyName(string displyName, List<ListItem> list)
+    {
+        return list.FirstOrDefault(e => e.DisplyName == displyName);
+    }
+    private string GetDisplyName(string value, List<ListItem> list)
+    {
+        ListItem? item = GetListItem(value, list);
+        if (item == null) return string.Empty;
+        return item.DisplyName;
+    }
+
+    partial void OnSelectedToolChanged(string value)
+    {
+        ClearSelectedTool();
+
+        if (!IsSvg) return;
+
+        SetSelectedTool(value);
+    }
+    partial void OnIsSvgChanged(bool value)
+    {
+        ClearSelectedTool();
+
+        if (!IsSvg) return;
+
+        SetSelectedTool(SelectedTool);
+    }
+    private void ClearSelectedTool()
+    {
+        BallpointPenSelected = false;
+        PencilSelected = false;
+        HighlighterSelected = false;
+        LineSelected = false;
+        FixedRectSelected = false;
+        FixedCircleSelected = false;
+        TextSelected = false;
+        CircleTextSelected = false;
+        RectTextSelected = false;
+        AcceptSelected = false;
+        MoveSelected = false;
+        EraserSelected = false;
+        EmptySelected = false;
+    }
+    private void SetSelectedTool(string tool)
+    {
+        switch (tool)
+        {
+            case "BallpointPen":
+                BallpointPenSelected = true; break;
+            case "Pencil":
+                PencilSelected = true; break;
+            case "Highlighter":
+                HighlighterSelected = true; break;
+            case "Line":
+                LineSelected = true; break;
+            case "FixedRect":
+                FixedRectSelected = true; break;
+            case "FixedCircle":
+                FixedCircleSelected = true; break;
+            case "Text":
+                TextSelected = true; break;
+            case "CircleText":
+                CircleTextSelected = true; break;
+            case "RectText":
+                RectTextSelected = true; break;
+            case "Accept":
+                AcceptSelected = true; break;
+            case "Move":
+                MoveSelected = true; break;
+            case "Eraser":
+                EraserSelected = true; break;
+            case "Empty":
+                EmptySelected = true; break;
+        }
+    }
+
+    // 颜料版可选颜色集合
+    public ObservableCollection<Color> GetColorPalette()
+    {
+        return new ObservableCollection<Color>()
+            {
+                Colors.Black, Color.FromArgb("#FFE600"), Color.FromArgb("#E61E1E"), Colors.Red, Colors.Orange, Colors.Yellow,
+                Colors.Green, Colors.Blue, Colors.Purple, Colors.Pink, Colors.Brown, Colors.Cyan,
+                Colors.Magenta, Colors.DarkBlue, Colors.DarkGreen, Colors.DarkRed, Color.FromArgb("#FFD700"), Color.FromArgb("#C0C0C0"),
+                Color.FromArgb("#808000"), Color.FromArgb("#008080"), Color.FromArgb("#F7D7C4"), Color.FromArgb("#613D30"), Color.FromArgb("#FFFF81"), Color.FromArgb("#BCB3FF")
+            };
+    }
+
+    // 工具的大小范围
+    public (float Min, float Max) GetToolSizeRange(string type)
+    {
+        return type switch
+        {
+            "BallpointPen" => (1f, 24f),
+            "Pencil" => (1f, 24f),
+            "Highlighter" => (12f, 64f),
+            "Line" => (1f, 24f),
+            "FixedRect" => (1f, 100f),
+            "FixedCircle" => (1f, 50f),
+            _ => (1f, 24f)
+        };
+    }
+
+    public class AsyncRequestMessage : RequestMessage<bool>
+    {
+        public string Name { get; }
+        public Dictionary<string, object> Result { get; set; }
+
+        public TaskCompletionSource<bool> Tcs { get; } = new();
+
+        public AsyncRequestMessage(string name)
+        {
+            Name = name;
+            Result = new Dictionary<string, object>();
+        }
+    }
+}

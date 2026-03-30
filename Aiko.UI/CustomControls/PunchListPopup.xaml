@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="Aiko.UI.CustomControls.PunchListPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:model="clr-namespace:Aiko.Common;assembly=Aiko.Common"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.UserControlVms"
+    x:DataType="vm:PunchListPopupVM"
+    HorizontalOptions="End"
+    VerticalOptions="Start"
+    WidthRequest="350">
+    <Grid Padding="20" RowDefinitions="*, Auto">
+        <CollectionView Grid.Row="0" ItemsSource="{Binding PunchList}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="model:PunchListModel">
+                    <HorizontalStackLayout Padding="5" Spacing="10">
+                        <CheckBox IsChecked="{Binding IsSelected}" />
+                        <Label Text="{Binding Text}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button
+            Grid.Row="1"
+            Margin="0,20,0,0"
+            Command="{Binding AddCommand}"
+            Text="追加"
+            WidthRequest="150" />
+    </Grid>
+
+</ContentView>
