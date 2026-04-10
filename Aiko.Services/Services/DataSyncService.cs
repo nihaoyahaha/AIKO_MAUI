@@ -4,6 +4,15 @@ using DI.DiNetWinServiceObject;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
+#if WINDOWS
+using Windows.Security.Cryptography;
+using Windows.System.Profile;
+using System.Management;
+#endif
+
+#if IOS || MACCATALYST
+using UIKit;
+#endif
 
 namespace Aiko.Services.Services;
 
@@ -45,13 +54,7 @@ public class DataSyncService
 	int _timeout = 15000;
 	decimal _pageSize = 10000;
 	IUWPServiceAPI _serviceApi02;
-	Dictionary<string, string> _mimeTypes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-	{
-		{ "jpg", "image/jpeg" },          // JPEG图像
-		{ "svg", "image/svg+xml" },       // SVG矢量图
-		{ "canvas", "application/octet-stream" },  // 自定义类型（假设无标准）
-		{ "inkcanvas", "application/octet-stream" } // 自定义类型
-	};
+	string[] _mimeTypes = { "jpg", "svg", "json" };
 	#endregion
 
 	#region 属性
@@ -600,15 +603,14 @@ public class DataSyncService
 			hm17.HM17002 = operatorCode;
 			hm17.HM17003 = operatorName;
 			hm17.HM17004 = "";
-			var appVersion = Microsoft.Maui.ApplicationModel.AppInfo.Version;
-			hm17.HM17005 = $"{appVersion.Major}.{appVersion.Minor}.{appVersion.Build}.{appVersion.Revision}";
+			hm17.HM17005 = _appContext.AppVersion;
 			hm17.HM17007 = operatorName;
 			hm17.HM17009 = operatorName;
 			hm17.HM17011 = operatorName;
 			hm17.HM17012 = companyCode;
 			hm17.HM17013 = operatorId;
 			hm17.HM17014 = ipAddress;
-			hm17.HM17015 = GetDeviceId();
+			hm17.HM17015 = await GetDeviceId();
 			hm17.HM17017 = hm17017;
 			hm17.HM17018 = workCode;
 
@@ -629,8 +631,8 @@ public class DataSyncService
 			hm17DC.HM17012 = companyCode;
 			hm17DC.HM17013 = operatorId;
 			hm17DC.HM17014 = ipAddress;
-			hm17DC.HM17015 = GetDeviceId();
-			hm17DC.HM17017 = hm17017;
+			hm17DC.HM17015 = await GetDeviceId();
+            hm17DC.HM17017 = hm17017;
 			hm17DC.HM17018 = workCode;
 
 			list.Add(hm17DC);
@@ -690,14 +692,14 @@ public class DataSyncService
 	/// <summary>
 	/// 検証端末制限
 	/// </summary>
-	public bool CheckUUID()
+	public async Task<bool> CheckUUID()
 	{
 		try
 		{
 			HM26DEVRESDC hm26DC = new HM26DEVRESDC();
 			hm26DC.HM26001 = _appContext.CompanyID;
 			hm26DC.HM26002 = _appContext.OperatorCD;
-			hm26DC.HM26003 = GetDeviceId();
+			hm26DC.HM26003 = await GetDeviceId();
 			hm26DC.HM26004 = Environment.MachineName;
 			hm26DC.HM26007 = 2;
 			hm26DC.HM26008 = 0;
@@ -1668,6 +1670,11 @@ public class DataSyncService
 					await _hkksDb.Db.ExecuteAsync("delete from HR02KSKK where HR02001=? and HR02002=?", workCode, DIFF_HR01003List[i]);
 					await _hkksDb.Db.ExecuteAsync("delete from HR03SYAS where HR03001=? and HR03003=?", workCode, DIFF_HR01003List[i]);
 					await _hkksDb.Db.ExecuteAsync("delete from HR05KOKUMINFO where HR05001=? and HR05002=?", workCode, DIFF_HR01003List[i]);
+					await _hkksDb.Db.ExecuteAsync(
+						@$"INSERT INTO HR06SYASDEL (HR06001, HR06002, HR06003,HR06004,HR06006,HR06008,HR06010)
+                        SELECT HR03001, HR03002, HR03003,HR03004,'{_appContext.Name}' AS HR03012,'{_appContext.Name}' AS HR03014,'{_appContext.Name}' AS HR03016
+                        FROM HR03SYAS
+                        WHERE HR03001=? and HR03003=?", workCode, DIFF_HR01003List[i]);
 				}
 			}
 			string downLoadTime = _downLoadTimeUtils.GetDownLoadTime(workCode, "HR01ITEM");
@@ -2022,7 +2029,8 @@ public class DataSyncService
 		{
 			_logger.LogError(ex.ToString());
 		}
-		return local_dataList;
+		var finalList = local_dataList.Union(dataList).ToList();
+		return finalList;
 	}
 
 	public async Task SetHR02Async(string workCode, Func<string, int, int, Task> asyncMethod)
@@ -2443,10 +2451,14 @@ public class DataSyncService
 				string message = $"写真画像のダウンロード:{++count}/{allCount}";
 				foreach (var mimetype in _mimeTypes)
 				{
-					if (item.HR03017 == 0 && mimetype.Key != "jpg") continue;
+					if (item.HR03017 == 0 && mimetype != "jpg") continue;
+					if (item.HR03017 == 1 && mimetype == "jpg") continue;
 					await asyncMethod(message, currentStep, totalSteps);
-					string fileUri = $"{workCode}/photo/{item.HR03002.Trim()}.{mimetype.Key}";
-					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}.{mimetype.Key}");
+					string fileUri = $"{workCode}/photo/{item.HR03002.Trim()}.{mimetype}";
+					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}.{mimetype}");
+
+					if (mimetype == "json" && !await JsonFileExistsAsync(fileUri)) continue;
+
 					using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 					bool result;
 					if (_appContext.FileServerType == 2)
@@ -2474,6 +2486,27 @@ public class DataSyncService
 	}
 
 	/// <summary>
+	/// サービス側jsonファイルが存在するかどうかを確認します
+	/// </summary>
+	/// <param name="fileUri">サービス側ファイルパス</param>
+	/// <returns>true:存在、false:存在しない</returns>
+	async Task<bool> JsonFileExistsAsync(string fileUri)
+	{
+		using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
+		bool result;
+		if (_appContext.FileServerType == 2)
+		{
+			result = await _webDavClient.FileExistsAsync(fileUri, cts.Token);
+		}
+		else
+		{
+			fileUri = $"/{_appContext.HC01013}/{fileUri}";
+			result = await _fluentFtpClient.FileExistsAsync(fileUri, cts.Token);
+		}
+		return result;
+	}
+
+	/// <summary>
 	/// 写真ファイルをアップロード
 	/// </summary>
 	public async Task<bool> UploadPhotoFilesAsync(string workCode, List<HR03SYAS> hr03List, int currentStep, int totalSteps, Func<string, int, int, Task> asyncMethod)
@@ -2489,11 +2522,15 @@ public class DataSyncService
 				string message = $"写真画像のアップロード:{++count}/{allCount}";
 				foreach (var mimetype in _mimeTypes)
 				{
-					if (item.HR03017 == 0 && mimetype.Key != "jpg") continue;
+					if (item.HR03017 == 0 && mimetype != "jpg") continue;
+					if (item.HR03017 == 1 && mimetype == "jpg") continue;
 					await asyncMethod(message, currentStep, totalSteps);
 					string remoteDirectory = $"{workCode}/photo";
-					string remoteFileName = $"{item.HR03002.Trim()}.{mimetype.Key}";
-					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}.{mimetype.Key}");
+					string remoteFileName = $"{item.HR03002.Trim()}.{mimetype}";
+					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}.{mimetype}");
+
+					if (mimetype == "json" && !File.Exists(localFilePath)) continue;
+
 					using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 					if (File.Exists(localFilePath))
 					{
@@ -2514,7 +2551,7 @@ public class DataSyncService
 					else
 					{
 						// 写真方式 0：JPG 1：SVG
-						if ((item.HR03017 == 0 && mimetype.Key == "jpg") || (item.HR03017 == 1 && mimetype.Key == "svg"))
+						if ((item.HR03017 == 0 && mimetype == "jpg") || (item.HR03017 == 1 && mimetype == "svg"))
 						{
 							_logger.LogWarning($"UploadPhotoFilesAsync:{localFilePath}画像が存在しません");
 						}
@@ -2548,7 +2585,7 @@ public class DataSyncService
 				foreach (var mimetype in _mimeTypes)
 				{
 					await asyncMethod(message, currentStep, totalSteps);
-					string fileUri = $"{workCode}/photo/{item.HR06002.Trim()}.{mimetype.Key}";
+					string fileUri = $"{workCode}/photo/{item.HR06002.Trim()}.{mimetype}";
 					using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 					if (_appContext.FileServerType == 2)
 					{
@@ -2746,23 +2783,74 @@ public class DataSyncService
 		}
 	}
 
-	/// <summary>
-	/// 端末のserial numberまたはIMEI
-	/// </summary>
-	/// <returns></returns>
-	string GetDeviceId()
-	{
-		return DeviceInfo.Current.Name;
-	}
+    /// <summary>
+    /// 端末のserial numberまたはIMEI
+    /// </summary>
+    /// <returns></returns>
+    async Task<string> GetDeviceId()
+    {
+        const string key = "app_device_id";
 
-	/// <summary>
-	/// ClassDCをClassに転化する。
-	/// </summary>
-	/// <typeparam name="D">Class</typeparam>
-	/// <typeparam name="S">ClassDC</typeparam>
-	/// <param name="s">ClassDCのデータ</param>
-	/// <returns></returns>
-	D Mapper<D, S>(S s)
+		var cached = await SecureStorage.Default.GetAsync(key);
+		if (!string.IsNullOrWhiteSpace(cached))
+			return cached;
+
+		string id = string.Empty;
+
+#if WINDOWS
+    // 1. 先取 Windows 设备 UUID
+    try
+    {
+        using var mc = new ManagementClass("Win32_ComputerSystemProduct");
+        using var moc = mc.GetInstances();
+
+        foreach (ManagementObject mo in moc)
+        {
+            id = mo.Properties["UUID"]?.Value?.ToString() ?? string.Empty;
+            break;
+        }
+
+        // 有些机器会返回全 0 UUID，当作无效值处理
+        if (string.Equals(id, "00000000-0000-0000-0000-000000000000", StringComparison.OrdinalIgnoreCase))
+        {
+            id = string.Empty;
+        }
+    }
+    catch
+    {
+        id = string.Empty;
+    }
+
+    // 2. 取不到时，回退到发布者级系统 ID
+    if (string.IsNullOrWhiteSpace(id))
+    {
+        var info = SystemIdentification.GetSystemIdForPublisher();
+        if (info?.Id != null)
+        {
+            id = CryptographicBuffer.EncodeToHexString(info.Id);
+        }
+    }
+
+#elif IOS || MACCATALYST
+        id = UIDevice.CurrentDevice.IdentifierForVendor?.AsString() ?? string.Empty;
+#endif
+
+        // 3. 最终还取不到，就生成一个本地稳定 ID
+        if (string.IsNullOrWhiteSpace(id))
+            id = Guid.NewGuid().ToString("N");
+
+        await SecureStorage.Default.SetAsync(key, id);
+        return id;
+    }
+
+    /// <summary>
+    /// ClassDCをClassに転化する。
+    /// </summary>
+    /// <typeparam name="D">Class</typeparam>
+    /// <typeparam name="S">ClassDC</typeparam>
+    /// <param name="s">ClassDCのデータ</param>
+    /// <returns></returns>
+    D Mapper<D, S>(S s)
 	{
 		D d = Activator.CreateInstance<D>();
 		try

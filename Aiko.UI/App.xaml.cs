@@ -6,15 +6,17 @@ namespace Aiko.UI;
 public partial class App : Application
 {
 	readonly IAppInitializationService _appInitializationService;
-	public App(IAppInitializationService appInitializationService)
+	readonly AppShell _shell;
+	public App(IAppInitializationService appInitializationService, AppShell shell)
 	{
 		InitializeComponent();
 		_appInitializationService = appInitializationService;
+		_shell = shell;
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new AppShell());
+        return new Window(_shell);
     }
 
     protected override async void OnStart()

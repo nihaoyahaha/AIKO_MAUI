@@ -50,12 +50,6 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	private bool _blackboardDisplay = true;
 
 	/// <summary>
-	/// フロントカメラかどうか
-	/// </summary>
-	[ObservableProperty]
-	private bool _isFontCamera;
-
-	/// <summary>
 	/// カメラのズーム率
 	/// </summary>
 	[ObservableProperty]
@@ -127,17 +121,8 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	[ObservableProperty]
 	private Size _selectedResolution;
 
-	/// <summary>
-	/// カメラ解像度コレクション
-	/// </summary>
 	[ObservableProperty]
-	private ObservableCollection<string> _resolutionDisplayList = new();
-
-	/// <summary>
-	/// カメラ解像度インデックス
-	/// </summary>
-	[ObservableProperty]
-	private int _selectedResolutionIndex = -1;
+	private bool isRearCamera;
 	#endregion
 
 	#region プライベートフィールド
@@ -163,6 +148,22 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 
 	#region コマンドハンドラ 
 
+	async partial void OnIsRearCameraChanged(bool value)
+	{
+		await RefreshCameras(CancellationToken.None);
+		if (value)
+		{
+			SelectedCamera = _cameraProvider?.AvailableCameras?
+				.FirstOrDefault(x => x.Position == CameraPosition.Rear);
+		}
+		else
+		{
+			SelectedCamera = _cameraProvider?.AvailableCameras?
+				.FirstOrDefault(x => x.Position == CameraPosition.Front);
+		}
+		SaveCameraResolutionDisplayList();
+	}
+
 	/// <summary>
 	/// 画面ロード処理
 	/// </summary>
@@ -181,7 +182,8 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		{
 			ReinforcementTypeSelectedItem = ReinforcementTypeList[0];
 		}
-		InitSupportedResolutionsDisplayList();
+		InitSelectedCamera();
+		SaveCameraResolutionDisplayList();
 #if WINDOWS
 		UpdateVideoDisplayLayoutForWindows();
 #else
@@ -269,7 +271,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 			SelectedCamera = _cameraProvider?.AvailableCameras?
 				.FirstOrDefault(x => x.Position == CameraPosition.Front);
 		}
-		InitSupportedResolutionsDisplayList();
+		SaveCameraResolutionDisplayList();
 	}
 
 	/// <summary>
@@ -341,17 +343,6 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	}
 
 	/// <summary>
-	/// 解像度の切り替え
-	/// </summary>
-	[RelayCommand]
-	private void ResolutionsSelectedIndexChanged()
-	{
-		if (SelectedCamera == null) return;
-		if (SelectedResolutionIndex < 0) return;
-		SelectedResolution = SelectedCamera.SupportedResolutions[SelectedResolutionIndex];
-	}
-
-	/// <summary>
 	/// 写真を撮る
 	/// </summary>
 	/// <param name="e"></param>
@@ -362,6 +353,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		string photoType = Preferences.Default.Get("PhotoType", "JPEG");
 		try
 		{
+			if (e.Media == null) return;
 			if (!await ValidateBeforeSavingAsync()) return;
 			using MemoryStream stream = new();
 			await e.Media.CopyToAsync(stream);
@@ -432,7 +424,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		{
 			using var compositeBitmap = new SKBitmap(photoBitmap.Width, photoBitmap.Height);
 			using (var canvas = new SKCanvas(compositeBitmap))
-			{ 
+			{
 				// 底面写真を描く
 				canvas.DrawBitmap(photoBitmap, 0, 0);
 				// 緑の背景版を描く
@@ -518,7 +510,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 
 			await File.WriteAllTextAsync(PhotoScreenshotPath, strBuild.ToString());
 			PhotoScreenshot = ImageSource.FromFile(PhotoScreenshotPath);
-		
+
 			photoLayer.ImageUri = PhotoScreenshotPath;
 			photoLayer.GreenBackgroundIsVisible = BlackboardDisplay;
 			photoLayer.PhotoIsChecked = true;
@@ -596,7 +588,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	SKRectI CalculatePreviewCropRect(int photoWidth, int photoHeight)
 	{
 #if WINDOWS
-        double PreviewRatio = 16.0 / 9.0;
+		double PreviewRatio = 16.0 / 9.0;
 #else
 		double PreviewRatio = CameraViewActualVideoRect.Width / CameraViewActualVideoRect.Height;
 #endif
@@ -632,7 +624,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	/// 画像プレビューデータの追加
 	/// </summary>
 	/// <param name="path"></param>
-	void AddImageViewPhotoPreviewDto(string path,byte[] bytes,PhotoLayer layer)
+	void AddImageViewPhotoPreviewDto(string path, byte[] bytes, PhotoLayer layer)
 	{
 		Service.AddImageViewPhotoPreviewModel(path, bytes, layer);
 	}
@@ -700,18 +692,54 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	}
 
 	/// <summary>
-	/// 初期化サポートされている解像度表示リスト
+	/// カメラ解像度表示リストの保存
 	/// </summary>
-	void InitSupportedResolutionsDisplayList()
+	void SaveCameraResolutionDisplayList()
 	{
 		if (SelectedCamera == null) return;
-		var list = SelectedCamera.SupportedResolutions.Select(x => $"{x.Width}×{x.Height}").ToList();
-		ResolutionDisplayList = new ObservableCollection<string>(list);
-		if (ResolutionDisplayList.Count > 0)
+		if (SelectedCamera.Position == CameraPosition.Unknown) return;
+
+		string key = SelectedCamera.Position == CameraPosition.Front ? "CameraResolution_Front" : "CameraResolution_Rear";
+
+		if (Preferences.Default.ContainsKey(key))
 		{
-			SelectedResolutionIndex = ResolutionDisplayList.Count-1;
-			SelectedResolution = SelectedCamera.SupportedResolutions[ResolutionDisplayList.Count - 1];
+			string selectedValue = Preferences.Default.Get($"{key}_Selected", "");
+			if (!string.IsNullOrEmpty(selectedValue))
+			{
+				string [] arry = selectedValue.Split('×');
+				SelectedResolution = new Size(int.Parse(arry[0]), int.Parse(arry[1]));
+			}
 		}
+		else
+		{
+			var resolutions = SelectedCamera.SupportedResolutions.Select(x => $"{x.Width}×{x.Height}").ToList();
+			if (resolutions.Count > 0)
+			{
+				SelectedResolution = SelectedCamera.SupportedResolutions[resolutions.Count - 1];
+				string value = string.Join(",", resolutions);
+				Preferences.Default.Set(key, value);
+				Preferences.Default.Set($"{key}_Selected", resolutions[resolutions.Count - 1]);
+			}
+		}
+	}
+
+	void InitSelectedCamera()
+	{
+		if (SelectedCamera == null) return;
+		if (SelectedCamera.Position == CameraPosition.Unknown) return;
+		IsRearCamera = SelectedCamera.Position == CameraPosition.Rear ? true : false;
+	}
+	
+	void LoadSelectedCameraResolution()
+	{
+		if (SelectedCamera == null) return;
+		if (SelectedCamera.Position == CameraPosition.Unknown) return;
+
+		string frontSelected = Preferences.Default.Get("CameraResolution_Front_Selected", "");
+		string rearSelected = Preferences.Default.Get("CameraResolution_Rear_Selected", "");
+		string selectedValue = SelectedCamera.Position == CameraPosition.Front ? frontSelected : rearSelected;
+
+
 	}
 
 	/// <summary>
@@ -724,13 +752,6 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		{
 			string ErrMsg = ErrorMessage.ERRORPOP("CM01037");
 			DialogHelper.MessageDialogClose(string.Format(ErrMsg, "撮影方向"));
-
-			return false;
-		}
-		if (SelectedResolution == Size.Zero)
-		{
-			string ErrMsg = ErrorMessage.ERRORPOP("CM01037");
-			DialogHelper.MessageDialogClose(string.Format(ErrMsg, "解像度"));
 
 			return false;
 		}

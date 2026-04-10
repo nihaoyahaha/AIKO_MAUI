@@ -31,7 +31,7 @@
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
 	<key>NSCameraUsageDescription</key>
-	<string>PROVIDE YOUR REASON HERE</string>
+	<string>配筋検査の写真を撮影するために、カメラへのアクセスを許可してください。</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
@@ -39,6 +39,10 @@
 	<key>CFBundleIdentifier</key>
 	<string></string>
 	<key>NSAppTransportSecurity</key>
+	<dict>
+    <key>NSAllowsLocalNetworking</key>
+    <true/>
+    </dict>
 	<dict>
 		<key>NSExceptionDomains</key>
 		<dict>
@@ -58,5 +62,6 @@
 			</dict>
 		</dict>
 	</dict>
+	
 </dict>
 </plist>

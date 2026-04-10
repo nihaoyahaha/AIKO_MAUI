@@ -80,6 +80,8 @@ public partial class UploadPageVM : Observablebase<UploadPageVM, IUploadService>
 			});
 			IsShowProgressGridFlag = true;
 			downLoadTime = Service.GetSystemDateTime();
+			// ログインID、IPなどを利用バージョン(hm17version)に登録する
+			await _dataSyncService.UpdateHM17Async(1, Service.AppContext.WorkCD);
 			await Service.UploadDataAsync(progressHandler);
 		}
 		catch (Exception exp)
@@ -142,6 +144,8 @@ public partial class UploadPageVM : Observablebase<UploadPageVM, IUploadService>
 				PercentText = args.PercentText;
 			});
 			IsShowProgressGridFlag = true;
+			// ログインID、IPなどを利用バージョン(hm17version)に登録する
+			await _dataSyncService.UpdateHM17Async(1, Service.AppContext.WorkCD);
 			await Service.UploadFileAsync(progressHandler,IsCheckDrawing);
 		}
 		catch (Exception exp)
@@ -158,6 +162,8 @@ public partial class UploadPageVM : Observablebase<UploadPageVM, IUploadService>
 		finally
 		{
 			InitializateProgress();
+			//ダウンロードもしくは同期処理完了後に利用バージョン(hm17version)のログイン中(hm17017)に0を登録する
+			await _dataSyncService.UpdateHM17Async(0, Service.AppContext.WorkCD);
 			// 結果メッセージ
 			string errMsg;
 			if (ioExp)

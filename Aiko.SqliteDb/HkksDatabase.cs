@@ -870,7 +870,6 @@ public class HkksDatabase
 	{
 		try
 		{
-			strCode.Add("0");
 			var newCodes = strCode.Select(x => $"'{x}'").ToList();
 			string str = string.Join(",", newCodes);
 
@@ -1727,8 +1726,9 @@ public class HkksDatabase
 				.Where(hr04 => hr04.HR04003 == hr04DC.HR04003)
 				.ToListAsync();
 
-			return result.Max(hr04 => hr04.HR04004);
-		}
+            return result.Any() ? result.Max(hr04 => hr04.HR04004) : 0;
+
+        }
 		catch (Exception ex)
 		{
 			_logger.LogError(ex.ToString());

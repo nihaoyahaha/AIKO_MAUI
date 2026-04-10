@@ -46,25 +46,15 @@
                 Title="ロ グ イ ン"
                 ContentTemplate="{DataTemplate local:LoginPage}"
                 Route="Login" />
-
         </Tab>
-
     </FlyoutItem>
 
     <FlyoutItem Title="環境設定">
         <Tab>
             <ShellContent
-                Title="遠隔サーバー"
-                ContentTemplate="{DataTemplate local:RemotingServerPage}"
-                Route="RemotingServer" />
-            <ShellContent
-                Title="オプション"
-                ContentTemplate="{DataTemplate local:SystemOptionServerPage}"
-                Route="SystemOptionServer" />
-            <ShellContent
-                Title="FTP接続"
-                ContentTemplate="{DataTemplate local:RemotingFtpServerPage}"
-                Route="RemotingFtpServer" />
+                Title="環境設定"
+                ContentTemplate="{DataTemplate local:EnvironmentCenterPage}"
+                Route="EnvironmentCenter" />
         </Tab>
     </FlyoutItem>
 
@@ -72,29 +62,9 @@
         <Tab>
             <ShellContent
                 Title="ダウンロード"
-                ContentTemplate="{DataTemplate local:DownloadPage}"
-                Route="Download" />
-
-            <ShellContent
-                x:Name="shellContent_Upload"
-                Title="同　期"
-                ContentTemplate="{DataTemplate local:UploadPage}"
-                IsVisible="False"
-                Route="Upload" />
-
-            <ShellContent
-                Title="ロ　グ"
-                ContentTemplate="{DataTemplate local:LogPage}"
-                Route="Log" />
-
-            <ShellContent
-                x:Name="shellContent_Delete"
-                Title="削  除"
-                ContentTemplate="{DataTemplate local:DeletePage}"
-                IsVisible="False"
-                Route="Delete" />
+                ContentTemplate="{DataTemplate local:SyncCenterPage}"
+                Route="SyncCenter" />
         </Tab>
-
     </FlyoutItem>
 
     <FlyoutItem Title="テーマ">
@@ -114,7 +84,13 @@
                 ContentTemplate="{DataTemplate local:LoginOutPage}"
                 Route="Logout" />
         </Tab>
+    </FlyoutItem>
 
+    <FlyoutItem Title="システム情報">
+        <ShellContent
+            Title="システム情報"
+            ContentTemplate="{DataTemplate local:AppInfoPage}"
+            Route="AppInfo" />
     </FlyoutItem>
 
 </Shell>

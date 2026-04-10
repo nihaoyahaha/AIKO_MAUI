@@ -134,8 +134,8 @@ public class LoginService :BaseService<LoginService>, ILoginService
             hm17.HM17002 = operatorCd;
             hm17.HM17003 = name;
             hm17.HM17004 = "";
-            hm17.HM17005 = AppInfo.Current.VersionString;
-            hm17.HM17007 = name;
+            hm17.HM17005 = AikoAppContext.AppVersion;
+			hm17.HM17007 = name;
             hm17.HM17009 = name;
             hm17.HM17011 = name;
             hm17.HM17012 = companyID;

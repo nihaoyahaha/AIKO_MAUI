@@ -4,6 +4,7 @@
              x:Class="Aiko.UI.Pages.CheckPointDetailPage"
              xmlns:controls="clr-namespace:Aiko.UI.Pages"
              xmlns:models="clr-namespace:Aiko.Common.Models;assembly=Aiko.Common"
+             xmlns:conv="clr-namespace:Aiko.Common.Converters;assembly=Aiko.Common"
              xmlns:ff="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
              x:DataType="vm:CheckPointDetailPageVM"
@@ -47,6 +48,9 @@
                 <Setter Property="BackgroundColor" Value="Transparent" />
             </Style>
 
+            <conv:OrBooleanConverter x:Key="OrConverter" />
+            <conv:AndBooleanConverter x:Key="AndConverter" />
+
         </Grid.Resources>
 
         <Grid RowDefinitions="Auto, Auto, *" >
@@ -82,31 +86,31 @@
 
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="0.9*" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1.1*" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="0.9*" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1.8*" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="1.8*" />
                     </Grid.ColumnDefinitions>
 
                     <Label Grid.Column="0" Text="部位" />
-                    <Entry Grid.Column="1" x:Name="ety_Buim" IsReadOnly="True" Text="{Binding Buim}" />
+                    <Entry Grid.Column="1" x:Name="ety_Buim" IsReadOnly="True" BackgroundColor="#CCCCCC" Text="{Binding Buim}" />
 
                     <Label Grid.Column="2" Text="階・グループ" />
-                    <Entry Grid.Column="3" x:Name="ety_Grpl" IsReadOnly="True" Text="{Binding Grpl}" />
+                    <Entry Grid.Column="3" x:Name="ety_Grpl" IsReadOnly="True" BackgroundColor="#CCCCCC" Text="{Binding Grpl}" />
 
                     <Label Grid.Column="4" Text="断面" />
-                    <Entry Grid.Column="5" x:Name="ety_Danm" IsReadOnly="True" Text="{Binding Danm}" />
+                    <Entry Grid.Column="5" x:Name="ety_Danm" IsReadOnly="True" BackgroundColor="#CCCCCC" Text="{Binding Danm}" />
 
                     <Label Grid.Column="6" Text="工区" />
-                    <Entry Grid.Column="7" x:Name="ety_Koku" IsReadOnly="True" Text="{Binding Koku}" />
+                    <Entry Grid.Column="7" x:Name="ety_Koku" IsReadOnly="True" BackgroundColor="#CCCCCC" Text="{Binding Koku}" />
 
                     <Label Grid.Column="8" Text="位置" />
-                    <Entry Grid.Column="9" x:Name="ety_Location" IsReadOnly="True" MaxLength="20" Text="{Binding Location}" />
+                    <Entry Grid.Column="9" x:Name="ety_Location" IsReadOnly="True" MaxLength="20" BackgroundColor="#CCCCCC" Text="{Binding Location}" />
                 </Grid>
                 <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnSpacing="10" Padding="0,5">
                     <Grid.Resources>
@@ -142,7 +146,7 @@
                     <Picker Grid.Column="3" x:Name="pck_Proj" ItemsSource="{Binding ProjList}" SelectedItem="{Binding Proj}" ItemDisplayBinding="{Binding DisplyName}" />
 
                     <Label Grid.Column="4" Text="判定基準" />
-                    <Entry Grid.Column="5" x:Name="ety_Hantei" IsReadOnly="True" Margin="0,0,10,0" Text="{Binding Hantei}" />
+                    <Entry Grid.Column="5" x:Name="ety_Hantei" IsReadOnly="True" Margin="0,0,10,0" BackgroundColor="#CCCCCC" Text="{Binding Hantei}" />
                 </Grid>
             </Grid>
 
@@ -150,28 +154,33 @@
                 <Grid Grid.Column="0" RowDefinitions="*, 33,auto">
                     <Grid Grid.Row="0" BackgroundColor="White">
 
-                        <Grid x:Name="MainGridView" IsClippedToBounds="True">
+                        <Border Stroke="#CCCCCC"
+                                StrokeThickness="1"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Fill">
+                            
+                            <Grid x:Name="MainGridView" IsClippedToBounds="True">
 
-                            <local:PinchToZoomContainerForCheckPointDetail x:Name="PinchToZoom">
+                                <local:PinchToZoomContainerForCheckPointDetail x:Name="PinchToZoom">
 
-                                <AbsoluteLayout x:Name="ZoomLayer"
+                                    <AbsoluteLayout x:Name="ZoomLayer"
                                                 HorizontalOptions="Start" 
                                                 VerticalOptions="Start">
 
-                                    <skia:SKCanvasView x:Name="PhotoCanvasView"
-                                                       PaintSurface="OnPhotoCanvasViewPaintSurface"/>
+                                        <skia:SKCanvasView x:Name="PhotoCanvasView"
+                                                           PaintSurface="OnPhotoCanvasViewPaintSurface"/>
 
-                                    <skia:SKCanvasView x:Name="BlackboardCanvasView"
-                                                       PaintSurface="OnBlackboardCanvasViewPaintSurface"
-                                                       IsVisible="{Binding IsBlackboardVisible}"/>
+                                        <skia:SKCanvasView x:Name="BlackboardCanvasView"
+                                                           PaintSurface="OnBlackboardCanvasViewPaintSurface"
+                                                           IsVisible="{Binding IsBlackboardVisible}"/>
 
-                                    <skia:SKCanvasView x:Name="InkCanvasView"
-                                                       PaintSurface="OnInkCanvasViewPaintSurface"
-                                                       EnableTouchEvents="True"
-                                                       Touch="OnTouch"
-                                                       IsVisible="{Binding IsStrokesVisible}"/>
+                                        <skia:SKCanvasView x:Name="InkCanvasView"
+                                                           PaintSurface="OnInkCanvasViewPaintSurface"
+                                                           EnableTouchEvents="True"
+                                                           Touch="OnTouch"
+                                                           IsVisible="{Binding IsStrokesVisible}"/>
 
-                                    <Editor x:Name="TextEditor"
+                                        <Editor x:Name="TextEditor"
                                                 IsVisible="False"
                                                 AutoSize="TextChanges" 
                                                 BackgroundColor="Transparent"
@@ -179,9 +188,42 @@
                                                 FontSize="16"
                                                 Unfocused="OnTextEditorUnfocused"
                                                 TextChanged="OnTextEditorTextChanged" />
-                                </AbsoluteLayout>
-                            </local:PinchToZoomContainerForCheckPointDetail>
-                        </Grid>
+                                    </AbsoluteLayout>
+                                </local:PinchToZoomContainerForCheckPointDetail>
+
+                                <Grid ColumnDefinitions="Auto,*,Auto"
+                                      Margin="10,0"
+                                      VerticalOptions="Center"
+                                      HorizontalOptions="Fill"
+                                      InputTransparent="True"
+                                      CascadeInputTransparent="False"
+                                      ZIndex="10">
+
+                                    <ImageButton Grid.Column="0"
+                                                 InputTransparent="False"
+                                                 Source="arrowleft.png"
+                                                 Command="{Binding PreviousImageCommand}"
+                                                 IsVisible="{Binding IsSwitchable}"
+                                                 BackgroundColor="#66000000"
+                                                 CornerRadius="24"
+                                                 WidthRequest="48"
+                                                 HeightRequest="48"
+                                                 Padding="10" />
+
+                                    <ImageButton Grid.Column="2"
+                                                 InputTransparent="False"
+                                                 Source="arrowleft.png"
+                                                 Rotation="180"
+                                                 Command="{Binding NextImageCommand}"
+                                                 IsVisible="{Binding IsSwitchable}"
+                                                 BackgroundColor="#66000000"
+                                                 CornerRadius="24"
+                                                 WidthRequest="48"
+                                                 HeightRequest="48"
+                                                 Padding="10" />
+                                </Grid>
+                            </Grid>
+                        </Border>
                     </Grid>
 
                     <Grid Grid.Row="1" ColumnDefinitions="1*,1*,1*,1*,1*,1*,1*,1*,1*,1*,1*,1*,1*,1*,7*">
@@ -583,27 +625,41 @@
 
                             <Label Grid.Row="0" Grid.Column="0" Text="撮影方向" VerticalOptions="Center" HorizontalOptions="End" />
                             <Grid Grid.Row="0" Grid.Column="1" VerticalOptions="Center">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                
+                                <Grid HeightRequest="45" VerticalOptions="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="45" />
+                                    </Grid.ColumnDefinitions>
 
-                                <Entry Grid.Column="0"
-                                       Text="{Binding DirsDisplyName}"
-                                       VerticalOptions="Center" />
+                                    <Picker x:Name="HiddenPicker"
+                                            Grid.ColumnSpan="2"
+                                            ItemsSource="{Binding DirsList}"
+                                            SelectedItem="{Binding Dirs}"
+                                            ItemDisplayBinding="{Binding DisplyName}"
+                                            Opacity="0.01"
+                                            VerticalOptions="Fill"
+                                            HorizontalOptions="Fill" />
 
-                                <Picker Grid.Column="1"
-                                        x:Name="cmb_Dirs"
-                                        ItemsSource="{Binding DirsList}"
-                                        SelectedItem="{Binding Dirs}"
-                                        ItemDisplayBinding="{Binding DisplyName}"
-                                        VerticalOptions="Center"
-                                        MinimumWidthRequest="50" />
+                                    <Entry Grid.Column="0"
+                                           Text="{Binding DirsDisplyName}"
+                                           BackgroundColor="White" 
+                                           VerticalOptions="Center" />
 
-                                <!--<controls:SearchablePopupPicker
-                                    x:Name="PopupPicker"
-                                    WidthRequest="300"
-                                    IsSearchEnabled="False"/>-->
+                                    <Grid Grid.Column="1" BackgroundColor="White">
+                                        <Image Source="arrow.png"
+                                               WidthRequest="20"
+                                               HeightRequest="20"
+                                               VerticalOptions="Center"
+                                               HorizontalOptions="Center"
+                                               InputTransparent="True" />
+
+                                        <Button BackgroundColor="Transparent"
+                                                Clicked="OnArrowClicked"
+                                                VerticalOptions="Fill"
+                                                HorizontalOptions="Fill" />
+                                    </Grid>
+                                </Grid>
 
                             </Grid>
 
@@ -631,6 +687,7 @@
                                    HorizontalOptions="Fill"
                                    VerticalOptions="Center"
                                    MinimumHeightRequest="40"
+                                   BackgroundColor="#CCCCCC"
                                    Text="{Binding Date}" />
 
                             <Label Grid.Row="1" Grid.Column="0" Text="撮影者" VerticalOptions="Center" />
@@ -641,6 +698,7 @@
                                    HorizontalOptions="Fill"
                                    VerticalOptions="Center"
                                    MinimumHeightRequest="40"
+                                   BackgroundColor="#CCCCCC"
                                    Text="{Binding Author}" />
                         </Grid>
 
@@ -649,12 +707,12 @@
 
                 <Grid Grid.Column="1" RowDefinitions="40, *">
 
-                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="5,0" BackgroundColor="#F5F5F5">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *, Auto" Padding="5,0" BackgroundColor="#F5F5F5">
 
                         <Grid x:Name="CheckOptions"
                               Margin="0,0,10,0"
                               BackgroundColor="#FFCCCCCC"
-                              ColumnSpacing="30"
+                              ColumnSpacing="10"
                               HeightRequest="33"
                               HorizontalOptions="Start"
                               VerticalOptions="Center">
@@ -664,70 +722,130 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Image x:Name="imgBtn_rsl1"
-                                   Margin="10,0,0,0"
-                                   Aspect="Fill"
-                                   HeightRequest="16"
-                                   HorizontalOptions="Center"
-                                   Source="checkrsl1.png"
-                                   ToolTipProperties.Text="未確認"
-                                   VerticalOptions="Center"
-                                   WidthRequest="16">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="1" />
-                                </Image.GestureRecognizers>
-                            </Image>
-                            <Image x:Name="imgBtn_rsl2"
-                                   Grid.Column="1"
-                                   Aspect="Fill"
-                                   HeightRequest="16"
-                                   HorizontalOptions="Center"
-                                   Source="checkrsl2.png"
-                                   ToolTipProperties.Text="不合格"
-                                   VerticalOptions="Center"
-                                   WidthRequest="16">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="0" />
-                                </Image.GestureRecognizers>
-                            </Image>
-                            <Image x:Name="imgBtn_rsl4"
-                                   Grid.Column="2"
-                                   Aspect="Fill"
-                                   HeightRequest="16"
-                                   HorizontalOptions="Center"
-                                   Source="checkrsl4.png"
-                                   ToolTipProperties.Text="合格"
-                                   VerticalOptions="Center"
-                                   WidthRequest="16">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="2" />
-                                </Image.GestureRecognizers>
-                            </Image>
-                            <Image x:Name="imgBtn_rsl5"
-                                   Grid.Column="3"
-                                   Margin="0,0,10,0"
-                                   Aspect="Fill"
-                                   HeightRequest="16"
-                                   HorizontalOptions="Center"
-                                   Source="checkrsl5.png"
-                                   ToolTipProperties.Text="是正済"
-                                   VerticalOptions="Center"
-                                   WidthRequest="16">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="3" />
-                                </Image.GestureRecognizers>
-                            </Image>
+                            <Border Grid.Column="0"
+                                    Margin="3,0,0,0"
+                                    HeightRequest="26"
+                                    Stroke="Blue"
+                                    StrokeThickness="{Binding Checkrsl1StrokeThickness}"
+                                    WidthRequest="26">
+                                <Image x:Name="imgBtn_rsl1"
+                                       Aspect="Fill"
+                                       HeightRequest="16"
+                                       HorizontalOptions="Center"
+                                       Source="checkrsl1.png"
+                                       ToolTipProperties.Text="未確認"
+                                       VerticalOptions="Center"
+                                       WidthRequest="16">
+                                    <Image.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="0" />
+                                    </Image.GestureRecognizers>
+                                </Image>
+                            </Border>
+                            <Border Grid.Column="1"
+                                    Margin="3,0,0,0"
+                                    HeightRequest="26"
+                                    Stroke="Blue"
+                                    StrokeThickness="{Binding Checkrsl2StrokeThickness}"
+                                    WidthRequest="26">
+                                <Image x:Name="imgBtn_rsl2"
+                                       Aspect="Fill"
+                                       HeightRequest="16"
+                                       HorizontalOptions="Center"
+                                       Source="checkrsl2.png"
+                                       ToolTipProperties.Text="不合格"
+                                       VerticalOptions="Center"
+                                       WidthRequest="16">
+                                    <Image.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="1" />
+                                    </Image.GestureRecognizers>
+                                </Image>
+                            </Border>
+                            <Border Grid.Column="2"
+                                    Margin="3,0,0,0"
+                                    HeightRequest="26"
+                                    Stroke="Blue"
+                                    StrokeThickness="{Binding Checkrsl4StrokeThickness}"
+                                    WidthRequest="26">
+                                <Image x:Name="imgBtn_rsl4"
+                                       Aspect="Fill"
+                                       HeightRequest="16"
+                                       HorizontalOptions="Center"
+                                       Source="checkrsl4.png"
+                                       ToolTipProperties.Text="合格"
+                                       VerticalOptions="Center"
+                                       WidthRequest="16">
+                                    <Image.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="2" />
+                                    </Image.GestureRecognizers>
+                                </Image>
+                            </Border>
+                            <Border Grid.Column="3"
+                                    Margin="3,0,0,0"
+                                    HeightRequest="26"
+                                    Stroke="Blue"
+                                    StrokeThickness="{Binding Checkrsl5StrokeThickness}"
+                                    WidthRequest="26">
+                                <Image x:Name="imgBtn_rsl5"
+                                       Aspect="Fill"
+                                       HeightRequest="16"
+                                       HorizontalOptions="Center"
+                                       Source="checkrsl5.png"
+                                       ToolTipProperties.Text="是正済"
+                                       VerticalOptions="Center"
+                                       WidthRequest="16">
+                                    <Image.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="3" />
+                                    </Image.GestureRecognizers>
+                                </Image>
+                            </Border>
 
                         </Grid>
 
-                        <StackLayout Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                        <StackLayout Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <Border WidthRequest="60" HeightRequest="30"
+                                    HorizontalOptions="Center" Background="#5B9BD5">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleImageGalleryCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label HorizontalOptions="Center" 
+                                       VerticalOptions="Center" 
+                                       Text="写真" 
+                                       FontSize="14"
+                                       TextColor="White"
+                                       BackgroundColor="Transparent"/>
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsImageGalleryVisible}" Value="True">
+                                        <Setter Property="Background" Value="#4472C4" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                            </Border>
+                            <Border WidthRequest="60" HeightRequest="30"
+                                    HorizontalOptions="Center" Background="#5B9BD5">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleImageDanmCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label HorizontalOptions="Center" 
+                                       VerticalOptions="Center" 
+                                       Text="断面図" 
+                                       FontSize="14"
+                                       TextColor="White"
+                                       BackgroundColor="Transparent"/>
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsImageDanmVisible}" Value="True">
+                                        <Setter Property="Background" Value="#4472C4" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                            </Border>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="3" Orientation="Horizontal" Spacing="8">
                             <Image Source="clear.png" WidthRequest="30" HeightRequest="30" >
                                 <Image.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding DeleteImageCommand}" />
                                 </Image.GestureRecognizers>
                             </Image>
                             <Label VerticalOptions="Center" TextColor="#666" FontSize="16" Text="{Binding Summary}" />
-                            <Border Grid.Column="2" WidthRequest="80" HeightRequest="30" Margin="2" 
+                            <Border WidthRequest="80" HeightRequest="30" Margin="2" 
                                     HorizontalOptions="Center" Background="#FFCCCCCC">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding ToggleSortCommand}" />
@@ -740,10 +858,22 @@
                         </StackLayout>
                     </Grid>
 
-                    <CollectionView x:Name="ImageGallery" ItemsSource="{Binding ImageList}" Grid.Row="1">
+                    <CollectionView x:Name="ImageGallery"
+                                    ItemsSource="{Binding ImageList}"
+                                    IsVisible="{Binding IsImageGalleryVisible}"
+                                    Grid.Row="1"
+                                    ItemsUpdatingScrollMode="KeepScrollOffset"
+                                    Scrolled="OnCollectionViewScrolled">
                         <CollectionView.ItemsLayout>
                             <GridItemsLayout Orientation="Vertical" Span="3" VerticalItemSpacing="1" HorizontalItemSpacing="1"/>
                         </CollectionView.ItemsLayout>
+
+                        <CollectionView.Footer>
+                            <VerticalStackLayout IsVisible="{Binding IsFooterVisible}" HeightRequest="50" HorizontalOptions="Center">
+                                <ActivityIndicator IsRunning="True" WidthRequest="30" HeightRequest="30"/>
+                                <Label Text="Loading..." FontSize="12" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </CollectionView.Footer>
 
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:InkImage">
@@ -800,11 +930,11 @@
 
                                                     <Image.Triggers>
                                                         <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="0">
-                                                            <Setter Property="Source" Value="checkrsl2.png" />
+                                                            <Setter Property="Source" Value="checkrsl1.png" />
                                                         </DataTrigger>
 
                                                         <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="1">
-                                                            <Setter Property="Source" Value="checkrsl1.png" />
+                                                            <Setter Property="Source" Value="checkrsl2.png" />
                                                         </DataTrigger>
 
                                                         <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="2">
@@ -850,7 +980,7 @@
                                                 </Border>
                                             </Grid>
 
-                                            <Grid HeightRequest="102" BackgroundColor="#EEEEEE" Margin="1">
+                                            <Grid HeightRequest="102" BackgroundColor="White" Margin="1">
                                                 <Label x:Name="ImageGalleryItemPlaceholder" 
                                                        Text="Loading..." 
                                                        TextColor="#AAAAAA" 
@@ -859,11 +989,13 @@
                                                        FontSize="10"/>
                                                 <ff:CachedImage x:Name="ImageGalleryItemImage"
                                                                 Source="{Binding InkImageSource}"
-                                                                Aspect="AspectFill"
+                                                                Aspect="AspectFit"
                                                                 IsVisible="False"
                                                                 DownsampleToViewSize="True"
                                                                 CacheType="None"
-                                                                LoadingDelay="0">
+                                                                LoadingDelay="0"
+                                                                Success="OnImageVisualized">
+                                                    
                                                     <ff:CachedImage.Triggers>
                                                         <DataTrigger TargetType="ff:CachedImage" Binding="{Binding CacheUpdater}" Value="True">
                                                             <Setter Property="IsVisible" Value="True"/>
@@ -876,7 +1008,7 @@
                                             </Grid>
 
                                             <StackLayout Padding="4,0,4,4" Spacing="0">
-                                                <Label Text="{Binding CreationTime, StringFormat='{0:yyyy/MM/dd HH:mm:ss}'}" FontSize="14" TextColor="#333" LineBreakMode="NoWrap"/>
+                                                <Label Text="{Binding Date}" FontSize="14" TextColor="#333" LineBreakMode="NoWrap"/>
                                                 <Label Text="{Binding DirsDisplyName}" FontSize="14" TextColor="#333" LineBreakMode="NoWrap"/>
                                                 <Label Text="{Binding Comment}" FontSize="14" TextColor="#333" LineBreakMode="NoWrap"/>
                                             </StackLayout>
@@ -893,6 +1025,22 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
+
+                    <Grid x:Name="ImageDanm"
+                          IsVisible="{Binding IsImageDanmVisible}"
+                          Grid.Row="1"
+                          Background="#e8e8e8"
+                          IsClippedToBounds="True">
+                        <local:PinchToZoomContainer x:Name="DanmImagePinchToZoom">
+                            <AbsoluteLayout x:Name="DanmImageZoomLayer">
+                                <Image x:Name="DanmImage"
+                                       AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                       AbsoluteLayout.LayoutFlags="All"
+                                       Aspect="Fill"
+                                       Source="{Binding DanmImageSource}" />
+                            </AbsoluteLayout>
+                        </local:PinchToZoomContainer>
+                    </Grid>
                 </Grid>
             </Grid>
         </Grid>

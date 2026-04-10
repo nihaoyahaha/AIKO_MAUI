@@ -11,8 +11,8 @@ namespace Aiko.SqliteDb;
 
 public class WebDavClient
 {
-    WebDavOptions _options;
-    string _authValue;
+	WebDavOptions _options;
+	string _authValue;
 	readonly IHttpClientFactory _httpClientFactory;
 	readonly ILogger<WebDavClient> _logger;
 	public WebDavClient(IHttpClientFactory httpClientFactory,
@@ -30,6 +30,43 @@ public class WebDavClient
 	{
 		_options = webDavOptions;
 		_authValue = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_options.Username}:{_options.Password}"));
+	}
+
+	/// <summary>
+	/// WebDAVサーバー上にファイルが存在するかどうかをチェックする
+	/// </summary>
+	/// <param name="remotePath">リモートファイルのパス</param>
+	/// <param name="ct">キャンセルトークン</param>
+	/// <returns>true：存在、false：存在しない</returns>
+	public async Task<bool> FileExistsAsync(string remotePath, CancellationToken ct = default)
+	{
+		try
+		{
+			var client = _httpClientFactory.CreateClient("WebDavClient");
+			client.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+
+			string url = BuildUrl(remotePath);
+			var request = new HttpRequestMessage(HttpMethod.Head, url);
+			request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", _authValue);
+
+			using var response = await client.SendAsync(request, ct);
+
+			if (response.IsSuccessStatusCode)
+			{
+				return true;
+			}
+
+			if (response.StatusCode == HttpStatusCode.NotFound)
+			{
+				return false;
+			}
+			return false;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError($"webdav-ファイル存在確認に失敗しました: {remotePath}. エラー: {ex.Message}");
+			return false;
+		}
 	}
 
 	/// <summary>
@@ -92,7 +129,7 @@ public class WebDavClient
 	/// <param name="remoteFileName">アップロードファイルの名前</param>
 	/// <param name="ct">キャンセルトークン</param>
 	/// <returns>true：アップロード成功、false：アップロード失敗</returns>
-	public async Task<bool> UploadAsync(string localFilePath, string remoteDirectory, string remoteFileName,CancellationToken ct = default)
+	public async Task<bool> UploadAsync(string localFilePath, string remoteDirectory, string remoteFileName, CancellationToken ct = default)
 	{
 		try
 		{
@@ -200,8 +237,7 @@ public class WebDavClient
 			using var response = await client.SendAsync(request, ct);
 			if (response.StatusCode == HttpStatusCode.NotFound)
 			{
-				_logger.LogWarning($"webdav-削除対象のファイルが見つかりません: {remotePath}");
-				return false; 
+				return true;
 			}
 			response.EnsureSuccessStatusCode();
 
@@ -231,7 +267,7 @@ public class WebDavClient
 		using var quickRes = await client.SendAsync(quickCheck, ct);
 		if (quickRes.IsSuccessStatusCode)
 		{
-			return ;
+			return;
 		}
 		_logger.LogInformation($"ターゲットディレクトリが存在せず、再帰検査を開始します: {remoteDirectory}");
 		string cleanDirectory = remoteDirectory.Trim('/');

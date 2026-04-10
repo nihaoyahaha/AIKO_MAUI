@@ -9,7 +9,8 @@ namespace Aiko.UI;
 public static class RegisterViewExts
 {
 	public static IServiceCollection AddViews(this IServiceCollection services) {
-        services.AddScopedWithShellRoute<MapViewPage, MapViewPageVM>("MapView");
+		services.AddSingleton<AppShell>();
+		services.AddScopedWithShellRoute<MapViewPage, MapViewPageVM>("MapView");
         services.AddScopedWithShellRoute<MapListPage, MapListPageVM>("MapList");
         services.AddScopedWithShellRoute<CameraPage, CameraPageVM>("Camera");
 		services.AddScopedWithShellRoute<CheckPointPage, CheckPointPageVM>("CheckPoint");
@@ -28,6 +29,11 @@ public static class RegisterViewExts
 		services.AddScoped<LogPage, LogPageVM>();
 		services.AddScoped<DeletePage, DeletePageVM>();
 		services.AddScoped<SwitchThemePage, SwitchThemePageVM>();
+
+        services.AddScoped<SyncCenterPage, SyncCenterPageVM>();
+        services.AddScoped<EnvironmentCenterPage, EnvironmentCenterPageVM>();
+		services.AddScoped<AppInfoPage, AppInfoPageVM>();
+
 		return services;
 	}
 }

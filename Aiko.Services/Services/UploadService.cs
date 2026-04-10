@@ -37,8 +37,6 @@ public class UploadService : BaseService<UploadService>, IUploadService
 	{
 		_progressHandler = progress;
 		_dataSyncService.InitDataAndFileStatus();
-		// ログインID、IPなどを利用バージョン(hm17version)に登録する
-		await _dataSyncService.UpdateHM17Async(1, AikoAppContext.WorkCD);
 		await _dataSyncService.SetHR02Async(AikoAppContext.WorkCD, ReportProgressAsync);
 	}
 
@@ -53,8 +51,6 @@ public class UploadService : BaseService<UploadService>, IUploadService
 		string systemTime = _dataSyncService.GetSystemDateTime();
 		string saveDays = $"-{Preferences.Default.Get("SaveDays", "14")}";
 		int passedDay = Convert.ToInt32(Convert.ToDateTime(systemTime).AddDays(int.Parse(saveDays)).ToString("yyyyMMdd"));
-		// ログインID、IPなどを利用バージョン(hm17version)に登録する
-		await _dataSyncService.UpdateHM17Async(1, AikoAppContext.WorkCD);
 		if (checkDrawing)
 		{
 			var hm12Tuple = await _dataSyncService.GetHM12FILEAsync(AikoAppContext.WorkCD,true);

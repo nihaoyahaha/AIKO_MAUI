@@ -93,7 +93,7 @@ public class CameraService : BaseService<CameraService>, ICameraService
 	/// 写真パスの取得
 	/// </summary>
 	/// <returns></returns>
-	public string GetPhotoName() => $"{_hr01.HR01003}{_hm13004}{AikoAppContext.OperatorID}{Guid.NewGuid().ToString("N")}";
+	public string GetPhotoName() => $"{_hr01.HR01003}{_hm13004}{AikoAppContext.OperatorCD}{Guid.NewGuid().ToString("N")}";
 
 	/// <summary>
 	/// 現在の確認項目の写真集の設定

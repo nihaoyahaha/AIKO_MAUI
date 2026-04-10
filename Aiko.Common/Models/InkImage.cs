@@ -29,6 +29,8 @@ public partial class InkImage : ObservableObject, IDisposable
     [ObservableProperty]
     private string _date;
     [ObservableProperty]
+    private string _creationDate;
+    [ObservableProperty]
     private string _author;
 
     [ObservableProperty]
@@ -69,6 +71,9 @@ public partial class InkImage : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _isDeleted = false;
+
+    [ObservableProperty]
+    private bool _isVisualized = false;
 
     // 缓存刷新机制
     [ObservableProperty]
@@ -135,12 +140,12 @@ public partial class InkImage : ObservableObject, IDisposable
                 var photoSvgDoc = SvgDocument.Open<SvgDocument>(new MemoryStream(svgBytes));
                 var blackboardSvgDoc = SvgDocument.Open<SvgDocument>(new MemoryStream(svgBytes));
 
-                FilterElements(photoSvgDoc, new[] { "photo" });
+                FilterElements(photoSvgDoc, ["photo"]);
                 SetElementVisible(photoSvgDoc, "photo");
                 PhotoSvg = new SKSvg();
                 PhotoSvg.FromSvgDocument(photoSvgDoc);
 
-                FilterElements(blackboardSvgDoc, new[] { "blackboard" });
+                FilterElements(blackboardSvgDoc, ["blackboard"]);
                 SetElementVisible(blackboardSvgDoc, "blackboard");
                 BlackboardSvg = new SKSvg();
                 BlackboardSvg.FromSvgDocument(blackboardSvgDoc);
@@ -207,6 +212,7 @@ public partial class InkImage : ObservableObject, IDisposable
             DirsDisplyName = this.DirsDisplyName,
             Comment = this.Comment,
             Date = this.Date,
+            CreationDate = this.CreationDate,
             Author = this.Author,
             SyncDate = this.SyncDate,
             SyncAuthor = this.SyncAuthor,
@@ -230,5 +236,9 @@ public partial class InkImage : ObservableObject, IDisposable
         return clone;
     }
 
-    public void Dispose() => ClearBitmap();
+    public void Dispose()
+    {
+        ClearBitmap();
+        GC.SuppressFinalize(this);
+    }
 }

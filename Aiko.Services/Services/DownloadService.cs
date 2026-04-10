@@ -225,8 +225,6 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 		//無効な画像の削除
 		await ReportProgressAsync("無効な画像の削除", currentStep++, totalSteps);
 		await _dataSyncService.DeletePhotoFilesAsync(workCode, hr06List, currentStep, totalSteps, ReportProgressAsync);
-
-		await _dataSyncService.UpdateHM17Async(0, workCode);
 	}
 	
 	/// <summary>

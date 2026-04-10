@@ -26,7 +26,7 @@ public partial class CheckPointDetailPage : ContentPage
         if (_isTextEditing && !InkToolConfig.IsFont(_currentTool.Type))
             FinishTextEdit();
 
-        _toolManager.HandleTouch(e, InkCanvasView);
+        _toolManager.HandleTouch(e, InkCanvasView, null, null);
     }
 
     private void OnPhotoCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -47,6 +47,15 @@ public partial class CheckPointDetailPage : ContentPage
                 canvas.DrawPicture(_currentImage.PhotoSvg.Picture);
             }
         }
+
+        using (var paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = Color.FromArgb("#CCCCCC").ToSKColor();
+            paint.StrokeWidth = 1;
+
+            canvas.DrawRect(new SKRect(0, 0, e.Info.Width, e.Info.Height), paint);
+        }
     }
     private void OnBlackboardCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
@@ -55,9 +64,21 @@ public partial class CheckPointDetailPage : ContentPage
 
         canvas.Clear(SKColors.Transparent);
 
-        if (_currentImage != null && _currentImage.BlackboardSvg != null)
+        if (_currentImage != null)
         {
-            canvas.DrawPicture(_currentImage.BlackboardSvg.Picture);
+            if (_currentImage.Bitmap != null)
+            {
+                canvas.DrawBitmap(_currentImage.Bitmap, 0, 0);
+            }
+            else if (_currentImage.PhotoSvg != null)
+            {
+                canvas.DrawPicture(_currentImage.PhotoSvg.Picture);
+            }
+
+            if (_currentImage.BlackboardSvg != null)
+            {
+                canvas.DrawPicture(_currentImage.BlackboardSvg.Picture);
+            }
         }
     }
     private void OnInkCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -67,7 +88,7 @@ public partial class CheckPointDetailPage : ContentPage
 
         canvas.Clear(SKColors.Transparent);
 
-        _toolManager.HandleDrawing(canvas);
+        _toolManager.HandleDrawing(canvas, null, null);
     }
 
     // --- 画布浏览 ---
@@ -149,7 +170,7 @@ public partial class CheckPointDetailPage : ContentPage
             InkCanvasView.InputTransparent = true;
             PinchToZoom.IsEnabled = true;
         }
-        else if(InkToolConfig.IsFont(_currentTool.Type))
+        else if (InkToolConfig.IsFont(_currentTool.Type))
         {
             InkCanvasView.InputTransparent = false;
             PinchToZoom.IsEnabled = true;

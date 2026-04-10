@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage
+<ContentView
     x:Class="Aiko.UI.LogPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
-    Title="LogPage"
     x:DataType="vm:LogPageVM">
     <ScrollView Orientation="Both">
         <Grid MinimumHeightRequest="600" MinimumWidthRequest="600">
@@ -20,4 +19,4 @@
 
         </Grid>
     </ScrollView>
-</ContentPage>
+</ContentView>

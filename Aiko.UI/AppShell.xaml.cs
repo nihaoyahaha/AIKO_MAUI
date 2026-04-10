@@ -1,27 +1,22 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using Aiko.Common;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Aiko.UI;
 
 public partial class AppShell : Shell
 {
-	public AppShell()
+	readonly AikoAppContext _appContext;
+	public AppShell(AikoAppContext aikoApp)
 	{
+		_appContext = aikoApp;
 		InitializeComponent();
 
-		WeakReferenceMessenger.Default.Register<string, string>(this, "LoginOrLogoutToken", (page, message) =>
-		{
-			if (message == "login")
-			{
-				shellContent_Delete.IsVisible = true;
-				shellContent_Upload.IsVisible = true;
-			}
-			else
-			{
-				shellContent_Delete.IsVisible = false;
-				shellContent_Upload.IsVisible = false;
-			}
-		});
-		WeakReferenceMessenger.Default.Register<string, string>(this, "EnterOrLeaveLogoutPageToken", (page, message) =>
+        var appName = _appContext.AppName;
+        var version = _appContext.AppVersion;
+
+        this.Title = $"Ver {version} {appName}";
+
+        WeakReferenceMessenger.Default.Register<string, string>(this, "EnterOrLeaveLogoutPageToken", (page, message) =>
 		{
 			if (message == "Enter")
 			{

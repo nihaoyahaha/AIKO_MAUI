@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.AppInfoPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_AppInfo"
+    Title="システム情報"
+    x:DataType="vm:AppInfoPageVM">
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_AppInfo}}"
+            Command="{Binding PageLoadedCommand}"
+            EventName="Loaded" />
+    </ContentPage.Behaviors>
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <VerticalStackLayout
+                Margin="0,20,0,10"
+                HorizontalOptions="Center"
+                Spacing="10">
+                <Border
+                    BackgroundColor="White"
+                    HeightRequest="80"
+                    StrokeShape="RoundRectangle 20"
+                    StrokeThickness="0"
+                    WidthRequest="80">
+                    <Image
+                        Margin="10"
+                        Aspect="AspectFit"
+                        Source="app_icon.png" />
+                </Border>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="22"
+                    HorizontalOptions="Center"
+                    Text="{Binding AppName}" />
+                <Label
+                    FontSize="14"
+                    HorizontalOptions="Center"
+                    Text="{Binding AppVersion, StringFormat='Version {0}'}"
+                    TextColor="Gray" />
+            </VerticalStackLayout>
+
+            <Border
+                Padding="0"
+                BackgroundColor="{AppThemeBinding Light=White,
+                                                  Dark=#1C1C1E}"
+                StrokeShape="RoundRectangle 12"
+                StrokeThickness="0">
+                <VerticalStackLayout>
+                    <Grid Padding="15" ColumnDefinitions="Auto,*">
+                        <Label
+                            Text="発行元"
+                            TextColor="Gray"
+                            VerticalOptions="Center"
+                            WidthRequest="100" />
+                        <Label
+                            Grid.Column="1"
+                            FontAttributes="Bold"
+                            HorizontalOptions="End"
+                            Text="{Binding AppCompany}" />
+                    </Grid>
+
+                    <BoxView
+                        Margin="15,0"
+                        HeightRequest="0.5"
+                        Color="#C7C7CC" />
+
+                    <Grid Padding="15" ColumnDefinitions="Auto,*">
+                        <Label
+                            Text="詳細説明"
+                            TextColor="Gray"
+                            VerticalOptions="Center"
+                            WidthRequest="100" />
+                        <Label
+                            Grid.Column="1"
+                            HorizontalOptions="End"
+                            LineBreakMode="WordWrap"
+                            Text="{Binding AppDescription}" />
+                    </Grid>
+
+                    <BoxView
+                        Margin="15,0"
+                        HeightRequest="0.5"
+                        Color="#C7C7CC" />
+
+                    <Grid Padding="15" ColumnDefinitions="Auto,*">
+                        <Label
+                            Text="著作権"
+                            TextColor="Gray"
+                            VerticalOptions="Center"
+                            WidthRequest="100" />
+                        <Label
+                            Grid.Column="1"
+                            HorizontalOptions="End"
+                            Text="{Binding AppCopyright}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label
+                Margin="5,10,0,0"
+                FontSize="14"
+                Text="リーガル情報"
+                TextColor="Gray" />
+            <Border
+                Padding="15"
+                BackgroundColor="{AppThemeBinding Light=White,
+                                                  Dark=#1C1C1E}"
+                StrokeShape="RoundRectangle 12"
+                StrokeThickness="0">
+                <Label
+                    FontSize="12"
+                    LineBreakMode="CharacterWrap"
+                    Text="{Binding AppTrademark}"
+                    TextColor="#8E8E93" />
+            </Border>
+
+            <Label
+                Margin="0,20"
+                FontSize="11"
+                HorizontalOptions="Center"
+                Text="© 2026 Aiko Project. All Rights Reserved."
+                TextColor="Gray" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

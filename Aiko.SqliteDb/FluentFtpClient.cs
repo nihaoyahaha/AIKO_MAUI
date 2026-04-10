@@ -147,8 +147,7 @@ public class FluentFtpClient
 			await EnsureConnectedAsync(ct);
 			if (!await _client.FileExists(remotePath, ct))
 			{
-				_logger?.LogWarning($"ftp-削除対象のファイルが見つかりません: {remotePath}");
-				return false;
+				return true;
 			}
 			await _client.DeleteFile(remotePath, ct);
 			return true;

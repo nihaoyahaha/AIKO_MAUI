@@ -9,11 +9,14 @@
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<ApplicationTitle>Aiko.UI</ApplicationTitle>
-		<ApplicationId>HKKS2025</ApplicationId>
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationTitle>HISYS 配筋検査システム</ApplicationTitle>
+		<ApplicationId>hisys.di-networks.jp</ApplicationId>
+		<ApplicationDisplayVersion>1</ApplicationDisplayVersion>
+		<ApplicationVersion>6</ApplicationVersion>
 		<WindowsPackageType>MSIX</WindowsPackageType>
+		<Company>デーバーインフォメーションネットワークス株式会社</Company>
+		<Description>検査業務をシステム化し効率よく管理するシステムです。</Description>
+		<Trademark>この製品は、日本国著作権法および国際条約により保護されています。この製品の全部または一部を無断で複製したり、無断で複製物を頒布すると、著作権の侵害となりますのでご注意ください。</Trademark>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
@@ -22,8 +25,16 @@
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='net10.0-ios'">
 	  <CodesignKey>Apple Development: Created via API (X43N7639R2)</CodesignKey>
-	  <CodesignProvision>VS: HKKS2025 Development</CodesignProvision>
+	  <CodesignProvision>VS: hisys.di-networks.jp Development</CodesignProvision>
 	  <ProvisioningType>automatic</ProvisioningType>
+	</PropertyGroup>
+
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<PackageReference Include="System.Management" Version="10.0.5" />
+	</ItemGroup>
+	
+	<PropertyGroup Condition="$(TargetFramework.Contains('-ios')) and '$(Configuration)' == 'Release'">
+		<UseInterpreter>true</UseInterpreter>
 	</PropertyGroup>
 	
 	<ItemGroup>
@@ -64,6 +75,12 @@
 
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">
     <MauiAsset Include="Resources\Raw\hkks.db" LogicalName="hkks.db" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiXaml Update="Pages\tt.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
     x:Class="Aiko.UI.SystemOptionServerPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -7,19 +7,18 @@
     xmlns:local="clr-namespace:Aiko.Common.Converters;assembly=Aiko.Common"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
-    x:Name="page_SystemOptionServer"
-    Title="オプション"
+    x:Name="view_SystemOptionServer"
     x:DataType="vm:SystemOptionServerPageVM">
-    <ContentPage.Behaviors>
+    <ContentView.Behaviors>
         <toolkit:EventToCommandBehavior
-            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_SystemOptionServer}}"
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference view_SystemOptionServer}}"
             Command="{Binding PageLoadCommand}"
             EventName="Loaded" />
-    </ContentPage.Behaviors>
+    </ContentView.Behaviors>
 
-    <ContentPage.Resources>
+    <ContentView.Resources>
         <local:ComparisonConverter x:Key="ComparisonConverter" />
-    </ContentPage.Resources>
+    </ContentView.Resources>
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="25">
@@ -62,7 +61,7 @@
                     StrokeShape="RoundRectangle 8"
                     StrokeThickness="1">
                     <VerticalStackLayout Spacing="10">
-                        <Grid ColumnDefinitions="120, *">
+                        <Grid ColumnDefinitions="160, *">
                             <Label
                                 FontSize="Body"
                                 Text="品質"
@@ -98,7 +97,56 @@
                     Stroke="#FF8B8B8B"
                     StrokeShape="RoundRectangle 8"
                     StrokeThickness="1">
-                    <Grid ColumnDefinitions="120, *">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="160, auto,auto,auto">
+
+                            <Label
+                                FontSize="Body"
+                                Text="メインカメラ解像度"
+                                VerticalTextAlignment="Center" />
+
+                            <Picker
+                                Grid.Column="1"
+                                HorizontalOptions="Start"
+                                ItemsSource="{Binding RearResolutions}"
+                                SelectedIndex="{Binding SelectedRearResolutionIndex}"
+                                WidthRequest="150" />
+                            <Label
+                                Grid.Column="2"
+                                Margin="20,0,0,0"
+                                FontSize="Body"
+                                Text="フロントカメラ解像度"
+                                VerticalTextAlignment="Center" />
+
+                            <Picker
+                                Grid.Column="3"
+                                Margin="10,0,0,0"
+                                HorizontalOptions="Start"
+                                ItemsSource="{Binding FrontResolutions}"
+                                SelectedIndex="{Binding SelectedFrontResolutionIndex}"
+                                WidthRequest="150" />
+
+
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+                <Label
+                    Margin="15,-10,0,0"
+                    Padding="5,0"
+                    BackgroundColor="{DynamicResource PageBackgroundColor}"
+                    FontSize="Body"
+                    HorizontalOptions="Start"
+                    Text="カメラ解像度設定"
+                    VerticalOptions="Start" />
+            </Grid>
+
+            <Grid>
+                <Border
+                    Padding="20,25,20,20"
+                    Stroke="#FF8B8B8B"
+                    StrokeShape="RoundRectangle 8"
+                    StrokeThickness="1">
+                    <Grid ColumnDefinitions="160, *">
                         <Label
                             FontSize="Body"
                             Text="フォントサイズ"
@@ -133,7 +181,7 @@
                     Stroke="#FF8B8B8B"
                     StrokeShape="RoundRectangle 8"
                     StrokeThickness="1">
-                    <Grid ColumnDefinitions="120, *">
+                    <Grid ColumnDefinitions="160, *">
                         <Label
                             FontSize="Body"
                             Text="保存日数"
@@ -173,4 +221,4 @@
                 WidthRequest="120" />
         </VerticalStackLayout>
     </ScrollView>
-</ContentPage>
+</ContentView>

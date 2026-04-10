@@ -1,4 +1,6 @@
 ﻿
+using System.Reflection;
+
 namespace Aiko.Common;
 
 /// <summary>
@@ -6,6 +8,8 @@ namespace Aiko.Common;
 /// </summary>
 public class AikoAppContext
 {
+	public static Assembly MainAssembly { get; set; }
+
 	/// <summary>
 	/// オペレータコード
 	/// </summary>
@@ -49,7 +53,7 @@ public class AikoAppContext
 	/// <summary>
 	/// ログインステータス
 	/// </summary>
-	public bool IsLogin { get; set; }=false;
+	public bool IsLogin { get; set; } = false;
 
 	/// <summary>
 	/// ファイルサーバタイプ 1:ftp、2:webdav
@@ -59,9 +63,9 @@ public class AikoAppContext
 	/// <summary>
 	/// アプリケーションデータディレクトリ
 	/// </summary>
-	public string AppDataFoler 
+	public string AppDataFoler
 	{
-		get 
+		get
 		{
 			if (!string.IsNullOrWhiteSpace(HC01013))
 				return Path.Combine(FileSystem.AppDataDirectory, HC01013);
@@ -83,5 +87,83 @@ public class AikoAppContext
 				return FileSystem.AppDataDirectory;
 		}
 	}
+
+	/// <summary>
+	/// アプリケーションバージョンの取得
+	/// </summary>
+	public string AppVersion
+	{
+		get
+		{
+#if WINDOWS
+			return AppInfo.Current.VersionString;
+#elif IOS || MACCATALYST
+			var version = AppInfo.Version;
+			string buildVersion = AppInfo.Current.BuildString;
+			return $"{version.Major}.{version.Minor}.{(version.Build == -1 ? "0" : version.Build)}.{buildVersion}";
+#endif
+		}
+	}
+
+	/// <summary>
+	/// システム名の取得
+	/// </summary>
+	public string AppName
+	{
+		get
+		{
+			return AppInfo.Current.Name;
+		}
+	}
+
+	/// <summary>
+	/// 著作権表示
+	/// </summary>
+	public string AppCopyright
+	{
+		get 
+		{
+			return $"Copyright © {DateTime.Now.Year}";
+		}
+	}
+
+	/// <summary>
+	/// 会社
+	/// </summary>
+	public string CompanyName 
+	{
+		get 
+		{
+			return MainAssembly?
+				.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? "Unknown";
+		}
+	}
+
+	/// <summary>
+	/// 商標
+	/// </summary>
+	public string Trademark
+	{
+		get 
+		{
+			return MainAssembly?
+				.GetCustomAttribute<AssemblyTrademarkAttribute>()?.Trademark ?? "Unknown";
+		}
+	}
+
+	/// <summary>
+	/// 記述
+	/// </summary>
+	public string Description 
+	{
+		get 
+		{
+			return MainAssembly?
+				.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description ?? "Unknown";
+		}
+	}
+
+
+
 }
 

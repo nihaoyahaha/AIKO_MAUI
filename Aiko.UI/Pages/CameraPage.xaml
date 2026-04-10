@@ -34,7 +34,6 @@
             <Setter Property="Margin" Value="10" />
             <Setter Property="CornerRadius" Value="20" />
         </Style>
-
     </ContentPage.Resources>
     <Grid RowDefinitions="8*,60">
         <Grid x:Name="gridRoot">
@@ -55,9 +54,6 @@
                         CommandParameter="{Binding Source={x:Reference camera}}"
                         EventName="SizeChanged" />
                 </toolkit:CameraView.Behaviors>
-                <toolkit:CameraView.GestureRecognizers>
-                    <PinchGestureRecognizer PinchUpdated="PinchGestureRecognizer_PinchUpdated" />
-                </toolkit:CameraView.GestureRecognizers>
             </toolkit:CameraView>
 
             <Grid
@@ -253,38 +249,6 @@
                 HorizontalOptions="Start"
                 VerticalOptions="Start">
                 <Button
-                    x:Name="btn_Resolution"
-                    Command="{Binding ResolutionClickCommand}"
-                    Style="{StaticResource CustomButtonStyle}"
-                    Text="画" />
-                <HorizontalStackLayout
-                    x:Name="hsStack_resolution"
-                    HeightRequest="50"
-                    IsVisible="{Binding ResolutionHsStackIsVisible}"
-                    WidthRequest="240">
-                    <Picker
-                        x:Name="pik_Resolutions"
-                        Margin="5,0,0,0"
-                        ItemsSource="{Binding ResolutionDisplayList, FallbackValue=''}"
-                        SelectedIndex="{Binding SelectedResolutionIndex}"
-                        TextColor="White"
-                        VerticalOptions="Center"
-                        WidthRequest="150">
-                        <Picker.Behaviors>
-                            <toolkit:EventToCommandBehavior
-                                BindingContext="{Binding Path=BindingContext, Source={x:Reference pik_Resolutions}}"
-                                Command="{Binding ResolutionsSelectedIndexChangedCommand}"
-                                EventName="SelectedIndexChanged" />
-                        </Picker.Behaviors>
-                    </Picker>
-
-                </HorizontalStackLayout>
-            </HorizontalStackLayout>
-            <HorizontalStackLayout
-                Margin="0,10,0,0"
-                HorizontalOptions="Start"
-                VerticalOptions="Start">
-                <Button
                     x:Name="btn_cameraPosition"
                     Command="{Binding CameraPositionClickCommand}"
                     Style="{StaticResource CustomButtonStyle}"
@@ -303,24 +267,26 @@
                         x:Name="rdb_Back"
                         Margin="20,10,0,0"
                         Content="1"
+                        GroupName="camera"
                         HeightRequest="30"
                         HorizontalOptions="Center"
-                        IsChecked="True"
-                        TextColor="White">
-                        <RadioButton.Behaviors>
-                            <toolkit:EventToCommandBehavior
-                                x:TypeArguments="system:EventArgs"
-                                BindingContext="{Binding Path=BindingContext, Source={x:Reference rdb_Back}}"
-                                Command="{Binding ChangeCameraCommand}"
-                                EventName="CheckedChanged" />
-                        </RadioButton.Behaviors>
-                    </RadioButton>
+                        IsChecked="{Binding IsRearCamera}"
+                        TextColor="White" />
                     <RadioButton
                         Margin="20,10,0,0"
                         Content="2"
+                        GroupName="camera"
                         HorizontalOptions="Center"
-                        IsChecked="False"
-                        TextColor="White" />
+                        TextColor="White">
+                        <RadioButton.Triggers>
+                            <DataTrigger
+                                Binding="{Binding IsRearCamera}"
+                                TargetType="RadioButton"
+                                Value="False">
+                                <Setter Property="IsChecked" Value="True" />
+                            </DataTrigger>
+                        </RadioButton.Triggers>
+                    </RadioButton>
                 </HorizontalStackLayout>
             </HorizontalStackLayout>
 

@@ -14,6 +14,11 @@ namespace Aiko.UI.ViewModels.PageVMs;
 
 public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPageVM, ICheckPointDetailService>
 {
+    private readonly ICheckPointService _checkPointService;
+
+    [ObservableProperty]
+    private bool _isDarkenMode = true;
+
     // 图片存储路径
     public string ImageFolderPath;
 
@@ -35,11 +40,22 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     private ObservableCollection<InkImage> _imageList = new ObservableCollection<InkImage>();
     [ObservableProperty]
     private List<InkImage> _original‌ImageList = new List<InkImage>();
-    public string Summary => $"{ImageList.Count}/{ImageList.Count}";
+    public string Summary => $"{SourceImageList.Count(image => image.IsVisualized)}/{SourceImageList.Count}";
 
     [ObservableProperty]
     private bool _isAscending = true;
     public string SortText => IsAscending ? "昇順 ▲" : "降順 ▼";
+
+    public List<InkImage> SourceImageList = new List<InkImage>();
+    private int _pageSize = 12;
+    private bool _isImageLoading;
+    [ObservableProperty]
+    private bool _isFooterVisible;
+
+    public bool IsLoaded => SourceImageList.Count(image => image.IsVisualized) >= (SourceImageList.Count > _pageSize - 3 ? _pageSize - 3 : SourceImageList.Count);
+
+    [ObservableProperty]
+    private ImageSource _danmImageSource;
 
     /// <summary>
     /// 配筋確認
@@ -122,6 +138,18 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     private string _author;
 
     [ObservableProperty]
+    private int _checkrsl1StrokeThickness = 0;
+    [ObservableProperty]
+    private int _checkrsl2StrokeThickness = 0;
+    [ObservableProperty]
+    private int _checkrsl4StrokeThickness = 0;
+    [ObservableProperty]
+    private int _checkrsl5StrokeThickness = 0;
+
+    [ObservableProperty]
+    private int _sign;
+
+    [ObservableProperty]
     private bool _isBlackboardVisible;
     [ObservableProperty]
     private bool _isStrokesVisible;
@@ -158,13 +186,16 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [ObservableProperty]
     private bool _emptySelected;
 
-    public CheckPointDetailPageVM(ILogger<CheckPointDetailPageVM> logger, ICheckPointDetailService service) : base(logger, service)
+    public bool IsSwitchable => !IsSvg || EmptySelected;
+
+    [ObservableProperty]
+    private bool _isImageGalleryVisible = true;
+    [ObservableProperty]
+    private bool _isImageDanmVisible = false;
+
+    public CheckPointDetailPageVM(ILogger<CheckPointDetailPageVM> logger, ICheckPointDetailService service, ICheckPointService checkPointService) : base(logger, service)
     {
-        ImageList.CollectionChanged += (s, e) =>
-        {
-            OnPropertyChanged(nameof(Summary));
-            UpdateImageLoadingPriorities();
-        };
+        _checkPointService = checkPointService;
     }
 
     public override async void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -173,7 +204,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
         ColorPalette = new ObservableCollection<Color>(GetColorPalette());
 
-        if (query.Keys.Contains("json"))
+        if (query.ContainsKey("json"))
         {
             Query = JsonSerializer.Deserialize<Dictionary<string, object>>(query["json"]?.ToString());
         }
@@ -288,12 +319,11 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     partial void OnImageListChanged(ObservableCollection<InkImage> value)
     {
         OnPropertyChanged(nameof(Summary));
-        UpdateImageLoadingPriorities();
     }
 
     partial void OnProcChanged(ListItem value)
     {
-
+        SetProj(value.Value);
     }
 
     partial void OnProjChanged(ListItem value)
@@ -321,22 +351,56 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
     }
 
+    partial void OnSignChanged(int value)
+    {
+        Checkrsl1StrokeThickness = 0;
+        Checkrsl2StrokeThickness = 0;
+        Checkrsl4StrokeThickness = 0;
+        Checkrsl5StrokeThickness = 0;
+
+        switch (value)
+        {
+            case 0:
+                Checkrsl1StrokeThickness = 1;
+                break;
+            case 1:
+                Checkrsl2StrokeThickness = 1;
+                break;
+            case 2:
+                Checkrsl4StrokeThickness = 1;
+                break;
+            case 3:
+                Checkrsl5StrokeThickness = 1;
+                break;
+            default:
+                break;
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleImageGallery()
+    {
+        IsImageGalleryVisible = true;
+        IsImageDanmVisible = false;
+    }
+
+    [RelayCommand]
+    private void ToggleImageDanm()
+    {
+        IsImageGalleryVisible = false;
+        IsImageDanmVisible = true;
+    }
+
     [RelayCommand]
     private async Task DeleteImageAsync()
     {
         InkImage? image = ImageList.Where(image => image.IsSelected).FirstOrDefault();
         if (image == null) return;
 
-        try
-        {
-            ImageList.Remove(image);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "指定されたパスの画像の削除に失敗しました: {Path}", image.FullName);
-            // 无法删除文件，请检查文件是否正在使用。
-            DialogHelper.MessageDialog("ファイルを削除できません。ファイルが他のプログラムで使用中ではないか確認してください。");
-        }
+        ImageList.Remove(image);
+        SourceImageList.Remove(image);
+
+        OnPropertyChanged(nameof(Summary));
     }
 
     [RelayCommand]
@@ -344,10 +408,12 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     {
         IsAscending = !IsAscending;
 
-        for (int i = 0; i < ImageList.Count - 1; i++)
-        {
-            ImageList.Move(ImageList.Count - 1, i);
-        }
+        SourceImageList = IsAscending
+        ? SourceImageList.OrderBy(x => x.Sort).ToList()
+        : SourceImageList.OrderByDescending(x => x.Sort).ToList();
+
+        ImageList.Clear();
+        LoadNextPage();
 
         OnPropertyChanged(nameof(Summary));
         OnPropertyChanged(nameof(SortText));
@@ -367,6 +433,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         bool? success = (bool?)message.Result["success"];
         if (success != false)
         {
+            ToggleImageGallery();
             await Shell.Current.GoToAsync("..");
         }
         else
@@ -401,12 +468,64 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         bool? success = (bool?)message.Result["success"];
         if (success != false)
         {
+            ToggleImageGallery();
             await Shell.Current.GoToAsync("..");
         }
         else
         {
             await Toast.ShowToast("保存に失敗しました");
         }
+    }
+
+    [RelayCommand]
+    private async Task PreviousImageAsync()
+    {
+        var image = ImageList.Where(image => image.IsSelected).FirstOrDefault();
+        if (image == null) return;
+
+        int index = ImageList.IndexOf(image) - 1;
+        if (index < 0) return;
+
+        if (ImageList.Count <= index)
+        {
+            LoadNextPage();
+            if (ImageList.Count <= index)
+            {
+                return;
+            }
+        }
+
+        var previousImage = ImageList.ElementAtOrDefault(index);
+        if (previousImage == null) return;
+
+        var message = new AsyncRequestMessage("SwitchImage", new Dictionary<string, object> { { "image", previousImage } });
+        _ = WeakReferenceMessenger.Default.Send(message);
+        await message.Tcs.Task;
+    }
+
+    [RelayCommand]
+    private async Task NextImageAsync()
+    {
+        var image = ImageList.Where(image => image.IsSelected).FirstOrDefault();
+        if (image == null) return;
+
+        int index = ImageList.IndexOf(image) + 1;
+
+        if (ImageList.Count <= index)
+        {
+            LoadNextPage();
+            if (ImageList.Count <= index)
+            {
+                return;
+            }
+        }
+
+        var nextImage = ImageList.ElementAtOrDefault(index);
+        if (nextImage == null) return;
+
+        var message = new AsyncRequestMessage("SwitchImage", new Dictionary<string, object> { { "image", nextImage } });
+        _ = WeakReferenceMessenger.Default.Send(message);
+        await message.Tcs.Task;
     }
 
     public void LoadImageInfo(InkImage image)
@@ -418,14 +537,17 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
             DirsList = dirsList;
             Dirs = GetListItem(image.Dirs, DirsList);
         }
-        Comment = image.Comment;
+        Comment = image.Comment.Trim();
         Date = image.Date;
         Author = image.Author;
+        Sign = image.Sign;
 
         IsBlackboardVisible = image.IsBlackboardVisible;
         IsStrokesVisible = image.IsStrokesVisible;
 
         IsSvg = image.IsSvg;
+
+        OnPropertyChanged(nameof(IsSwitchable));
     }
 
     public async Task<bool> SaveImageInfo(InkImage image)
@@ -440,7 +562,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
         image.Dirs = Dirs.Value;
         image.DirsDisplyName = Dirs.DisplyName;
-        image.Comment = Comment;
+        image.Comment = Comment.Trim();
         image.Date = Date;
         image.Author = Author;
 
@@ -458,33 +580,60 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
         var hr03List = CreateDbImageList(imageList, changedImageList);
 
-        return await Service.UpdateHR03(hr03List, ImageFolderPath);
+        if (!await Service.UpdateHR03(hr03List, ImageFolderPath)) return false;
+
+        if (changedImageList != null)
+        {
+            foreach (var image in changedImageList)
+            {
+                if (image.IsDeleted)
+                {
+                    if (File.Exists(image.FullName))
+                    {
+                        try
+                        {
+                            File.Delete(image.FullName);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex, "指定されたパスの画像の削除に失敗しました: {Path}", image.FullName);
+                            // 无法删除文件，请检查文件是否正在使用。
+                            DialogHelper.MessageDialog("ファイルを削除できません。ファイルが他のプログラムで使用中ではないか確認してください。");
+
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
     }
     public void ResetImageList()
     {
-        if (ImageList != null)
+        if (SourceImageList != null)
         {
             Original‌ImageList.Clear();
-            Original‌ImageList = ImageList.Select(image => image.Clone()).ToList();
+            Original‌ImageList = SourceImageList.Select(image => image.Clone()).ToList();
         }
     }
     public void RevertImageList()
     {
         if (Original‌ImageList != null)
         {
-            ImageList.Clear();
-            ImageList = new ObservableCollection<InkImage>(Original‌ImageList.Select(image => image.Clone()).ToList());
+            SourceImageList.Clear();
+            SourceImageList = new List<InkImage>(Original‌ImageList.Select(image => image.Clone()).ToList());
         }
     }
     public List<InkImage> GetChangedImageList()
     {
         var changedImageList = new List<InkImage>();
 
-        if (OriginalImageList == null || ImageList == null) return changedImageList;
+        if (OriginalImageList == null || SourceImageList == null) return changedImageList;
 
         foreach (var originalImage in OriginalImageList)
         {
-            var current = ImageList.FirstOrDefault(x => x.Code == originalImage.Code);
+            var current = SourceImageList.FirstOrDefault(x => x.Code == originalImage.Code);
 
             if (current == null)
             {
@@ -540,10 +689,10 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         hr03.HR03005 = image.Sort;
         hr03.HR03006 = image.Sign;
         hr03.HR03007 = DbDirsList.Any(dirs => dirs.Value == image.Dirs) ? int.Parse(image.Dirs) : -1;
-        hr03.HR03008 = image.Comment;
+        hr03.HR03008 = image.Comment.Trim();
         hr03.HR03009 = int.Parse(DateTime.Parse(image.Date).ToString("yyyyMMdd"));
         hr03.HR03010 = int.Parse(DateTime.Parse(image.Date).ToString("HHmmss"));
-        hr03.HR03011 = image.Date;
+        hr03.HR03011 = image.CreationDate;
         hr03.HR03012 = image.Author;
         hr03.HR03013 = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         hr03.HR03014 = Service.AppContext.Name;
@@ -568,8 +717,9 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
             Dirs = item.HR03007 != -1 ? item.HR03007.ToString() : item.HR03019,
             DirsDisplyName = item.HR03007 != -1 ? GetDisplyName(item.HR03007.ToString(), DirsList) : item.HR03019,
-            Comment = item.HR03008,
-            Date = item.HR03011,
+            Comment = !string.IsNullOrEmpty(item.HR03008.Trim()) ? item.HR03008.Trim() : " ",
+            Date = DateTime.ParseExact(item.HR03009.ToString("D8") + item.HR03010.ToString("D6"), "yyyyMMddHHmmss", null).ToString("yyyy/MM/dd HH:mm:ss"),
+            CreationDate = item.HR03011,
             Author = item.HR03012,
 
             SyncDate = item.HR03015,
@@ -588,16 +738,16 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     {
         return image.Dirs != Dirs.Value
             || image.DirsDisplyName != DirsDisplyName
-            || image.Comment != Comment
-            || image.Date != Date
+            || image.Comment.Trim() != Comment.Trim()
+            || DateTime.Parse(image.Date) != DateTime.Parse(Date)
             || image.Author != Author;
     }
 
     public bool SortChanged(List<InkImage> imageList)
     {
-        string GetExpectedSort(int index) => IsAscending ? (index + 1).ToString().PadLeft(4, '0') : (ImageList.Count - index).ToString().PadLeft(4, '0');
-
-        return ImageList.Select((item, index) => item.Sort != GetExpectedSort(index)).Any(changed => changed);
+        List<string> originalSortList = OriginalImageList.Select(original => original.Sort).ToList();
+        originalSortList = IsAscending ? originalSortList.OrderBy(x => x).ToList() : originalSortList.OrderByDescending(x => x).ToList();
+        return imageList.Zip(originalSortList, (current, originalSort) => current.Sort != originalSort).Any(changed => changed);
     }
 
     public void UpdateDirsListPreferences(string value)
@@ -610,23 +760,6 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
             {
                 prefDirsList.Add(value);
                 Preferences.Set("DirsList", string.Join(",", prefDirsList));
-            }
-        }
-    }
-
-    private void UpdateImageLoadingPriorities()
-    {
-        if (ImageList == null || ImageList.Count == 0) return;
-
-        for (int i = 0; i < ImageList.Count; i++)
-        {
-            if (i < 9)
-            {
-                ImageList[i].Priority = FFImageLoading.Work.LoadingPriority.Highest;
-            }
-            else
-            {
-                ImageList[i].Priority = FFImageLoading.Work.LoadingPriority.Lowest;
             }
         }
     }
@@ -657,6 +790,38 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         ListItem? item = GetListItem(value, list);
         if (item == null) return string.Empty;
         return item.DisplyName;
+    }
+
+    public async Task LoadDanmImage()
+    {
+        DanmImageSource = await _checkPointService.GetImageSourceAsync(0);
+    }
+
+    public void LoadNextPage()
+    {
+        if (_isImageLoading || ImageList.Count >= SourceImageList.Count)
+            return;
+
+        _isImageLoading = true;
+
+        try
+        {
+            var nextItems = SourceImageList.Skip(ImageList.Count).Take(_pageSize).ToList();
+
+            foreach (var item in nextItems)
+            {
+                ImageList.Add(item);
+            }
+        }
+        finally
+        {
+            _isImageLoading = false;
+        }
+    }
+
+    public void NoditySummary()
+    {
+        OnPropertyChanged(nameof(Summary));
     }
 
     partial void OnSelectedToolChanged(string value)
@@ -722,6 +887,8 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
             case "Empty":
                 EmptySelected = true; break;
         }
+
+        OnPropertyChanged(nameof(IsSwitchable));
     }
 
     // 颜料版可选颜色集合
@@ -754,6 +921,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     public class AsyncRequestMessage : RequestMessage<bool>
     {
         public string Name { get; }
+        public Dictionary<string, object> Parameters { get; set; }
         public Dictionary<string, object> Result { get; set; }
 
         public TaskCompletionSource<bool> Tcs { get; } = new();
@@ -761,6 +929,12 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         public AsyncRequestMessage(string name)
         {
             Name = name;
+            Result = new Dictionary<string, object>();
+        }
+        public AsyncRequestMessage(string name, Dictionary<string, object> parameters)
+        {
+            Name = name;
+            Parameters = parameters;
             Result = new Dictionary<string, object>();
         }
     }

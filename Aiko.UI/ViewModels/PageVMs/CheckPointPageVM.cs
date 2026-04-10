@@ -14,6 +14,12 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+#if WINDOWS
+using Windows.Devices.Enumeration;
+using Windows.Security.Authorization.AppCapabilityAccess;
+using static Microsoft.Maui.ApplicationModel.Permissions;
+
+#endif
 
 namespace Aiko.UI.ViewModels.PageVMs;
 
@@ -124,6 +130,12 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	private bool _confirmationDateIsEnabled = true;
 
 	/// <summary>
+	/// 確認日の背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _confirmationDateBackgroundColor = null;
+
+	/// <summary>
 	/// 確認者
 	/// </summary>
 	[ObservableProperty]
@@ -134,6 +146,12 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// </summary>
 	[ObservableProperty]
 	private bool _confirmerIsEnabled = true;
+
+	/// <summary>
+	/// 確認者の背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _confirmerBackgroundColor = null;
 
 	/// <summary>
 	/// 値
@@ -148,6 +166,12 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	private bool _tiIsEnabled = true;
 
 	/// <summary>
+	/// 値の背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _tiBackgroundColor = null;
+
+	/// <summary>
 	/// 指摘日
 	/// </summary>
 	[ObservableProperty]
@@ -158,6 +182,12 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// </summary>
 	[ObservableProperty]
 	private bool _indicationDateIsEnabled = true;
+
+	/// <summary>
+	/// 指摘日の背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _indicationDateBackgroundColor = null;
 
 	/// <summary>
 	/// 指摘者
@@ -172,6 +202,12 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	private bool _ndicationerIsEnabled = true;
 
 	/// <summary>
+	/// 指摘者の背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _ndicationerBackgroundColor = null;
+
+	/// <summary>
 	/// 是正方法
 	/// </summary>
 	[ObservableProperty]
@@ -182,6 +218,12 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// </summary>
 	[ObservableProperty]
 	private bool _correctionMethodIsEnabled = true;
+
+	/// <summary>
+	/// 是正方法の背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _correctionMethodBackgroundColor = null;
 
 	/// <summary>
 	/// 指摘事項
@@ -196,6 +238,12 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	private bool _indicationIsEnabled = true;
 
 	/// <summary>
+	/// 指摘事項の背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _indicationBackgroundColor = null;
+
+	/// <summary>
 	/// 確認方法の選択インデックス
 	/// </summary>
 	[ObservableProperty]
@@ -207,8 +255,23 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	[ObservableProperty]
 	private bool _confirmationMethodIsEnabled = true;
 
+	/// <summary>
+	/// 確認方法の背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _confirmationMethodBackgroundColor = null;
+
+	/// <summary>
+	/// 指摘事項ボタンの有効状態
+	/// </summary>
 	[ObservableProperty]
 	private bool _openButtonIsEnabled = true;
+
+	/// <summary>
+	/// 指摘事項ボタンの背景色
+	/// </summary>
+	[ObservableProperty]
+	private Color _openButtonBackgroundColor = null;
 
 	/// <summary>
 	/// 未確認画像の枠の厚さ
@@ -287,6 +350,16 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// 前のページの名前
 	/// </summary>
 	private string _fromPage = "";
+
+	/// <summary>
+	/// コントロール非有効状態の背景色
+	/// </summary>
+	private Color _enableFalseBackgroundColor = Color.FromArgb("#CCCCCC");
+
+	/// <summary>
+	/// コントロール有効状態の背景色
+	/// </summary>
+	private Color _enableTrueBackgroundColor;
 	#endregion
 
 	/// <summary>
@@ -428,6 +501,8 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		Projects = await Service.GetProjectsAsync();
 		SetProjectSelectedIndexFromApplyQuery();
 
+		_enableTrueBackgroundColor = Preferences.Default.Get("Theme", "Light") == "Light" ? Colors.Transparent : Color.FromArgb("#212121");
+
 		await InitializeRowLayoutAsync();
 	}
 
@@ -467,21 +542,38 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			case 1:
 				//確認日
 				ConfirmationDateIsEnabled = false;
+				ConfirmationDateBackgroundColor = _enableFalseBackgroundColor;
+
 				//確認者
 				ConfirmerIsEnabled = false;
+				ConfirmerBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘日
 				IndicationDateIsEnabled = false;
+				IndicationDateBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘者
 				NdicationerIsEnabled = false;
+				NdicationerBackgroundColor = _enableFalseBackgroundColor;
+
 				//処理方法
 				CorrectionMethodIsEnabled = false;
+				CorrectionMethodBackgroundColor = _enableFalseBackgroundColor;
+
 				//メモ
 				ConfirmationMethodIsEnabled = false;
+				ConfirmationMethodBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘事項
 				IndicationIsEnabled = false;
+				IndicationBackgroundColor = _enableFalseBackgroundColor;
 				OpenButtonIsEnabled = false;
+				OpenButtonBackgroundColor = _enableFalseBackgroundColor;
+
 				//値
 				TiIsEnabled = true;
+				TiBackgroundColor = _enableTrueBackgroundColor;
+
 				if (flag)
 				{
 					//確認日
@@ -512,23 +604,41 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			case 2:
 				//確認日
 				ConfirmationDateIsEnabled = false;
+				ConfirmationDateBackgroundColor = _enableFalseBackgroundColor;
+
 				//確認者
 				ConfirmerIsEnabled = false;
+				ConfirmerBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘日
 				IndicationDateIsEnabled = true;
+				IndicationDateBackgroundColor = _enableTrueBackgroundColor;
+
 				//指摘者
 				NdicationerIsEnabled = true;
+				NdicationerBackgroundColor = _enableTrueBackgroundColor;
+
 				//処理方法
 				CorrectionMethodIsEnabled = false;
+				CorrectionMethodBackgroundColor = _enableFalseBackgroundColor;
+
 				//処理方法の入力内容をクリアする。
 				CorrectionMethod = "";
+
 				//メモ
 				ConfirmationMethodIsEnabled = true;
+				ConfirmationMethodBackgroundColor = _enableTrueBackgroundColor;
+
 				//指摘事項
 				IndicationIsEnabled = true;
+				IndicationBackgroundColor = _enableTrueBackgroundColor;
+
 				OpenButtonIsEnabled = true;
+				OpenButtonBackgroundColor = Color.FromArgb("#512BD4");
+
 				//値
 				TiIsEnabled = false;
+				TiBackgroundColor = _enableFalseBackgroundColor;
 				if (flag)
 				{
 					// 確認日
@@ -549,21 +659,38 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			case 3:
 				//確認日
 				ConfirmationDateIsEnabled = true;
+				ConfirmationDateBackgroundColor = _enableTrueBackgroundColor;
+
 				//確認者
 				ConfirmerIsEnabled = true;
+				ConfirmerBackgroundColor = _enableTrueBackgroundColor;
+
 				//指摘日
 				IndicationDateIsEnabled = false;
+				IndicationDateBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘者
 				NdicationerIsEnabled = false;
+				NdicationerBackgroundColor = _enableFalseBackgroundColor;
+
 				//処理方法
 				CorrectionMethodIsEnabled = false;
+				CorrectionMethodBackgroundColor = _enableFalseBackgroundColor;
+
 				//メモ
 				ConfirmationMethodIsEnabled = false;
+				ConfirmationMethodBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘事項
 				IndicationIsEnabled = false;
+				IndicationBackgroundColor = _enableFalseBackgroundColor;
+
 				OpenButtonIsEnabled = false;
+				OpenButtonBackgroundColor = _enableFalseBackgroundColor;
+
 				//値
 				TiIsEnabled = false;
+				TiBackgroundColor = _enableFalseBackgroundColor;
 				if (flag)
 				{
 					// 確認日
@@ -580,21 +707,38 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			case 4:
 				//確認日
 				ConfirmationDateIsEnabled = true;
+				ConfirmationDateBackgroundColor = _enableTrueBackgroundColor;
+
 				//確認者
 				ConfirmerIsEnabled = true;
+				ConfirmerBackgroundColor = _enableTrueBackgroundColor;
+
 				//指摘日
 				IndicationDateIsEnabled = false;
+				IndicationDateBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘者
 				NdicationerIsEnabled = false;
+				NdicationerBackgroundColor = _enableFalseBackgroundColor;
+
 				//処理方法
 				CorrectionMethodIsEnabled = false;
+				CorrectionMethodBackgroundColor = _enableFalseBackgroundColor;
+
 				//メモ
 				ConfirmationMethodIsEnabled = false;
+				ConfirmationMethodBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘事項
 				IndicationIsEnabled = false;
+				IndicationBackgroundColor = _enableFalseBackgroundColor;
+
 				OpenButtonIsEnabled = false;
+				OpenButtonBackgroundColor = _enableFalseBackgroundColor;
+
 				//値
 				TiIsEnabled = true;
+				TiBackgroundColor = _enableTrueBackgroundColor;
 				if (flag)
 				{
 					// 確認日
@@ -608,21 +752,38 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			case 5:
 				//確認日
 				ConfirmationDateIsEnabled = true;
+				ConfirmationDateBackgroundColor = _enableTrueBackgroundColor;
+
 				//確認者
 				ConfirmerIsEnabled = true;
+				ConfirmerBackgroundColor = _enableTrueBackgroundColor;
+
 				//指摘日
 				IndicationDateIsEnabled = false;
+				IndicationDateBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘者
 				NdicationerIsEnabled = false;
+				NdicationerBackgroundColor = _enableFalseBackgroundColor;
+
 				//処理方法
 				CorrectionMethodIsEnabled = true;
+				CorrectionMethodBackgroundColor = _enableTrueBackgroundColor;
+
 				//メモ
 				ConfirmationMethodIsEnabled = false;
+				ConfirmationMethodBackgroundColor = _enableFalseBackgroundColor;
+
 				//指摘事項
 				IndicationIsEnabled = false;
+				IndicationBackgroundColor = _enableFalseBackgroundColor;
+
 				OpenButtonIsEnabled = false;
+				OpenButtonBackgroundColor = _enableFalseBackgroundColor;
+
 				//値
 				TiIsEnabled = true;
+				TiBackgroundColor = _enableTrueBackgroundColor;
 				if (flag)
 				{
 					// 確認日
@@ -763,7 +924,95 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			{ "json", jsonString }
 		};
 	}
-	#endregion
+
+	/// <summary>
+	/// iosとMacCatalystシステムのカメラ権限の検証
+	/// </summary>
+	async Task<bool> CheckCameraPermissionForIOSAndMacCatalystAsync()
+	{
+		var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+
+		if (status != PermissionStatus.Granted)
+		{
+			status = await Permissions.RequestAsync<Permissions.Camera>();
+		}
+
+		return status == PermissionStatus.Granted;
+	}
+
+	/// <summary>
+	/// ウィンドウズシステムカメラ権限の検証
+	/// </summary>
+	async Task<bool> CheckCameraPermissionForWindowsAsync()
+	{
+		var cameraStatus = await Permissions.CheckStatusAsync<Permissions.Camera>();
+		var micStatus = await Permissions.CheckStatusAsync<Permissions.Microphone>();
+		if (cameraStatus != PermissionStatus.Granted)
+		{
+			cameraStatus = await Permissions.RequestAsync<Permissions.Camera>();
+		}
+		if (cameraStatus != PermissionStatus.Granted)
+		{
+			return false;
+		}
+		
+		if (micStatus != PermissionStatus.Granted)
+		{
+			micStatus = await Permissions.RequestAsync<Permissions.Microphone>();
+		}
+		if (micStatus != PermissionStatus.Granted)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	/// <summary>
+	/// カメラが使用可能かどうかを確認する
+	/// </summary>
+	/// <returns></returns>
+	async Task<bool> CheckCameraSupportAsync()
+	{
+		string noCameraMsg = "現在のデバイスには使用可能なカメラがありません。";
+		string cameraDeniedMsg = "カメラ権限がオフになっていることを検出しました。配筋検査システムがカメラにアクセスできるようにしてください。";
+		//デバイスにカメラが存在するかどうかを判断する
+		bool hasCamera;
+#if WINDOWS
+		var videoDevices = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
+		hasCamera = videoDevices != null && videoDevices.Count > 0;
+#else
+        hasCamera = MediaPicker.Default.IsCaptureSupported;
+#endif
+		if (!hasCamera)
+		{
+			DialogHelper.MessageDialogOk(noCameraMsg);
+			return false;
+		}
+
+		//カメラの使用権限の判断
+		bool isAllowed;
+#if WINDOWS
+		isAllowed = await CheckCameraPermissionForWindowsAsync();
+#else
+        isAllowed = await CheckCameraPermissionForIOSAndMacCatalystAsync();
+#endif
+		if (!isAllowed)
+		{
+			bool askSettings = await Shell.Current.DisplayAlertAsync(
+				"カメラ権限が必要",
+				cameraDeniedMsg,
+				"設定",
+				"キャンセル");
+			if (askSettings)
+			{
+				AppInfo.Current.ShowSettingsUI();
+			}
+			return false;
+		}
+		return true;
+	}
+
+#endregion
 
 	#region コマンドハンドラ 
 	/// <summary>
@@ -783,6 +1032,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	[RelayCommand]
 	private async Task GotoCameraPage()
 	{
+		if (!await CheckCameraSupportAsync()) return;
 		if (InspectionItemSelectedItem == null) return;
 		GreenBackgroundModel model = new GreenBackgroundModel()
 		{

@@ -1,13 +1,12 @@
-﻿using Aiko.UI.ViewModels.PageVMs;
+using Aiko.UI.ViewModels.PageVMs;
 
 namespace Aiko.UI;
 
-public partial class RemotingFtpServerPage : ContentPage
+public partial class RemotingFtpServerPage : ContentView
 {
-	public RemotingFtpServerPage(RemotingFtpServerPageVM remotingftpserverVM)
-	{
-		InitializeComponent();
-		BindingContext = remotingftpserverVM;
-
+    public RemotingFtpServerPage(RemotingFtpServerPageVM vm)
+    {
+        InitializeComponent();
+        BindingContext = vm;
     }
 }

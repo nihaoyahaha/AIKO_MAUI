@@ -23,6 +23,8 @@ public partial class LogPageVM: Observablebase<LogPageVM,ILogService>
 	{
 		IsEnabled = false;
 		string ErrMsg;
+		string logDirectory = Path.Combine(FileSystem.AppDataDirectory, "Log");
+		if (!Directory.Exists(logDirectory)) return;
 		try
 		{
 			var result = await Service.UploadLogFileAsync();

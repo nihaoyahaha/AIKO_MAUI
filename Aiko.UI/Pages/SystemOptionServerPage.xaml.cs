@@ -1,12 +1,12 @@
-﻿using Aiko.UI.ViewModels.PageVMs;
+using Aiko.UI.ViewModels.PageVMs;
 
 namespace Aiko.UI;
 
-public partial class SystemOptionServerPage : ContentPage
+public partial class SystemOptionServerPage : ContentView
 {
-	public SystemOptionServerPage(SystemOptionServerPageVM systemoptionserverVM)
-	{
-		InitializeComponent();
-        BindingContext = systemoptionserverVM;
+    public SystemOptionServerPage(SystemOptionServerPageVM vm)
+    {
+        InitializeComponent();
+        BindingContext = vm;
     }
 }

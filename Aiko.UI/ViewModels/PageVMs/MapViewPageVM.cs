@@ -146,7 +146,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
     // 断面符号
     [ObservableProperty]
-    private bool hr01020Flag = false;
+    private bool hr01020Flag = true;
 
     // 工区名
     [ObservableProperty]
@@ -229,7 +229,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                 // アイテムNo显示隐藏
                 Hr01003Flag = Preferences.Default.Get("Hr01003Flag", false);
                 // 断面符号显示隐藏
-                Hr01020Flag = Preferences.Default.Get("Hr01020Flag", false);
+                Hr01020Flag = Preferences.Default.Get("Hr01020Flag", true);
                 // 工区名显示隐藏
                 Hr01007Flag = Preferences.Default.Get("Hr01007Flag", false);
                 // サイズ拡大
@@ -1222,7 +1222,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     Width = 80,
                     Height = 48,
                     FontSize = xStyle.FontSize,
-                    FontFamily = xStyle.FontFamily,
+                    FontFamily = xStyle.FontFamily.Trim(),
                     Color = xStyle.Color,
                     Side = 0,
                     Angle = Convert.ToDouble(item.HM20005)
@@ -1269,7 +1269,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     Width = 80,
                     Height = 22,
                     FontSize = yStyle.FontSize,
-                    FontFamily = yStyle.FontFamily,
+                    FontFamily = yStyle.FontFamily.Trim(),
                     Color = yStyle.Color,
                     Side = 1,
                     Angle = Convert.ToDouble(item.HM20005)

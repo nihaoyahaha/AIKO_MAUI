@@ -60,7 +60,7 @@ namespace Aiko.Common.InkTools
         /// <summary>
         /// 导出为 Base64 图片
         /// </summary>
-        public string ExportToBase64(int width, int height, IEnumerable<InkStroke> strokes)
+        public string ExportToBase64(int width, int height, IEnumerable<InkStroke> strokes, string[]? allowedTypes, string[]? bannedTypes)
         {
             if (width <= 0 || height <= 0) return string.Empty;
 
@@ -72,6 +72,8 @@ namespace Aiko.Common.InkTools
 
             foreach (var stroke in strokes)
             {
+                if (!((allowedTypes == null || allowedTypes.Contains(stroke.Type)) && (bannedTypes == null || !bannedTypes.Contains(stroke.Type)))) continue;
+
                 var tool = GetTool(stroke.Type);
                 tool?.Draw(canvas, stroke);
             }

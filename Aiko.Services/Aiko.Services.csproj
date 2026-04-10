@@ -17,6 +17,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.31" />
+		<PackageReference Include="System.Management" Version="10.0.5" />
 	</ItemGroup>
 
 	<ItemGroup>

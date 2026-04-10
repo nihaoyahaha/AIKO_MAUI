@@ -3,6 +3,7 @@ using Aiko.Common.InkTools;
 using Aiko.Common.Models;
 using Aiko.UI.ViewModels.PageVMs;
 using CommunityToolkit.Mvvm.Messaging;
+using FFImageLoading.Maui;
 
 namespace Aiko.UI.Pages;
 
@@ -44,6 +45,9 @@ public partial class CheckPointDetailPage : ContentPage
 
         // 默认选中状态
         SwitchTool("Empty");
+
+        await _vm.LoadDanmImage();
+        OnDanmImageLoaded();
     }
 
     public CheckPointDetailPage(CheckPointDetailPageVM checkPointDetailPageVM)
@@ -65,6 +69,7 @@ public partial class CheckPointDetailPage : ContentPage
         _vm.PropertyChanged += OnViewModelPropertyChanged;
 
         MainGridView.SizeChanged += (s, e) => UpdateImageDimensions();
+        ImageDanm.SizeChanged += (s, e) => UpdateDanmImageDimensions();
 
         WeakReferenceMessenger.Default.Register<CheckPointDetailPage, CheckPointDetailPageVM.AsyncRequestMessage>(this, async (page, message) =>
         {
@@ -78,6 +83,10 @@ public partial class CheckPointDetailPage : ContentPage
                     break;
                 case "SaveBack":
                     message.Result.Add("success", await Save(false, true));
+                    break;
+                case "SwitchImage":
+                    var image = message.Parameters["image"] as InkImage;
+                    if (image != null) await SwitchImage(image);
                     break;
                 default:
                     break;
@@ -112,6 +121,106 @@ public partial class CheckPointDetailPage : ContentPage
         List<InkImage> images = await _vm.GetImageInfo(_vm.Query, _vm.Proj.Value);
         await LoadGalleryImages(_vm.ImageFolderPath, images);
         if (_vm.ImageList.Count > 0) await LoadCanvasViewImage(_vm.ImageList[0]);
+    }
+
+    private void OnCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
+    {
+        double lastVisibleItemIndex = ((e.VerticalOffset + (sender as CollectionView).Height) / ((sender as CollectionView).Height / 3)) * 3; // 这个比 e.LastVisibleItemIndex 稍微准些
+
+        if (lastVisibleItemIndex >= _vm.ImageList.Count - 3)
+        {
+            _vm.LoadNextPage();
+        }
+    }
+
+    private void OnImageVisualized(object sender, CachedImageEvents.SuccessEventArgs e)
+    {
+        var cachedImage = sender as CachedImage;
+        var model = cachedImage?.BindingContext as InkImage;
+        if (model != null)
+        {
+            model.IsVisualized = true;
+            _vm.NoditySummary();
+        }
+    }
+
+    // --- 断面页签 ---
+
+    private double showW = 0;
+    private double showH = 0;
+    private double originalWidth = 0;
+    private double originalHeight = 0;
+    private async void OnDanmImageLoaded()
+    {
+        // 确保图片源已加载
+        if (DanmImage.Source == null) return;
+
+        for (int i = 0; i < 10; i++)
+        {
+            // 获取图片的尺寸
+            var size = await GetOriginalImageSize(DanmImage);
+            if (size.Width > 0 && size.Height > 0)
+            {
+                originalWidth = size.Width;
+                originalHeight = size.Height;
+
+                // 图片自适应宽度
+                UpdateDanmImageDimensions();
+
+                return;
+            }
+
+            await Task.Delay(50);
+        }
+    }
+    private void UpdateDanmImageDimensions()
+    {
+        if (originalWidth <= 0 || originalHeight <= 0)
+            return;
+
+        double cw = MainGridView.Width;
+        double ch = MainGridView.Height;
+
+        if (cw <= 0 || ch <= 0)
+            return;
+
+        double fitScale = Math.Min(1d, Math.Min(cw / originalWidth, ch / originalHeight));
+
+        showW = originalWidth * fitScale;
+        showH = originalHeight * fitScale;
+
+        DanmImageZoomLayer.WidthRequest = showW;
+        DanmImageZoomLayer.HeightRequest = showH;
+        DanmImageZoomLayer.HorizontalOptions = LayoutOptions.Start;
+        DanmImageZoomLayer.VerticalOptions = LayoutOptions.Start;
+
+        DanmImage.WidthRequest = showW;
+        DanmImage.HeightRequest = showH;
+
+        DanmImagePinchToZoom.SetBaseSize(showW, showH);
+    }
+    private static async Task<Size> GetOriginalImageSize(Image image)
+    {
+#if ANDROID
+        var handler = image.Handler?.PlatformView as Android.Widget.ImageView;
+        if (handler?.Drawable != null)
+        {
+            return new Size(handler.Drawable.IntrinsicWidth, handler.Drawable.IntrinsicHeight);
+        }
+#elif IOS
+        var handler = image.Handler?.PlatformView as UIKit.UIImageView;
+        if (handler?.Image != null)
+        {
+            return new Size(handler.Image.Size.Width, handler.Image.Size.Height);
+        }
+#elif WINDOWS
+        var handler = image.Handler?.PlatformView as Microsoft.UI.Xaml.Controls.Image;
+        if (handler?.Source is Microsoft.UI.Xaml.Media.Imaging.BitmapSource bs)
+        {
+            return new Size(bs.PixelWidth, bs.PixelHeight);
+        }
+#endif
+        return Size.Zero;
     }
 
     // --- 拖拽重排 ---
@@ -151,19 +260,29 @@ public partial class CheckPointDetailPage : ContentPage
                 var rightIndicator = border.FindByName<BoxView>("RightDropIndicator");
 
                 // 判断距离哪边更近
-                double borderMidPoint = border.Width / 2; // TO DO: border.Width 目前得到的值总是-1，导致距离判断逻辑错误，待后续解决
+
+                double borderMidPoint = 0;
+                if (border.Width > 0)
+                {
+                    borderMidPoint = border.Width / 2;
+                }
+                else if (border.Content != null)
+                {
+                    borderMidPoint = border.Content.DesiredSize.Width / 2;
+                }
+
                 if (relativePoint.Value.X < borderMidPoint)
                 {
                     // 距离左边更近
-                    if (leftIndicator != null) leftIndicator.Color = Colors.DeepSkyBlue;
-                    if (rightIndicator != null) rightIndicator.Color = Colors.Transparent;
+                    leftIndicator?.Color = Colors.DeepSkyBlue;
+                    rightIndicator?.Color = Colors.Transparent;
                     _insertPosition = InsertPosition.Front; // 插入到前面
                 }
                 else
                 {
                     // 距离右边更近
-                    if (leftIndicator != null) leftIndicator.Color = Colors.Transparent;
-                    if (rightIndicator != null) rightIndicator.Color = Colors.DeepSkyBlue;
+                    leftIndicator?.Color = Colors.Transparent;
+                    rightIndicator?.Color = Colors.DeepSkyBlue;
                     _insertPosition = InsertPosition.Behind; // 插入到后面
                 }
             }
@@ -176,18 +295,17 @@ public partial class CheckPointDetailPage : ContentPage
         var leftIndicator = border?.FindByName<BoxView>("LeftDropIndicator");
         var rightIndicator = border?.FindByName<BoxView>("RightDropIndicator");
 
-        if (leftIndicator != null) leftIndicator.Color = Colors.Transparent;
-        if (rightIndicator != null) rightIndicator.Color = Colors.Transparent;
+        leftIndicator?.Color = Colors.Transparent;
+        rightIndicator?.Color = Colors.Transparent;
     }
 
     private void OnDrop(object sender, DropEventArgs e)
     {
         var border = sender as Border;
-        var targetItem = border?.BindingContext as InkImage;
 
         OnDragLeave(sender, null);
 
-        if (_draggedItem == null || targetItem == null || _draggedItem == targetItem)
+        if (_draggedItem == null || border?.BindingContext is not InkImage targetItem || _draggedItem == targetItem)
         {
             _draggedItem = null;
             return;
@@ -205,6 +323,11 @@ public partial class CheckPointDetailPage : ContentPage
             if (oldIndex != newIndex)
             {
                 _vm.ImageList.Move(oldIndex, Math.Clamp(newIndex, 0, _vm.ImageList.Count - 1));
+
+                var itemToMove = _vm.SourceImageList[oldIndex];
+                _vm.SourceImageList.RemoveAt(oldIndex);
+                int clampedIndex = Math.Clamp(newIndex, 0, _vm.SourceImageList.Count);
+                _vm.SourceImageList.Insert(clampedIndex, itemToMove);
             }
         }
 
@@ -213,14 +336,31 @@ public partial class CheckPointDetailPage : ContentPage
 
     // --- 其他交互 ---
 
+    private void OnArrowClicked(object sender, EventArgs e)
+    {
+        HiddenPicker.Focus();
+
+#if WINDOWS
+        var nativePicker = (Microsoft.UI.Xaml.Controls.ComboBox)HiddenPicker.Handler.PlatformView;
+        nativePicker.IsDropDownOpen = true;
+#endif
+    }
+
     private async void OnGalleryItemTapped(object sender, EventArgs e)
+    {
+        if (!_vm.IsLoaded) return;
+
+        var border = sender as Border;
+        var image = border?.BindingContext as InkImage;
+
+        if (image != null) await SwitchImage(image);
+    }
+
+    private async Task SwitchImage(InkImage image)
     {
         bool? success = await Save(true, false);
         if (success != false)
         {
-            var border = sender as Border;
-            var image = border?.BindingContext as InkImage;
-
             await LoadCanvasViewImage(image);
 
             SwitchTool("Empty");
@@ -229,7 +369,6 @@ public partial class CheckPointDetailPage : ContentPage
         {
             DialogHelper.MessageDialog("保存に失敗しました");
         }
-
     }
 
     private void OnSignOptionTapped(object sender, TappedEventArgs e)
@@ -238,15 +377,18 @@ public partial class CheckPointDetailPage : ContentPage
         if (!string.IsNullOrEmpty(sign))
         {
             _currentImage.Sign = int.Parse(sign);
+            _vm.Sign = _currentImage.Sign;
         }
     }
 
     private async Task<bool?> Save(bool confirm, bool all)
     {
-        bool imageChanged = _currentImage != null && (_toolManager.StrokesChanged || CanvasViewVisibleChanged || _vm.ImageInfoChanged(_currentImage));
+        bool strokesChanged = _toolManager.StrokesChanged;
+
+        bool imageChanged = _currentImage != null && (strokesChanged || CanvasViewVisibleChanged || _vm.ImageInfoChanged(_currentImage));
 
         var changedImageList = all ? _vm.GetChangedImageList() : new List<InkImage>();
-        bool imageListChanged = all && (changedImageList.Count > 0 || _vm.SortChanged(new List<InkImage>(_vm.ImageList)));
+        bool imageListChanged = all && (changedImageList.Count > 0 || _vm.SortChanged(_vm.SourceImageList));
 
         if (imageChanged || imageListChanged)
         {
@@ -259,11 +401,11 @@ public partial class CheckPointDetailPage : ContentPage
             {
                 bool success = true;
 
-                if (_toolManager.StrokesChanged || CanvasViewVisibleChanged)
+                if (strokesChanged || CanvasViewVisibleChanged)
                 {
                     await SaveImage(_currentImage, _toolManager.CompletedStrokes.Select(stroke => stroke.Clone()).ToList());
                 }
-                if (_toolManager.StrokesChanged || CanvasViewVisibleChanged || _vm.ImageInfoChanged(_currentImage))
+                if (strokesChanged || CanvasViewVisibleChanged || _vm.ImageInfoChanged(_currentImage))
                 {
                     if (!await _vm.SaveImageInfo(_currentImage))
                     {
@@ -273,7 +415,7 @@ public partial class CheckPointDetailPage : ContentPage
 
                 if (imageListChanged)
                 {
-                    if (!await _vm.SaveImageList(new List<InkImage>(_vm.ImageList), changedImageList))
+                    if (!await _vm.SaveImageList(_vm.SourceImageList, changedImageList))
                     {
                         success = false;
                     }

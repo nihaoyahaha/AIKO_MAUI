@@ -1,19 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
     x:Class="Aiko.UI.DownloadPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
-    x:Name="page_download"
-    Title="ダウンロード"
+    x:Name="view_download"
     x:DataType="vm:DownloadPageVM">
-    <ContentPage.Behaviors>
+    <ContentView.Behaviors>
         <toolkit:EventToCommandBehavior
-            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_download}}"
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference view_download}}"
             Command="{Binding PageLoadedCommand}"
             EventName="Loaded" />
-    </ContentPage.Behaviors>
+    </ContentView.Behaviors>
     <ScrollView Orientation="Both">
         <Grid
             Padding="10"
@@ -117,7 +116,6 @@
                 </Border>
             </VerticalStackLayout>
 
-            <!--  进度条遮罩层  -->
             <Grid
                 x:Name="gridProgress"
                 BackgroundColor="#B0D3D3D3"
@@ -129,28 +127,24 @@
                     HorizontalOptions="Center"
                     Spacing="15"
                     VerticalOptions="Center">
-                    <!--  进度说明  -->
                     <Label
                         x:Name="txtBarName"
                         FontSize="16"
                         HorizontalTextAlignment="Center"
                         Text="{Binding ProgressMessage}"
                         WidthRequest="400" />
-                    <!--  ★ 关键：绑定 Progress 属性 ★  -->
                     <ProgressBar
                         x:Name="pBar"
                         HeightRequest="20"
                         Progress="{Binding Progress}"
                         ProgressColor="#512BD4"
                         WidthRequest="400" />
-                    <!--  百分比  -->
                     <Label
                         x:Name="percent"
                         FontAttributes="Bold"
                         FontSize="14"
                         HorizontalTextAlignment="Center"
                         Text="{Binding PercentText}" />
-                    <!--  加载动画  -->
                     <ActivityIndicator
                         HeightRequest="40"
                         IsRunning="{Binding IsShowProgressGridFlag}"
@@ -160,4 +154,4 @@
             </Grid>
         </Grid>
     </ScrollView>
-</ContentPage>
+</ContentView>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.EnvironmentCenterPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:Aiko.UI.CustomControls"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_environmentCenter"
+    Title="環境設定"
+    x:DataType="vm:EnvironmentCenterPageVM">
+    <Grid
+        Padding="16"
+        RowDefinitions="Auto,*"
+        RowSpacing="12">
+        <controls:SegmentedTabBar ItemsSource="{Binding Tabs}" />
+
+        <Border
+            Grid.Row="1"
+            Padding="0"
+            BackgroundColor="{DynamicResource PageBackgroundColor}"
+            Stroke="{DynamicResource Gray300}"
+            StrokeShape="RoundRectangle 12">
+            <Grid>
+                <ContentView x:Name="remotingServerHost" IsVisible="{Binding IsRemotingServerSelected}" />
+                <ContentView x:Name="systemOptionHost" IsVisible="{Binding IsSystemOptionSelected}" />
+                <ContentView x:Name="ftpHost" IsVisible="{Binding IsFtpSelected}" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

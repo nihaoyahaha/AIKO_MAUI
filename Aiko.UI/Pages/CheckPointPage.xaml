@@ -173,7 +173,7 @@
         <Grid Grid.ColumnSpan="2" VerticalOptions="End">
             <Button
                 x:Name="btn_back"
-                Margin="15,0,0,0"
+                Margin="10,0,0,0"
                 Command="{Binding BackCommand}"
                 FontSize="Body"
                 HorizontalOptions="Start"
@@ -191,7 +191,7 @@
                 WidthRequest="200" />
 
             <Grid
-                Margin="0,0,20,0"
+                Margin="0,0,10,0"
                 ColumnSpacing="5"
                 HorizontalOptions="End">
 
@@ -239,69 +239,72 @@
 
         <!--  中间 部位、工区、階・グループ...选择框  -->
         <Grid
-            Grid.Row="1"
-            Grid.ColumnSpan="2"
-            ColumnSpacing="10">
+    Grid.Row="1"
+    Grid.ColumnSpan="2"
+    ColumnSpacing="10" Padding="10,0,10,0">
+
             <Grid.Resources>
                 <Style TargetType="Label">
                     <Setter Property="FontSize" Value="Body" />
-
                     <Setter Property="VerticalTextAlignment" Value="Center" />
-                    <Setter Property="Margin" Value="15,0,0,0" />
                 </Style>
+
                 <Style TargetType="Entry">
                     <Setter Property="FontSize" Value="Body" />
-                    <Setter Property="HeightRequest" Value="40" />
                     <Setter Property="IsEnabled" Value="False" />
                     <Setter Property="VerticalTextAlignment" Value="Center" />
-                    <Setter Property="Margin" Value="0,0,10,0" />
                     <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+                    <Setter Property="BackgroundColor" Value="#CCCCCC" />
                 </Style>
             </Grid.Resources>
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="0.9*" />
+
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1.1*" />
+
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="0.9*" />
+
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1.8*" />
+
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="1.8*" />
             </Grid.ColumnDefinitions>
 
             <Label Grid.Column="0" Text="部位" />
             <Entry
-                x:Name="ety_Buim"
-                Grid.Column="1"
-                Text="{Binding BuimName}" />
+        x:Name="ety_Buim"
+        Grid.Column="1"
+        Text="{Binding BuimName}" />
 
             <Label Grid.Column="2" Text="階・グループ" />
             <Entry
-                x:Name="ety_Grpl"
-                Grid.Column="3"
-                Text="{Binding FloorName}" />
+        x:Name="ety_Grpl"
+        Grid.Column="3"
+        Text="{Binding FloorName}" />
 
             <Label Grid.Column="4" Text="断面" />
             <Entry
-                x:Name="ety_Danm"
-                Grid.Column="5"
-                Text="{Binding DanmName}" />
+        x:Name="ety_Danm"
+        Grid.Column="5"
+        Text="{Binding DanmName}" />
 
             <Label Grid.Column="6" Text="工区" />
             <Entry
-                x:Name="ety_Koku"
-                Grid.Column="7"
-                Text="{Binding KokuName}" />
+        x:Name="ety_Koku"
+        Grid.Column="7"
+        Text="{Binding KokuName}" />
 
             <Label Grid.Column="8" Text="位置" />
             <Entry
-                x:Name="ety_Location"
-                Grid.Column="9"
-                MaxLength="20"
-                Text="{Binding LocationName}" />
+        x:Name="ety_Location"
+        Grid.Column="9"
+        MaxLength="20"
+        Text="{Binding LocationName}" />
         </Grid>
 
         <!--  下左 按钮 图片  -->
@@ -310,11 +313,9 @@
             Grid.Row="2"
             Grid.RowSpan="2"
             Margin="10,0,0,0"
-            RowDefinitions="auto,auto,auto,*"
-            WidthRequest="600">
+            RowDefinitions="auto,auto,auto,*">
             <HorizontalStackLayout
                 x:Name="row1Layout"
-                Margin="5,0,0,0"
                 BindableLayout.ItemTemplate="{StaticResource SelectionButtonTemplate}"
                 BindableLayout.ItemsSource="{Binding Row1Buttons}"
                 Spacing="10"
@@ -322,7 +323,6 @@
             <HorizontalStackLayout
                 x:Name="row2Layout"
                 Grid.Row="1"
-                Margin="5,0,0,0"
                 BindableLayout.ItemTemplate="{StaticResource SelectionButtonTemplate}"
                 BindableLayout.ItemsSource="{Binding Row2Buttons}"
                 Spacing="10"
@@ -330,7 +330,6 @@
             <HorizontalStackLayout
                 x:Name="row3Layout"
                 Grid.Row="2"
-                Margin="5,0,0,0"
                 BindableLayout.ItemTemplate="{StaticResource SelectionButtonTemplate}"
                 BindableLayout.ItemsSource="{Binding Row3Buttons}"
                 Spacing="10"
@@ -347,12 +346,12 @@
                     IsClippedToBounds="True">
                     <local:PinchToZoomContainer x:Name="pinchToZoom">
                         <AbsoluteLayout x:Name="ZoomLayer">
-                            <Image 
-                                x:Name="ContainerImg" 
-                                Source="{Binding ContainerImageSource}" 
-                                Aspect="Fill"
+                            <Image
+                                x:Name="ContainerImg"
                                 AbsoluteLayout.LayoutBounds="0,0,1,1"
-                                AbsoluteLayout.LayoutFlags="All"/>
+                                AbsoluteLayout.LayoutFlags="All"
+                                Aspect="Fill"
+                                Source="{Binding ContainerImageSource}" />
                         </AbsoluteLayout>
                     </local:PinchToZoomContainer>
                 </Grid>
@@ -581,8 +580,9 @@
                 x:Name="ety_Sem"
                 Grid.Column="1"
                 Grid.ColumnSpan="4"
+                Background="#CCCCCC"
                 HorizontalOptions="Fill"
-                IsReadOnly="True"
+                IsEnabled="False"
                 Text="{Binding Criterion}" />
 
             <Label
@@ -594,6 +594,7 @@
                 x:Name="ety_ConfirmedDate"
                 Grid.Row="1"
                 Grid.Column="1"
+                BackgroundColor="{Binding ConfirmationDateBackgroundColor}"
                 IsEnabled="{Binding ConfirmationDateIsEnabled}"
                 Placeholder="确认日"
                 Text="{Binding ConfirmationDate}" />
@@ -607,6 +608,7 @@
                 x:Name="ety_Confirmer"
                 Grid.Row="1"
                 Grid.Column="3"
+                BackgroundColor="{Binding ConfirmerBackgroundColor}"
                 IsEnabled="{Binding ConfirmerIsEnabled}"
                 Placeholder="确认者"
                 Text="{Binding Confirmer}" />
@@ -620,6 +622,7 @@
                 <Entry
                     x:Name="ety_Ti"
                     Grid.Column="1"
+                    BackgroundColor="{Binding TiBackgroundColor}"
                     IsEnabled="{Binding TiIsEnabled}"
                     Placeholder="值"
                     Text="{Binding Ti}">
@@ -641,6 +644,7 @@
                 x:Name="ety_IndicationDate"
                 Grid.Row="2"
                 Grid.Column="1"
+                BackgroundColor="{Binding IndicationDateBackgroundColor}"
                 IsEnabled="{Binding IndicationDateIsEnabled}"
                 Placeholder="指摘日"
                 Text="{Binding IndicationDate}" />
@@ -654,6 +658,7 @@
                 x:Name="ety_ndicationer"
                 Grid.Row="2"
                 Grid.Column="3"
+                BackgroundColor="{Binding NdicationerBackgroundColor}"
                 IsEnabled="{Binding NdicationerIsEnabled}"
                 Placeholder="指摘者"
                 Text="{Binding Ndicationer}" />
@@ -662,6 +667,7 @@
                 x:Name="pck_Check"
                 Grid.Row="2"
                 Grid.Column="4"
+                BackgroundColor="{Binding ConfirmationMethodBackgroundColor}"
                 IsEnabled="{Binding ConfirmationMethodIsEnabled}"
                 SelectedIndex="{Binding ConfirmationMethodSelectedIndex}">
                 <Picker.ItemsSource>
@@ -689,6 +695,7 @@
                 Grid.Row="3"
                 Grid.Column="1"
                 Grid.ColumnSpan="4"
+                BackgroundColor="{Binding CorrectionMethodBackgroundColor}"
                 HorizontalOptions="Fill"
                 IsEnabled="{Binding CorrectionMethodIsEnabled}"
                 Text="{Binding CorrectionMethod}">
@@ -713,6 +720,7 @@
                 ColumnSpacing="10">
                 <Entry
                     x:Name="ety_Mem"
+                    Background="{Binding IndicationBackgroundColor}"
                     HorizontalOptions="Fill"
                     IsEnabled="{Binding IndicationIsEnabled}"
                     Text="{Binding Indication}">
@@ -727,6 +735,7 @@
                     x:Name="btn_Open"
                     Grid.Column="1"
                     Padding="10,0"
+                    BackgroundColor="{Binding OpenButtonBackgroundColor}"
                     Command="{Binding PopupPunchListCommand}"
                     IsEnabled="{Binding OpenButtonIsEnabled}"
                     Text="···" />

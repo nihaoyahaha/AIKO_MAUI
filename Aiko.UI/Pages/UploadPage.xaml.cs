@@ -1,12 +1,12 @@
-﻿using Aiko.UI.ViewModels.PageVMs;
+using Aiko.UI.ViewModels.PageVMs;
 
 namespace Aiko.UI;
 
-public partial class UploadPage : ContentPage
+public partial class UploadPage : ContentView
 {
-	public UploadPage(UploadPageVM vm)
-	{
-		InitializeComponent();
-		BindingContext = vm;
-	}
+    public UploadPage(UploadPageVM vm)
+    {
+        InitializeComponent();
+        BindingContext = vm;
+    }
 }

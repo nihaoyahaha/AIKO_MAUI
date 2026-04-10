@@ -215,6 +215,7 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 				PercentText = args.PercentText;
 			});
 			IsShowProgressGridFlag = true;
+			await _dataSyncService.UpdateHM17Async(1, SelectedConstruction.Value);
 			await Service.DownLoadAsync(SelectedConstruction.Value, IsIncludeDrawingFile, IsIncludePhotoFile, progressHandler);
 		}
 		catch (Exception exp)
@@ -231,6 +232,8 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 		finally
 		{
 			InitializateProgress();
+
+			await _dataSyncService.UpdateHM17Async(0, SelectedConstruction.Value);
 			// 結果メッセージ
 			string errMsg;
 			if (ioExp)

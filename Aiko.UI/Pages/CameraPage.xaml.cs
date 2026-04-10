@@ -4,7 +4,6 @@ namespace Aiko.UI;
 
 public partial class CameraPage : ContentPage
 {
-	double currentScale = 1, startScale = 1;
 	CameraPageVM _vm;
 	public CameraPage(CameraPageVM vm)
 	{
@@ -14,30 +13,50 @@ public partial class CameraPage : ContentPage
 		_vm = vm;
 	}
 
-	private void PinchGestureRecognizer_PinchUpdated(object sender, PinchGestureUpdatedEventArgs e)
+	protected override void OnHandlerChanged()
 	{
-		rectGrid.CaptureAsync();
-		if (currentScale > slider.Maximum)
-		{
-			currentScale = slider.Maximum;
-			return;
-		}
-		if (currentScale < slider.Minimum)
-		{
-			currentScale = slider.Minimum;
-			return;
-		}
+		base.OnHandlerChanged();
+#if IOS
+		if (Handler?.PlatformView == null) return;
 
-		if (e.Status == GestureStatus.Started)
+		Action captureAction = async () =>
 		{
-			startScale = camera.ZoomFactor;
-		}
-		if (e.Status == GestureStatus.Running)
+			await camera.CaptureImage(CancellationToken.None);
+		};
+
+		var nativeView = camera.Handler?.PlatformView as UIKit.UIView;
+		if (nativeView != null)
 		{
-			currentScale += (e.Scale - 1) * startScale;
-			currentScale = Math.Max(1, currentScale);
-			camera.ZoomFactor = (float)currentScale;
-		}
+			Platforms.iOS.CameraCaptureHelper.AddCaptureInteraction(nativeView, captureAction);
+		}       
+#endif
+	}
+
+	protected override void OnAppearing()
+	{
+		base.OnAppearing();
+#if WINDOWS
+    // 使用 Dispatcher 延迟到下一帧执行
+    Dispatcher.Dispatch(() =>
+    {
+        if (this.Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement winView)
+        {
+            Action captureAction = async () =>
+            {
+                await camera.CaptureImage(CancellationToken.None);
+            };
+            Platforms.Windows.CameraCaptureHelper.AddVolumeKeyInteraction(winView, captureAction);
+        }
+    });
+#endif
+	}
+
+	protected override void OnDisappearing()
+	{
+		base.OnDisappearing();
+#if WINDOWS
+        Platforms.Windows.CameraCaptureHelper.RemoveInteraction();
+#endif
 	}
 
 	private void PanGestureRecognizer_PanUpdated(object sender, PanUpdatedEventArgs e)

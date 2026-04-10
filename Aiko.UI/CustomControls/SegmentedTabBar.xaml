@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="Aiko.UI.CustomControls.SegmentedTabBar"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:Aiko.UI.CustomControls"
+    x:Name="root">
+    <ContentView.Resources>
+        <Style x:Key="SegmentedTabButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray200}}" />
+            <Setter Property="BorderWidth" Value="0" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="MinimumHeightRequest" Value="36" />
+            <Setter Property="MinimumWidthRequest" Value="72" />
+        </Style>
+    </ContentView.Resources>
+
+    <Border
+        Padding="4"
+        BackgroundColor="{AppThemeBinding Light=#F2F2F7, Dark=#2C2C2E}"
+        Stroke="{AppThemeBinding Light=#D1D1D6, Dark=#3A3A3C}"
+        StrokeShape="RoundRectangle 14">
+        <HorizontalStackLayout
+            BindableLayout.ItemsSource="{Binding Source={x:Reference root}, Path=ItemsSource}"
+            Spacing="4">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="controls:SegmentedTabItem">
+                    <Button
+                        Command="{Binding Command}"
+                        IsVisible="{Binding IsVisible}"
+                        Style="{StaticResource SegmentedTabButtonStyle}"
+                        Text="{Binding Text}">
+                        <Button.Triggers>
+                            <DataTrigger
+                                Binding="{Binding IsSelected}"
+                                TargetType="Button"
+                                Value="True">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark=#636366}" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light=#111111, Dark=White}" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </HorizontalStackLayout>
+    </Border>
+</ContentView>

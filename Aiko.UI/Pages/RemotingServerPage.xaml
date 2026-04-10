@@ -1,20 +1,19 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
     x:Class="Aiko.UI.RemotingServerPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:behaviors="clr-namespace:Aiko.UI.Behaviors"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
-    x:Name="page_RemotingServer"
-    Title="遠隔サーバー"
+    x:Name="view_RemotingServer"
     x:DataType="vm:RemotingServerPageVM">
-    <ContentPage.Behaviors>
+    <ContentView.Behaviors>
         <toolkit:EventToCommandBehavior
-            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_RemotingServer}}"
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference view_RemotingServer}}"
             Command="{Binding PageLoadCommand}"
             EventName="Loaded" />
-    </ContentPage.Behaviors>
+    </ContentView.Behaviors>
     <ScrollView>
         <Grid
             Margin="120,70,0,0"
@@ -104,5 +103,4 @@
 
         </Grid>
     </ScrollView>
-
-</ContentPage>
+</ContentView>

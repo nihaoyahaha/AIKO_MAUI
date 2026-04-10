@@ -37,10 +37,11 @@ public partial class CheckPointDetailPage : ContentPage
             Dirs = image != null ? image.Dirs : "-1",
             DirsDisplyName = image != null ? image.DirsDisplyName : "",
             Comment = image != null ? image.Comment : "This is a comment ",
-            Date = image != null ? image.Date : file.CreationTime.ToString("yyyy/MM/dd HH:mm:ss"),
+            Date = image != null ? image.Date : file.CreationTime.ToString("yyyy-MM-dd HH:mm:ss"),
+            CreationDate = image != null ? image.CreationDate : file.CreationTime.ToString("yyyy-MM-dd HH:mm:ss"),
             Author = image != null ? image.Author : "",
 
-            SyncDate = image != null ? image.SyncDate : file.CreationTime.ToString("yyyy/MM/dd HH:mm:ss"),
+            SyncDate = image != null ? image.SyncDate : file.CreationTime.ToString("yyyy-MM-dd HH:mm:ss"),
             SyncAuthor = image != null ? image.SyncAuthor : "",
 
             IsBlackboardVisible = image != null ? image.IsBlackboardVisible : false,
@@ -77,68 +78,30 @@ public partial class CheckPointDetailPage : ContentPage
             }
         }
 
-        var missingImages = _vm.ImageList.Where(image => files.All(file => file.FullName != image.FullName)).ToList();
-        foreach (var image in missingImages)
-        {
-            _vm.ImageList.Remove(image);
-        }
+        _vm.SourceImageList.Clear();
 
         for (int i = 0; i < files.Count; i++)
         {
             var file = files[i];
-            var existingImage = _vm.ImageList.FirstOrDefault(image => image.FullName == file.FullName);
 
-            if (existingImage != null)
-            {
-                if (existingImage.LastWriteTime != file.LastWriteTime)
-                {
-                    existingImage.LastWriteTime = file.LastWriteTime;
+            var image = await CreateInkImage(file, images?.Where(image => image.Name == file.Name).First());
 
-                    string jsonPath = Path.ChangeExtension(file.FullName, ".json");
-                    if (File.Exists(jsonPath))
-                    {
-                        var jsonContent = await File.ReadAllTextAsync(jsonPath);
-                        var newStrokes = InkService.Instance.FromJson<List<InkStroke>>(jsonContent);
-                        existingImage.Strokes = newStrokes ?? new List<InkStroke>();
-                    }
-
-                    existingImage.RefreshPreview();
-
-                    if (_currentImage == existingImage)
-                    {
-                        await existingImage.SetBitmap();
-                        _toolManager.LoadStrokes(existingImage.Strokes);
-
-                        PhotoCanvasView.InvalidateSurface();
-                        BlackboardCanvasView.InvalidateSurface();
-                        InkCanvasView.InvalidateSurface();
-                    }
-                }
-            }
+            if (i < _vm.SourceImageList.Count)
+                _vm.SourceImageList.Insert(i, image);
             else
-            {
-                var newImage = await CreateInkImage(file, images?.Where(image => image.Name == file.Name).First());
+                _vm.SourceImageList.Add(image);
 
-                if (i < _vm.ImageList.Count)
-                    _vm.ImageList.Insert(i, newImage);
-                else
-                    _vm.ImageList.Add(newImage);
-
-                newImage.RefreshPreview();
-            }
-        }
-
-        var sortedImageList = _vm.IsAscending ? _vm.ImageList.OrderBy(x => x.Sort).ToList() : _vm.ImageList.OrderByDescending(x => x.Sort).ToList();
-        for (int i = 0; i < sortedImageList.Count; i++)
-        {
-            var oldIndex = _vm.ImageList.IndexOf(sortedImageList[i]);
-            if (oldIndex != i)
-            {
-                _vm.ImageList.Move(oldIndex, i);
-            }
+            image.RefreshPreview();
         }
 
         _vm.ResetImageList();
+
+        _vm.SourceImageList = _vm.IsAscending
+            ? _vm.SourceImageList.OrderBy(x => x.Sort).ToList()
+            : _vm.SourceImageList.OrderByDescending(x => x.Sort).ToList();
+
+        _vm.ImageList.Clear();
+        _vm.LoadNextPage();
     }
 
     private async Task LoadGalleryImage(string fullName)
@@ -235,21 +198,60 @@ public partial class CheckPointDetailPage : ContentPage
             int canvasWidth = newDoc.ViewBox.Width > 0 ? (int)newDoc.ViewBox.Width : (int)newDoc.Width.Value;
             int canvasHeight = newDoc.ViewBox.Height > 0 ? (int)newDoc.ViewBox.Height : (int)newDoc.Height.Value;
 
-            string base64 = InkService.Instance.ExportToBase64(canvasWidth, canvasHeight, image.Strokes);
-            if (!string.IsNullOrEmpty(base64))
+            if (_vm.IsDarkenMode)
             {
-                var notes = new SvgImage
+                string base64 = InkService.Instance.ExportToBase64(canvasWidth, canvasHeight, image.Strokes, null, ["Highlighter"]);
+                if (!string.IsNullOrEmpty(base64))
                 {
-                    ID = "notes",
-                    Href = $"data:image/png;base64,{base64}",
-                    X = new SvgUnit(0f),
-                    Y = new SvgUnit(0f),
-                    Width = new SvgUnit(SvgUnitType.Percentage, 100f),
-                    Height = new SvgUnit(SvgUnitType.Percentage, 100f),
-                    AspectRatio = new SvgAspectRatio(SvgPreserveAspectRatio.none),
-                    Display = _vm.IsStrokesVisible ? "inline" : "none"
-                };
-                newDoc.Children.Add(notes);
+                    var notes = new SvgImage
+                    {
+                        ID = "notes",
+                        Href = $"data:image/png;base64,{base64}",
+                        X = new SvgUnit(0f),
+                        Y = new SvgUnit(0f),
+                        Width = new SvgUnit(SvgUnitType.Percentage, 100f),
+                        Height = new SvgUnit(SvgUnitType.Percentage, 100f),
+                        AspectRatio = new SvgAspectRatio(SvgPreserveAspectRatio.none),
+                        Display = _vm.IsStrokesVisible ? "inline" : "none"
+                    };
+                    newDoc.Children.Add(notes);
+                }
+                string highlighterBase64 = InkService.Instance.ExportToBase64(canvasWidth, canvasHeight, image.Strokes, ["Highlighter"], null);
+                if (!string.IsNullOrEmpty(highlighterBase64))
+                {
+                    var notes = new SvgImage
+                    {
+                        ID = "highlighter",
+                        Href = $"data:image/png;base64,{highlighterBase64}",
+                        X = new SvgUnit(0f),
+                        Y = new SvgUnit(0f),
+                        Width = new SvgUnit(SvgUnitType.Percentage, 100f),
+                        Height = new SvgUnit(SvgUnitType.Percentage, 100f),
+                        AspectRatio = new SvgAspectRatio(SvgPreserveAspectRatio.none),
+                        Display = _vm.IsStrokesVisible ? "inline" : "none"
+                    };
+                    notes.CustomAttributes["style"] = "mix-blend-mode: darken;";
+                    newDoc.Children.Add(notes);
+                }
+            }
+            else
+            {
+                string base64 = InkService.Instance.ExportToBase64(canvasWidth, canvasHeight, image.Strokes, null, null);
+                if (!string.IsNullOrEmpty(base64))
+                {
+                    var notes = new SvgImage
+                    {
+                        ID = "notes",
+                        Href = $"data:image/png;base64,{base64}",
+                        X = new SvgUnit(0f),
+                        Y = new SvgUnit(0f),
+                        Width = new SvgUnit(SvgUnitType.Percentage, 100f),
+                        Height = new SvgUnit(SvgUnitType.Percentage, 100f),
+                        AspectRatio = new SvgAspectRatio(SvgPreserveAspectRatio.none),
+                        Display = _vm.IsStrokesVisible ? "inline" : "none"
+                    };
+                    newDoc.Children.Add(notes);
+                }
             }
 
             using (var fs = new FileStream(image.FullName, FileMode.Create, FileAccess.Write))

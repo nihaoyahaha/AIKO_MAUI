@@ -8,9 +8,4 @@ public partial class SwitchThemePage : ContentPage
 		InitializeComponent();
         BindingContext = vm;
 	}
-
-    void pck_SwitchTheme_SelectedIndexChanged(System.Object sender, System.EventArgs e)
-    {
-       
-    }
 }

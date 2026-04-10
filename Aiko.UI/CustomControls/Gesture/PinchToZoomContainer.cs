@@ -56,13 +56,14 @@ public class PinchToZoomContainer : ContentView
         panGesture.PanUpdated += OnPanUpdated;
         GestureRecognizers.Add(panGesture);
 
+#if WINDOWS
         var pointerGesture = new PointerGestureRecognizer();
         pointerGesture.PointerPressed += OnPointerPressed;
         pointerGesture.PointerMoved += OnPointerMoved;
         pointerGesture.PointerReleased += OnPointerReleased;
         pointerGesture.PointerExited += OnPointerReleased;
         GestureRecognizers.Add(pointerGesture);
-
+#endif
         SizeChanged += (_, _) => RefreshBounds();
 
         HandlerChanged += OnViewHandlerChanged;
@@ -110,6 +111,9 @@ public class PinchToZoomContainer : ContentView
         if (Content == null || Width <= 0 || Height <= 0 || LayerWidth <= 0 || LayerHeight <= 0)
             return;
 
+        if (isPinching || isMouseDragging)
+            return;
+
         double tx = ClampX(Content.TranslationX, currentScale);
         double ty = ClampY(Content.TranslationY, currentScale);
 
@@ -133,6 +137,7 @@ public class PinchToZoomContainer : ContentView
         {
             case GestureStatus.Started:
                 isPinching = true;
+                isMouseDragging = false;
                 startScale = currentScale;
 
                 xOffset = Content.TranslationX;
@@ -181,11 +186,13 @@ public class PinchToZoomContainer : ContentView
             case GestureStatus.Started:
                 panX = Content.TranslationX;
                 panY = Content.TranslationY;
+                RaiseViewportChanged();   // 可选，不要也行
                 break;
 
             case GestureStatus.Running:
                 Content.TranslationX = ClampX(panX + e.TotalX, currentScale);
                 Content.TranslationY = ClampY(panY + e.TotalY, currentScale);
+                RaiseViewportChanged();       // 走节流
                 break;
 
             case GestureStatus.Completed:
@@ -194,15 +201,17 @@ public class PinchToZoomContainer : ContentView
                 panY = Content.TranslationY;
                 xOffset = panX;
                 yOffset = panY;
+                RaiseViewportChanged(); // 最终位置强制通知
                 break;
         }
-
-        RaiseViewportChanged();
     }
 
     private void OnPointerPressed(object? sender, PointerEventArgs e)
     {
         if (Content == null || isPinching)
+            return;
+
+        if (!IsWindowsMouseLeftDrag(e))
             return;
 
         var pos = e.GetPosition(this);
@@ -218,6 +227,9 @@ public class PinchToZoomContainer : ContentView
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
         if (Content == null || !isMouseDragging || isPinching)
+            return;
+
+        if (!IsWindowsMouseLeftDrag(e))
             return;
 
         var pos = e.GetPosition(this);
@@ -398,5 +410,23 @@ public class PinchToZoomContainer : ContentView
     private void RaiseViewportChanged()
     {
         ViewportChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool IsWindowsMouseLeftDrag(PointerEventArgs e)
+    {
+#if WINDOWS
+    var pe = e.PlatformArgs?.PointerRoutedEventArgs;
+    var sender = e.PlatformArgs?.Sender;
+    if (pe == null || sender == null)
+        return false;
+
+    if (pe.Pointer.PointerDeviceType != Microsoft.UI.Input.PointerDeviceType.Mouse)
+        return false;
+
+    var point = pe.GetCurrentPoint(sender);
+    return point.Properties.IsLeftButtonPressed;
+#else
+        return false;
+#endif
     }
 }

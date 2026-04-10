@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Aiko.UI.SyncCenterPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:Aiko.UI.CustomControls"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_syncCenter"
+    Title="ダウンロード"
+    x:DataType="vm:SyncCenterPageVM">
+    <Grid
+        Padding="16"
+        RowDefinitions="Auto,*"
+        RowSpacing="12">
+        <controls:SegmentedTabBar ItemsSource="{Binding Tabs}" />
+
+        <Border
+            Grid.Row="1"
+            Padding="0"
+            BackgroundColor="{DynamicResource PageBackgroundColor}"
+            Stroke="{DynamicResource Gray300}"
+            StrokeShape="RoundRectangle 12">
+            <Grid>
+                <ContentView x:Name="downloadHost" IsVisible="{Binding IsDownloadSelected}" />
+                <ContentView x:Name="uploadHost" IsVisible="{Binding IsUploadSelected}" />
+                <ContentView x:Name="logHost" IsVisible="{Binding IsLogSelected}" />
+                <ContentView x:Name="deleteHost" IsVisible="{Binding IsDeleteSelected}" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

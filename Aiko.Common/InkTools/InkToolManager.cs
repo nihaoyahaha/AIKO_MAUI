@@ -61,9 +61,11 @@ namespace Aiko.Common.InkTools
         }
 
         // 分发触摸事件
-        public void HandleTouch(SKTouchEventArgs e, SKCanvasView canvasView)
+        public void HandleTouch(SKTouchEventArgs e, SKCanvasView canvasView, string[]? allowedTypes, string[]? bannedTypes)
         {
             if (CurrentTool == null) return;
+
+            if (!((allowedTypes == null || allowedTypes.Contains(CurrentTool.Type)) && (bannedTypes == null || !bannedTypes.Contains(CurrentTool.Type)))) return;
 
             switch (e.ActionType)
             {
@@ -83,12 +85,12 @@ namespace Aiko.Common.InkTools
         }
 
         // 分发绘制事件
-        public void HandleDrawing(SKCanvas canvas)
+        public void HandleDrawing(SKCanvas canvas, string[]? allowedTypes, string[]? bannedTypes)
         {
             // 绘制所有已完成的笔迹
             foreach (var stroke in _completedStrokes)
             {
-                if (_tools.ContainsKey(stroke.Type))
+                if (_tools.ContainsKey(stroke.Type) && (allowedTypes == null || allowedTypes.Contains(stroke.Type)) && (bannedTypes == null || !bannedTypes.Contains(stroke.Type)))
                 {
                     IInkTool renderer = _tools[stroke.Type];
                     renderer.Draw(canvas, stroke);
@@ -96,10 +98,13 @@ namespace Aiko.Common.InkTools
             }
 
             // 绘制当前正在拖动的笔迹（临时）
-            var tempStroke = CurrentTool?.GetCurrentTempStroke();
-            if (tempStroke != null)
+            if (CurrentTool != null)
             {
-                CurrentTool?.Draw(canvas, tempStroke);
+                var tempStroke = CurrentTool.GetCurrentTempStroke();
+                if (tempStroke != null && (allowedTypes == null || allowedTypes.Contains(CurrentTool.Type)) && (bannedTypes == null || !bannedTypes.Contains(CurrentTool.Type)))
+                {
+                    CurrentTool.Draw(canvas, tempStroke);
+                }
             }
         }
 
