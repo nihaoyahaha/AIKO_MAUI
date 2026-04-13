@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
@@ -24,19 +23,15 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='net10.0-ios'">
-	  <CodesignKey>Apple Development: Created via API (X43N7639R2)</CodesignKey>
-	  <CodesignProvision>VS: hisys.di-networks.jp Development</CodesignProvision>
-	  <ProvisioningType>automatic</ProvisioningType>
+		<CodesignKey>Apple Development: Created via API (X43N7639R2)</CodesignKey>
+		<CodesignProvision>VS: hisys.di-networks.jp Development</CodesignProvision>
+		<ProvisioningType>automatic</ProvisioningType>
 	</PropertyGroup>
 
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-		<PackageReference Include="System.Management" Version="10.0.5" />
-	</ItemGroup>
-	
 	<PropertyGroup Condition="$(TargetFramework.Contains('-ios')) and '$(Configuration)' == 'Release'">
 		<UseInterpreter>true</UseInterpreter>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
@@ -44,10 +39,10 @@
 		<MauiFont Include="Resources\Fonts\*" />
 		<MauiAsset Include="Resources\Raw\**" Exclude="Resources\Raw\hkks.db" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="14.0.0" />
-		<PackageReference Include="CommunityToolkit.Maui.Camera" Version="6.0.0" />
+		<PackageReference Include="CommunityToolkit.Maui.Camera" Version="6.0.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="FFImageLoading.Maui" Version="1.3.2" />
 		<PackageReference Include="MetroLog.Maui" Version="2.1.0" />
@@ -57,30 +52,31 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.2" />
 		<PackageReference Include="SkiaSharp" Version="3.119.1" />
 		<PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.31" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Aiko.Common\Aiko.Common.csproj" />
-	  <ProjectReference Include="..\Aiko.IServices\Aiko.IServices.csproj" />
-	  <ProjectReference Include="..\Aiko.Services\Aiko.Services.csproj" />
-	  <ProjectReference Include="..\Aiko.SqliteDb\Aiko.SqliteDb.csproj" />
+		<ProjectReference Include="..\Aiko.Common\Aiko.Common.csproj" />
+		<ProjectReference Include="..\Aiko.IServices\Aiko.IServices.csproj" />
+		<ProjectReference Include="..\Aiko.Services\Aiko.Services.csproj" />
+		<ProjectReference Include="..\Aiko.SqliteDb\Aiko.SqliteDb.csproj" />
 	</ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <EmbeddedResource Include="Resources\Raw\hkks.db" LogicalName="hkks.db">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<PackageReference Include="System.Management" Version="10.0.5" />
 
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">
-    <MauiAsset Include="Resources\Raw\hkks.db" LogicalName="hkks.db" />
-  </ItemGroup>
+		<EmbeddedResource Include="Resources\Raw\hkks.db" LogicalName="hkks.db">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
+		
+		<EmbeddedResource Include="Resources\ReleaseNote\ReleaseNotes.txt" LogicalName="ReleaseNotes.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
+	</ItemGroup>
 
-  <ItemGroup>
-    <MauiXaml Update="Pages\tt.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </MauiXaml>
-  </ItemGroup>
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">
+		<MauiAsset Include="Resources\Raw\hkks.db" LogicalName="hkks.db" />
+		<MauiAsset Include="Resources\ReleaseNote\ReleaseNotes.txt" LogicalName="ReleaseNotes.txt" />
+	</ItemGroup>
 
 </Project>

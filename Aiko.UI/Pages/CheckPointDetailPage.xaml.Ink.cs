@@ -15,6 +15,7 @@ public partial class CheckPointDetailPage : ContentPage
     private SKColor _currentTextColor;
     private float _currentTextSize;
     private string _currentTextFont;
+    private SKColor? _currentBackgoundColor;
 
     // 存储当前选中的颜色 Border，用于视觉状态切换
     private Border _selectedColorBorder;
@@ -88,7 +89,10 @@ public partial class CheckPointDetailPage : ContentPage
 
         canvas.Clear(SKColors.Transparent);
 
-        _toolManager.HandleDrawing(canvas, null, null);
+        if (_currentImage != null)
+        {
+            _toolManager.HandleDrawing(canvas, null, null);
+        }
     }
 
     // --- 画布浏览 ---
@@ -360,7 +364,7 @@ public partial class CheckPointDetailPage : ContentPage
             _currentTool.Size = (float)size;
             if (_isTextEditing)
             {
-                TextEditor.FontSize = size;
+                TextEditor.FontSize = size / InkUtils.Density;
                 _currentTextSize = (float)size;
                 AdjustTextEditorSize();
             }
@@ -524,20 +528,21 @@ public partial class CheckPointDetailPage : ContentPage
 
     // --- 文本 ---
 
-    private void OnTextEditRequested(SKPoint position, SKColor color, float size, string font)
+    private void OnTextEditRequested(SKPoint position, SKColor color, float size, string font, SKColor? bgColor)
     {
         if (_isTextEditing) FinishTextEdit();
 
-        StartTextEdit(position, color, size, font);
+        StartTextEdit(position, color, size, font, bgColor);
     }
 
-    private void StartTextEdit(SKPoint position, SKColor color, float size, string font)
+    private void StartTextEdit(SKPoint position, SKColor color, float size, string font, SKColor? bgColor)
     {
         _isTextEditing = true;
         _currentTextPosition = position;
         _currentTextColor = color;
         _currentTextSize = size;
         _currentTextFont = font;
+        _currentBackgoundColor = bgColor;
 
         TextEditor.Text = "";
         TextEditor.TextColor = color.ToMauiColor();
@@ -557,7 +562,15 @@ public partial class CheckPointDetailPage : ContentPage
         var text = TextEditor.Text?.Trim();
         if (!string.IsNullOrEmpty(text))
         {
-            _toolManager.AddTextStroke(_currentTool.Type, text, _currentTextPosition, _currentTextColor, _currentTextSize, _currentTextFont);
+            if (_currentTool.Type == "textTool")
+            {
+                _toolManager.AddTextStroke(_currentTool.Type, text, _currentTextPosition, _currentTextColor, _currentTextSize, _currentTextFont);
+            }
+            else
+            {
+                _toolManager.AddTextStroke(_currentTool.Type, text, _currentTextPosition, _currentBackgoundColor ?? SKColors.Transparent, _currentTextSize, _currentTextFont);
+            }
+
             InkCanvasView.InvalidateSurface();
         }
 

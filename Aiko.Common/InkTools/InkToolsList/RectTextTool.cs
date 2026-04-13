@@ -18,7 +18,7 @@ namespace Aiko.Common.InkTools.InkToolsList
 
         public override void OnDown(SKPoint point, SKCanvasView canvasView)
         {
-            TextEditRequest(point, SKColors.White, Size, Font);
+            TextEditRequest(point, SKColors.White, Size, Font, Color);
         }
 
         public override void Draw(SKCanvas canvas, InkStroke stroke)

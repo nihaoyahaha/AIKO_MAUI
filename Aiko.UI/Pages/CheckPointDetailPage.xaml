@@ -164,7 +164,7 @@
                                 <local:PinchToZoomContainerForCheckPointDetail x:Name="PinchToZoom">
 
                                     <AbsoluteLayout x:Name="ZoomLayer"
-                                                HorizontalOptions="Start" 
+                                                HorizontalOptions="Start"
                                                 VerticalOptions="Start">
 
                                         <skia:SKCanvasView x:Name="PhotoCanvasView"
@@ -182,7 +182,7 @@
 
                                         <Editor x:Name="TextEditor"
                                                 IsVisible="False"
-                                                AutoSize="TextChanges" 
+                                                AutoSize="TextChanges"
                                                 BackgroundColor="Transparent"
                                                 TextColor="Black"
                                                 FontSize="16"
@@ -780,7 +780,7 @@
                                 </Image>
                             </Border>
                             <Border Grid.Column="3"
-                                    Margin="3,0,0,0"
+                                    Margin="3,0,3,0"
                                     HeightRequest="26"
                                     Stroke="Blue"
                                     StrokeThickness="{Binding Checkrsl5StrokeThickness}"
@@ -822,7 +822,7 @@
                             <Border WidthRequest="60" HeightRequest="30"
                                     HorizontalOptions="Center" Background="#5B9BD5">
                                 <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ToggleImageDanmCommand}" />
+                                    <TapGestureRecognizer Command="{Binding ToggleImageGridCommand}" />
                                 </Border.GestureRecognizers>
                                 <Label HorizontalOptions="Center" 
                                        VerticalOptions="Center" 
@@ -831,7 +831,7 @@
                                        TextColor="White"
                                        BackgroundColor="Transparent"/>
                                 <Border.Triggers>
-                                    <DataTrigger TargetType="Border" Binding="{Binding IsImageDanmVisible}" Value="True">
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsImageGridVisible}" Value="True">
                                         <Setter Property="Background" Value="#4472C4" />
                                     </DataTrigger>
                                 </Border.Triggers>
@@ -1026,13 +1026,15 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
 
-                    <Grid x:Name="ImageDanm"
-                          IsVisible="{Binding IsImageDanmVisible}"
+                    <Grid x:Name="ImageGrid"
+                          IsVisible="{Binding IsImageGridVisible}"
                           Grid.Row="1"
                           Background="#e8e8e8"
                           IsClippedToBounds="True">
                         <local:PinchToZoomContainer x:Name="DanmImagePinchToZoom">
-                            <AbsoluteLayout x:Name="DanmImageZoomLayer">
+                            <AbsoluteLayout x:Name="DanmImageZoomLayer"
+                                            HorizontalOptions="Start"
+                                            VerticalOptions="Start">
                                 <Image x:Name="DanmImage"
                                        AbsoluteLayout.LayoutBounds="0,0,1,1"
                                        AbsoluteLayout.LayoutFlags="All"

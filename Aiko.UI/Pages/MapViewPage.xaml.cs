@@ -319,7 +319,15 @@ public partial class MapViewPage : ContentPage
                 {
                     baseFontSize = parsedFont;
                 }
+                 lbl.FontAutoScalingEnabled = false;
 
+                lbl.LineBreakMode = LineBreakMode.NoWrap;
+
+                lbl.MaxLines = 1;
+
+                lbl.Margin = 0;
+
+                lbl.Padding = 0;
                 lbl.FontSize = Math.Max(1d, baseFontSize * baseScale);
 
                 AbsoluteLayout.SetLayoutBounds(lbl, new Rect(
@@ -330,8 +338,8 @@ public partial class MapViewPage : ContentPage
                 AbsoluteLayout.SetLayoutFlags(lbl, AbsoluteLayoutFlags.None);
             }
 #else
-            // iOS/Mac：仅更新 IMG（RECT/POLY/LBL 在 OverlayCanvas 绘制）
-            if (type == "IMG")
+			// iOS/Mac：仅更新 IMG（RECT/POLY/LBL 在 OverlayCanvas 绘制）
+			if (type == "IMG")
             {
                 var vals = ParseNumbers(data[2]);
                 if (vals.Length < 4)

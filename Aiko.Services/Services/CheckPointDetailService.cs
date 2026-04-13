@@ -92,8 +92,26 @@ namespace Aiko.Services.Services
             {
                 var hr03ListToUpdate = hr03List.Where(hr03 => hr03.CHANGE == "UPDATE").ToList();
                 var hr03ListToDelete = hr03List.Where(hr03 => hr03.CHANGE == "DELETE").ToList();
-                await HkksDb.UpdateHR02HR03Async(hr03ListToUpdate, 0);
-                await HkksDb.UpdateHR02HR03Async(hr03ListToDelete, 1);
+
+                List<HR06SYASDEL> hr06List = new List<HR06SYASDEL>();
+                foreach (var item in hr03ListToDelete)
+                {
+                    HR06SYASDEL hr06 = new HR06SYASDEL();
+                    hr06.HR06001 = item.HR03001;
+                    hr06.HR06002 = item.HR03002;
+                    hr06.HR06003 = item.HR03003;
+                    hr06.HR06004 = item.HR03004;
+                    hr06.HR06005 = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    hr06.HR06006 = AppContext.Name;
+                    hr06.HR06007 = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    hr06.HR06008 = AppContext.Name;
+                    hr06.HR06009 = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    hr06.HR06010 = AppContext.Name;
+                    hr06List.Add(hr06);
+                }
+
+                await HkksDb.UpdateTableAsync(new List<HR02KSKK>(), hr03ListToUpdate, hr03ListToDelete, new List<HR04KSHIS>(), hr06List);
+
                 foreach (var hr03 in hr03ListToDelete)
                 {
                     string imageType = hr03.HR03017 == 0 ? ".jpg" : ".svg";

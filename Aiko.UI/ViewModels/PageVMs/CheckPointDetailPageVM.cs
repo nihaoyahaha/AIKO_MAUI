@@ -191,7 +191,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [ObservableProperty]
     private bool _isImageGalleryVisible = true;
     [ObservableProperty]
-    private bool _isImageDanmVisible = false;
+    private bool _isImageGridVisible = false;
 
     public CheckPointDetailPageVM(ILogger<CheckPointDetailPageVM> logger, ICheckPointDetailService service, ICheckPointService checkPointService) : base(logger, service)
     {
@@ -381,14 +381,14 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     private void ToggleImageGallery()
     {
         IsImageGalleryVisible = true;
-        IsImageDanmVisible = false;
+        IsImageGridVisible = false;
     }
 
     [RelayCommand]
-    private void ToggleImageDanm()
+    private void ToggleImageGrid()
     {
         IsImageGalleryVisible = false;
-        IsImageDanmVisible = true;
+        IsImageGridVisible = true;
     }
 
     [RelayCommand]
@@ -397,8 +397,18 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         InkImage? image = ImageList.Where(image => image.IsSelected).FirstOrDefault();
         if (image == null) return;
 
-        ImageList.Remove(image);
-        SourceImageList.Remove(image);
+        int index = ImageList.IndexOf(image);
+
+        ImageList.RemoveAt(index);
+        SourceImageList.RemoveAt(index);
+
+        var message = new AsyncRequestMessage("ClearImage");
+        _ = WeakReferenceMessenger.Default.Send(message);
+        await message.Tcs.Task;
+
+        message = new AsyncRequestMessage("SwitchImage", new Dictionary<string, object?> { { "image", ImageList.Count > index ? ImageList[index] : ImageList.LastOrDefault() } });
+        _ = WeakReferenceMessenger.Default.Send(message);
+        await message.Tcs.Task;
 
         OnPropertyChanged(nameof(Summary));
     }
@@ -498,7 +508,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         var previousImage = ImageList.ElementAtOrDefault(index);
         if (previousImage == null) return;
 
-        var message = new AsyncRequestMessage("SwitchImage", new Dictionary<string, object> { { "image", previousImage } });
+        var message = new AsyncRequestMessage("SwitchImage", new Dictionary<string, object?> { { "image", previousImage } });
         _ = WeakReferenceMessenger.Default.Send(message);
         await message.Tcs.Task;
     }
@@ -523,7 +533,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         var nextImage = ImageList.ElementAtOrDefault(index);
         if (nextImage == null) return;
 
-        var message = new AsyncRequestMessage("SwitchImage", new Dictionary<string, object> { { "image", nextImage } });
+        var message = new AsyncRequestMessage("SwitchImage", new Dictionary<string, object?> { { "image", nextImage } });
         _ = WeakReferenceMessenger.Default.Send(message);
         await message.Tcs.Task;
     }
@@ -921,7 +931,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     public class AsyncRequestMessage : RequestMessage<bool>
     {
         public string Name { get; }
-        public Dictionary<string, object> Parameters { get; set; }
+        public Dictionary<string, object?> Parameters { get; set; }
         public Dictionary<string, object> Result { get; set; }
 
         public TaskCompletionSource<bool> Tcs { get; } = new();
@@ -929,9 +939,10 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         public AsyncRequestMessage(string name)
         {
             Name = name;
+            Parameters = new Dictionary<string, object?>();
             Result = new Dictionary<string, object>();
         }
-        public AsyncRequestMessage(string name, Dictionary<string, object> parameters)
+        public AsyncRequestMessage(string name, Dictionary<string, object?> parameters)
         {
             Name = name;
             Parameters = parameters;

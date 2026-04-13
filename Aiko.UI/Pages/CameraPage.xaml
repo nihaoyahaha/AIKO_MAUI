@@ -57,6 +57,44 @@
             </toolkit:CameraView>
 
             <Grid
+                x:Name="cameraGrid"
+                ColumnDefinitions="*,*,*"
+                InputTransparent="True"
+                IsVisible="{Binding GridVisible}"
+                RowDefinitions="*,*,*">
+
+                <BoxView
+                    Grid.Row="0"
+                    Grid.ColumnSpan="3"
+                    HeightRequest="1"
+                    Opacity="0.5"
+                    VerticalOptions="End"
+                    Color="White" />
+                <BoxView
+                    Grid.Row="1"
+                    Grid.ColumnSpan="3"
+                    HeightRequest="1"
+                    Opacity="0.5"
+                    VerticalOptions="End"
+                    Color="White" />
+
+                <BoxView
+                    Grid.RowSpan="3"
+                    Grid.Column="0"
+                    HorizontalOptions="End"
+                    Opacity="0.5"
+                    WidthRequest="1"
+                    Color="White" />
+                <BoxView
+                    Grid.RowSpan="3"
+                    Grid.Column="1"
+                    HorizontalOptions="End"
+                    Opacity="0.5"
+                    WidthRequest="1"
+                    Color="White" />
+            </Grid>
+
+            <Grid
                 x:Name="rectGrid"
                 HorizontalOptions="Start"
                 VerticalOptions="Start">
@@ -135,6 +173,25 @@
                     Margin="-10,0,0,0"
                     FontSize="18"
                     Text="確認者"
+                    VerticalOptions="Center" />
+
+                <CheckBox
+                    x:Name="chk_grid"
+                    Margin="25,0,0,0"
+                    IsChecked="False"
+                    VerticalOptions="Center">
+                    <CheckBox.Behaviors>
+                        <toolkit:EventToCommandBehavior
+                            x:TypeArguments="system:EventArgs"
+                            BindingContext="{Binding Path=BindingContext, Source={x:Reference chk_grid}}"
+                            Command="{Binding ChangeGridIsVisibleCommand}"
+                            EventName="CheckedChanged" />
+                    </CheckBox.Behaviors>
+                </CheckBox>
+                <Label
+                    Margin="-10,0,0,0"
+                    FontSize="18"
+                    Text="グリッド"
                     VerticalOptions="Center" />
             </HorizontalStackLayout>
 

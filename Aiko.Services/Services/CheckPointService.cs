@@ -475,7 +475,7 @@ namespace Aiko.Services.Services
 		{
 			_cameraService.SetHR01ITEM(_hr01);
 
-			await Shell.Current.GoToAsync($"Camera");
+			await Shell.Current.GoToAsync($"Camera?FromPage=CheckPointPage");
 		}
 
 		/// <summary>
@@ -520,7 +520,7 @@ namespace Aiko.Services.Services
 			await HkksDb.UpdateHR02HR03Async(hr03List, 1);
 			photoPathList.Clear();
 			List<HR03SYAS> hr03syas = await HkksDb.GetHR03SYASListAsync(new List<string> { _hr01.HR01001 });
-			var allowedExtensions = new[] { ".jpg", ".svg", ".inkcanvas", ".canvas" };
+			var allowedExtensions = new[] { ".jpg", ".svg", ".json"};
 			string photoFolderPath = Path.Combine(AikoAppContext.ConstructionSiteFolder, "photo");
 			var files = Directory.GetFiles(photoFolderPath, "*", SearchOption.AllDirectories)
 				.Where(path => allowedExtensions.Contains(Path.GetExtension(path).ToLowerInvariant()))

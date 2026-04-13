@@ -29,7 +29,8 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	public CheckPointPageVM(ICheckPointService service, ILogger<CheckPointPageVM> logger, IPopupService popupService) : base(logger, service)
 	{
 		_popupService = popupService;
-		WeakReferenceMessenger.Default.Register<string, string>(this, "TakeOrDeletePhotosToken", (page, message) => TakeOrDeletePhotos(message));
+		WeakReferenceMessenger.Default.Register<string, string>(this, "TakePhotosToken", (page, message) => TakePhotos(message));
+		WeakReferenceMessenger.Default.Register<string, string>(this, "DeletePhotosToken", (page, message) => DeletePhotos(message));
 	}
 
 	#region 観察可能属性
@@ -381,18 +382,21 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	#region 処理方法
 
 	/// <summary>
-	/// 撮影した写真を追加または削除する
+	/// 撮影した写真を追加する
 	/// </summary>
 	/// <param name="message"></param>
-	void TakeOrDeletePhotos(string message)
+	void TakePhotos(string message)
 	{
-		string[] array = message.Split('-');
-		string key = array[0];
-		string filePath = array[1];
-		if (key == "Add")
-			_photoPathList.Add(filePath);
-		else
-			_photoPathList.Remove(filePath);
+		_photoPathList.Add(message);
+	}
+
+	/// <summary>
+	/// 撮影した写真を削除する
+	/// </summary>
+	/// <param name="message"></param>
+	void DeletePhotos(string message)
+	{
+		_photoPathList.Remove(message);
 	}
 
 	async Task InitializeRowLayoutAsync()

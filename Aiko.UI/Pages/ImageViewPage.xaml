@@ -70,7 +70,7 @@
             </Grid>
             <ImageButton
                 Padding="10"
-                BackgroundColor="#66000000"
+                BackgroundColor="#66ffffff"
                 Command="{Binding PreviousImageCommand}"
                 CommandParameter="imageButton"
                 CornerRadius="24"
@@ -82,7 +82,7 @@
                 WidthRequest="48" />
             <ImageButton
                 Padding="10"
-                BackgroundColor="#66000000"
+                BackgroundColor="#66ffffff"
                 Command="{Binding NextImageCommand}"
                 CommandParameter="imageButton"
                 CornerRadius="24"
@@ -129,7 +129,7 @@
                 <Button
                     Margin="100,0,20,0"
                     Command="{Binding RemoveCurrentItemCommand}"
-                    HeightRequest="40"
+                    FontSize="Body"
                     Text="削除"
                     WidthRequest="70" />
 

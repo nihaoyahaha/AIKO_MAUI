@@ -68,6 +68,12 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	private Grid _rectGrid;
 
 	/// <summary>
+	/// グリッド
+	/// </summary>
+	[ObservableProperty]
+	private Grid _gridLayer;
+
+	/// <summary>
 	/// 撮影されたフォトパス
 	/// </summary>
 	[ObservableProperty]
@@ -123,6 +129,12 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 
 	[ObservableProperty]
 	private bool isRearCamera;
+
+	/// <summary>
+	/// グリッドの表示
+	/// </summary>
+	[ObservableProperty]
+	private bool _gridVisible =false;
 	#endregion
 
 	#region プライベートフィールド
@@ -131,6 +143,14 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	/// cameraview uiサイズ
 	/// </summary>
 	private Rect CameraViewBoundRect;
+
+	/// <summary>
+	/// 前のページの名前
+	/// </summary>
+	private string _fromPage = "";
+	#endregion
+
+	#region 公開フィールド
 
 	/// <summary>
 	/// cameraview黒辺除去の可視化寸法
@@ -145,6 +165,18 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	public CancellationToken Token => CancellationToken.None;
 
 	#endregion
+
+	/// <summary>
+	/// 前の画面で渡されたパラメータの処理
+	/// </summary>
+	/// <param name="query"></param>
+	public override void ApplyQueryAttributes(IDictionary<string, object> query)
+	{
+		if (query.Keys.Contains("FromPage"))
+		{
+			_fromPage = query["FromPage"].ToString();
+		}
+	}
 
 	#region コマンドハンドラ 
 
@@ -171,7 +203,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	[RelayCommand]
 	async private Task PageLoaded()
 	{
-		PhotoScreenshot = null;
+		if(_fromPage == "CheckPointPage") PhotoScreenshot = null;
 		await RefreshCameras(CancellationToken.None);
 		GreenBackgroundModel = Service.GetGreenBackgroundModel();
 		//断面図の表示
@@ -372,7 +404,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 			}
 			InspectionRecordItem inspectionRecordItem = CreateInspectionRecordItem(photoType);
 			await Service.SavePhotoDataToSqliteDbAsync(inspectionRecordItem);
-			WeakReferenceMessenger.Default.Send($"Add-{PhotoScreenshotPath}", "TakeOrDeletePhotosToken");
+			WeakReferenceMessenger.Default.Send($"{PhotoScreenshotPath}", "TakePhotosToken");
 		}
 		catch (Exception ex)
 		{
@@ -380,8 +412,16 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		}
 	}
 
-
-
+	/// <summary>
+	/// グリッドの表示切り替え
+	/// </summary>
+	/// <param name="e"></param>
+	[RelayCommand]
+	private void ChangeGridIsVisible(EventArgs e)
+	{
+		var value = ((CheckedChangedEventArgs)e).Value;
+		GridVisible = value;
+	}
 	#endregion
 
 	#region 処理方法
@@ -677,6 +717,9 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		_rectGrid.TranslationY = previewHeight - _rectGrid.DesiredSize.Height + offsetY;
 		panX = _rectGrid.TranslationX;
 		panY = _rectGrid.TranslationY;
+
+		GridLayer.WidthRequest = CameraViewActualVideoRect.Width;
+		GridLayer.HeightRequest = CameraViewActualVideoRect.Height;
 	}
 
 	/// <summary>
@@ -689,6 +732,9 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		_rectGrid.TranslationY = CameraViewActualVideoRect.Height - _rectGrid.DesiredSize.Height;
 		panX = _rectGrid.TranslationX;
 		panY = _rectGrid.TranslationY;
+
+		GridLayer.WidthRequest = CameraViewActualVideoRect.Width;
+		GridLayer.HeightRequest = CameraViewActualVideoRect.Height;
 	}
 
 	/// <summary>

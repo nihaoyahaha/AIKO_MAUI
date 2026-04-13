@@ -102,7 +102,7 @@ public partial class ImageViewPageVM : Observablebase<ImageViewPageVM, IImageVie
 			if (File.Exists(localPath)) File.Delete(localPath);
 			await Service.RemovePreviewPhotoAsync(PhotoPreview);
 			PhotoPreviews.RemoveAt(_currentPosition);
-			WeakReferenceMessenger.Default.Send($"Delete-{localPath}", "TakeOrDeletePhotosToken");
+			WeakReferenceMessenger.Default.Send($"{localPath}", "DeletePhotosToken");
 
 			var index = _currentPosition >= PhotoPreviews.Count
 						   ? Math.Max(0, PhotoPreviews.Count - 1)
@@ -121,7 +121,7 @@ public partial class ImageViewPageVM : Observablebase<ImageViewPageVM, IImageVie
 	[RelayCommand]
 	private async Task Back()
 	{
-		await Shell.Current.GoToAsync("..");
+		await Shell.Current.GoToAsync("..?FromPage=ImageViewPage");
 	}
 
 	void InitializePage()

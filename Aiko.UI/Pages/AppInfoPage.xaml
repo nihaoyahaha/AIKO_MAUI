@@ -21,17 +21,6 @@
                 Margin="0,20,0,10"
                 HorizontalOptions="Center"
                 Spacing="10">
-                <Border
-                    BackgroundColor="White"
-                    HeightRequest="80"
-                    StrokeShape="RoundRectangle 20"
-                    StrokeThickness="0"
-                    WidthRequest="80">
-                    <Image
-                        Margin="10"
-                        Aspect="AspectFit"
-                        Source="app_icon.png" />
-                </Border>
                 <Label
                     FontAttributes="Bold"
                     FontSize="22"
@@ -104,7 +93,7 @@
             <Label
                 Margin="5,10,0,0"
                 FontSize="14"
-                Text="リーガル情報"
+                Text="{Binding ReleaseNotes}"
                 TextColor="Gray" />
             <Border
                 Padding="15"

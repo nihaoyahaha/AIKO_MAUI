@@ -132,7 +132,15 @@ public partial class CheckPointDetailPage : ContentPage
     private async Task LoadCanvasViewImage(InkImage? image)
     {
         if (image == null || string.IsNullOrEmpty(image.FullName))
+        {
+            _currentImage = null;
+
+            PhotoCanvasView.InvalidateSurface();
+            BlackboardCanvasView.InvalidateSurface();
+            InkCanvasView.InvalidateSurface();
+
             return;
+        }
 
         _vm.SetSelectedImage(image);
 

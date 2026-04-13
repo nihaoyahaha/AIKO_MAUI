@@ -219,10 +219,10 @@ namespace Aiko.Common.InkTools
 
         // --- 文本编辑事件 ---
 
-        public event Action<SKPoint, SKColor, float, string>? TextEditRequested;
-        public void OnTextEditRequested(SKPoint position, SKColor color, float size, string font)
+        public event Action<SKPoint, SKColor, float, string, SKColor?>? TextEditRequested;
+        public void OnTextEditRequested(SKPoint position, SKColor color, float size, string font, SKColor? bgColor)
         {
-            TextEditRequested?.Invoke(position, color, size, font);
+            TextEditRequested?.Invoke(position, color, size, font, bgColor);
         }
         public void AddTextStroke(string type, string text, SKPoint position, SKColor color, float size, string font)
         {

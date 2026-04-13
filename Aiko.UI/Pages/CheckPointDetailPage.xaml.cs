@@ -4,6 +4,8 @@ using Aiko.Common.Models;
 using Aiko.UI.ViewModels.PageVMs;
 using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
+using Point = Microsoft.Maui.Graphics.Point;
+using Size = Microsoft.Maui.Graphics.Size;
 
 namespace Aiko.UI.Pages;
 
@@ -15,7 +17,7 @@ public partial class CheckPointDetailPage : ContentPage
 
     private InkToolManager _toolManager;
 
-    private InkImage _currentImage;
+    private InkImage? _currentImage;
 
     private bool CanvasViewVisibleChanged =>
         (_vm.IsBlackboardVisible != _currentImage?.IsBlackboardVisible) ||
@@ -36,7 +38,7 @@ public partial class CheckPointDetailPage : ContentPage
         BlackboardCanvasView.InvalidateSurface();
         InkCanvasView.InvalidateSurface();
 
-        if (_vm.ImageList.Count > 0)
+        if (_vm.Proj != null)
         {
             List<InkImage> images = await _vm.GetImageInfo(_vm.Query, _vm.Proj.Value);
             await LoadGalleryImages(_vm.ImageFolderPath, images);
@@ -47,7 +49,7 @@ public partial class CheckPointDetailPage : ContentPage
         SwitchTool("Empty");
 
         await _vm.LoadDanmImage();
-        OnDanmImageLoaded();
+        UpdateDanmImageDimensions();
     }
 
     public CheckPointDetailPage(CheckPointDetailPageVM checkPointDetailPageVM)
@@ -68,8 +70,16 @@ public partial class CheckPointDetailPage : ContentPage
         // 订阅 VM 的属性变更通知
         _vm.PropertyChanged += OnViewModelPropertyChanged;
 
-        MainGridView.SizeChanged += (s, e) => UpdateImageDimensions();
-        ImageDanm.SizeChanged += (s, e) => UpdateDanmImageDimensions();
+        MainGridView.SizeChanged += (s, e) =>
+        {
+            if (MainGridView.Width > 0 && MainGridView.Height > 0)
+                UpdateImageDimensions();
+        };
+        ImageGrid.SizeChanged += (s, e) =>
+        {
+            if (ImageGrid.Width > 0 && ImageGrid.Height > 0)
+                UpdateDanmImageDimensions();
+        };
 
         WeakReferenceMessenger.Default.Register<CheckPointDetailPage, CheckPointDetailPageVM.AsyncRequestMessage>(this, async (page, message) =>
         {
@@ -86,7 +96,10 @@ public partial class CheckPointDetailPage : ContentPage
                     break;
                 case "SwitchImage":
                     var image = message.Parameters["image"] as InkImage;
-                    if (image != null) await SwitchImage(image);
+                    await SwitchImage(image);
+                    break;
+                case "ClearImage":
+                    _currentImage = null;
                     break;
                 default:
                     break;
@@ -107,7 +120,7 @@ public partial class CheckPointDetailPage : ContentPage
 
     private async Task OnProjChanged()
     {
-        if (string.IsNullOrEmpty(_vm.ImageFolderPath) || string.IsNullOrEmpty(_vm.Proj.Value)) return;
+        if (string.IsNullOrEmpty(_vm.ImageFolderPath) || _vm.Proj == null || string.IsNullOrEmpty(_vm.Proj.Value)) return;
 
         if (!Directory.Exists(_vm.ImageFolderPath))
         {
@@ -146,58 +159,34 @@ public partial class CheckPointDetailPage : ContentPage
 
     // --- 断面页签 ---
 
-    private double showW = 0;
-    private double showH = 0;
-    private double originalWidth = 0;
-    private double originalHeight = 0;
-    private async void OnDanmImageLoaded()
+    private async void UpdateDanmImageDimensions()
     {
-        // 确保图片源已加载
+        if (ImageGrid.Width <= 0 || ImageGrid.Height <= 0) return;
+
         if (DanmImage.Source == null) return;
 
+        Size size = Size.Zero;
         for (int i = 0; i < 10; i++)
         {
-            // 获取图片的尺寸
-            var size = await GetOriginalImageSize(DanmImage);
-            if (size.Width > 0 && size.Height > 0)
-            {
-                originalWidth = size.Width;
-                originalHeight = size.Height;
+            size = await GetOriginalImageSize(DanmImage);
 
-                // 图片自适应宽度
-                UpdateDanmImageDimensions();
-
-                return;
-            }
+            if (size.Width > 0 && size.Height > 0) break;
 
             await Task.Delay(50);
         }
-    }
-    private void UpdateDanmImageDimensions()
-    {
-        if (originalWidth <= 0 || originalHeight <= 0)
-            return;
 
-        double cw = MainGridView.Width;
-        double ch = MainGridView.Height;
+        double fitScale = Math.Min(1d, Math.Min(ImageGrid.Width / size.Width, ImageGrid.Height / size.Height));
 
-        if (cw <= 0 || ch <= 0)
-            return;
+        double fitWidth = size.Width * fitScale;
+        double fitHeight = size.Height * fitScale;
 
-        double fitScale = Math.Min(1d, Math.Min(cw / originalWidth, ch / originalHeight));
+        DanmImageZoomLayer.WidthRequest = fitWidth;
+        DanmImageZoomLayer.HeightRequest = fitHeight;
 
-        showW = originalWidth * fitScale;
-        showH = originalHeight * fitScale;
+        DanmImage.WidthRequest = fitWidth;
+        DanmImage.HeightRequest = fitHeight;
 
-        DanmImageZoomLayer.WidthRequest = showW;
-        DanmImageZoomLayer.HeightRequest = showH;
-        DanmImageZoomLayer.HorizontalOptions = LayoutOptions.Start;
-        DanmImageZoomLayer.VerticalOptions = LayoutOptions.Start;
-
-        DanmImage.WidthRequest = showW;
-        DanmImage.HeightRequest = showH;
-
-        DanmImagePinchToZoom.SetBaseSize(showW, showH);
+        DanmImagePinchToZoom.SetBaseSize(fitWidth, fitHeight);
     }
     private static async Task<Size> GetOriginalImageSize(Image image)
     {
@@ -356,7 +345,7 @@ public partial class CheckPointDetailPage : ContentPage
         if (image != null) await SwitchImage(image);
     }
 
-    private async Task SwitchImage(InkImage image)
+    private async Task SwitchImage(InkImage? image)
     {
         bool? success = await Save(true, false);
         if (success != false)
@@ -373,6 +362,8 @@ public partial class CheckPointDetailPage : ContentPage
 
     private void OnSignOptionTapped(object sender, TappedEventArgs e)
     {
+        if (_currentImage == null) return;
+
         var sign = e.Parameter as string;
         if (!string.IsNullOrEmpty(sign))
         {
@@ -401,15 +392,18 @@ public partial class CheckPointDetailPage : ContentPage
             {
                 bool success = true;
 
-                if (strokesChanged || CanvasViewVisibleChanged)
+                if (_currentImage != null)
                 {
-                    await SaveImage(_currentImage, _toolManager.CompletedStrokes.Select(stroke => stroke.Clone()).ToList());
-                }
-                if (strokesChanged || CanvasViewVisibleChanged || _vm.ImageInfoChanged(_currentImage))
-                {
-                    if (!await _vm.SaveImageInfo(_currentImage))
+                    if (strokesChanged || CanvasViewVisibleChanged)
                     {
-                        success = false;
+                        await SaveImage(_currentImage, _toolManager.CompletedStrokes.Select(stroke => stroke.Clone()).ToList());
+                    }
+                    if (strokesChanged || CanvasViewVisibleChanged || _vm.ImageInfoChanged(_currentImage))
+                    {
+                        if (!await _vm.SaveImageInfo(_currentImage))
+                        {
+                            success = false;
+                        }
                     }
                 }
 

@@ -54,7 +54,7 @@ public class DataSyncService
 	int _timeout = 15000;
 	decimal _pageSize = 10000;
 	IUWPServiceAPI _serviceApi02;
-	string[] _mimeTypes = { "jpg", "svg", "json" };
+	string[] _mimeTypes = { ".jpg", ".svg", ".json" };
 	#endregion
 
 	#region 属性
@@ -1670,11 +1670,6 @@ public class DataSyncService
 					await _hkksDb.Db.ExecuteAsync("delete from HR02KSKK where HR02001=? and HR02002=?", workCode, DIFF_HR01003List[i]);
 					await _hkksDb.Db.ExecuteAsync("delete from HR03SYAS where HR03001=? and HR03003=?", workCode, DIFF_HR01003List[i]);
 					await _hkksDb.Db.ExecuteAsync("delete from HR05KOKUMINFO where HR05001=? and HR05002=?", workCode, DIFF_HR01003List[i]);
-					await _hkksDb.Db.ExecuteAsync(
-						@$"INSERT INTO HR06SYASDEL (HR06001, HR06002, HR06003,HR06004,HR06006,HR06008,HR06010)
-                        SELECT HR03001, HR03002, HR03003,HR03004,'{_appContext.Name}' AS HR03012,'{_appContext.Name}' AS HR03014,'{_appContext.Name}' AS HR03016
-                        FROM HR03SYAS
-                        WHERE HR03001=? and HR03003=?", workCode, DIFF_HR01003List[i]);
 				}
 			}
 			string downLoadTime = _downLoadTimeUtils.GetDownLoadTime(workCode, "HR01ITEM");
@@ -2029,8 +2024,7 @@ public class DataSyncService
 		{
 			_logger.LogError(ex.ToString());
 		}
-		var finalList = local_dataList.Union(dataList).ToList();
-		return finalList;
+		return local_dataList;
 	}
 
 	public async Task SetHR02Async(string workCode, Func<string, int, int, Task> asyncMethod)
@@ -2451,13 +2445,13 @@ public class DataSyncService
 				string message = $"写真画像のダウンロード:{++count}/{allCount}";
 				foreach (var mimetype in _mimeTypes)
 				{
-					if (item.HR03017 == 0 && mimetype != "jpg") continue;
-					if (item.HR03017 == 1 && mimetype == "jpg") continue;
+					if (item.HR03017 == 0 && mimetype != ".jpg") continue;
+					if (item.HR03017 == 1 && mimetype == ".jpg") continue;
 					await asyncMethod(message, currentStep, totalSteps);
-					string fileUri = $"{workCode}/photo/{item.HR03002.Trim()}.{mimetype}";
-					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}.{mimetype}");
+					string fileUri = $"{workCode}/photo/{item.HR03002.Trim()}{mimetype}";
+					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}{mimetype}");
 
-					if (mimetype == "json" && !await JsonFileExistsAsync(fileUri)) continue;
+					if (mimetype == ".json" && !await JsonFileExistsAsync(fileUri)) continue;
 
 					using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 					bool result;
@@ -2522,14 +2516,14 @@ public class DataSyncService
 				string message = $"写真画像のアップロード:{++count}/{allCount}";
 				foreach (var mimetype in _mimeTypes)
 				{
-					if (item.HR03017 == 0 && mimetype != "jpg") continue;
-					if (item.HR03017 == 1 && mimetype == "jpg") continue;
+					if (item.HR03017 == 0 && mimetype != ".jpg") continue;
+					if (item.HR03017 == 1 && mimetype == ".jpg") continue;
 					await asyncMethod(message, currentStep, totalSteps);
 					string remoteDirectory = $"{workCode}/photo";
-					string remoteFileName = $"{item.HR03002.Trim()}.{mimetype}";
-					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}.{mimetype}");
+					string remoteFileName = $"{item.HR03002.Trim()}{mimetype}";
+					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}{mimetype}");
 
-					if (mimetype == "json" && !File.Exists(localFilePath)) continue;
+					if (mimetype == ".json" && !File.Exists(localFilePath)) continue;
 
 					using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 					if (File.Exists(localFilePath))
@@ -2551,7 +2545,7 @@ public class DataSyncService
 					else
 					{
 						// 写真方式 0：JPG 1：SVG
-						if ((item.HR03017 == 0 && mimetype == "jpg") || (item.HR03017 == 1 && mimetype == "svg"))
+						if ((item.HR03017 == 0 && mimetype == ".jpg") || (item.HR03017 == 1 && mimetype == ".svg"))
 						{
 							_logger.LogWarning($"UploadPhotoFilesAsync:{localFilePath}画像が存在しません");
 						}
@@ -2585,7 +2579,7 @@ public class DataSyncService
 				foreach (var mimetype in _mimeTypes)
 				{
 					await asyncMethod(message, currentStep, totalSteps);
-					string fileUri = $"{workCode}/photo/{item.HR06002.Trim()}.{mimetype}";
+					string fileUri = $"{workCode}/photo/{item.HR06002.Trim()}{mimetype}";
 					using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 					if (_appContext.FileServerType == 2)
 					{
@@ -2621,12 +2615,11 @@ public class DataSyncService
 			? hr03syas.Where(x => x.HR03009 < passedDay).Select(x => x.HR03002).ToList()
 			: new();
 
-		var allowedExtensions = new[] { ".jpg", ".svg", ".inkcanvas", ".canvas" };
 		string photoFolderPath = Path.Combine(_appContext.ConstructionSiteFolder, "photo");
 		if (!Directory.Exists(photoFolderPath)) return;
 
 		var files = Directory.GetFiles(photoFolderPath, "*", SearchOption.AllDirectories)
-			.Where(path => allowedExtensions.Contains(Path.GetExtension(path).ToLowerInvariant()))
+			.Where(path => _mimeTypes.Contains(Path.GetExtension(path).ToLowerInvariant()))
 			.ToList();
 		foreach (var file in files)
 		{

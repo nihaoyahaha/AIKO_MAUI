@@ -1,4 +1,5 @@
 ﻿using Aiko.UI.ViewModels.PageVMs;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Aiko.UI;
 
@@ -10,6 +11,7 @@ public partial class CameraPage : ContentPage
 		InitializeComponent();
 		BindingContext = vm;
 		vm.RectGrid = rectGrid;
+		vm.GridLayer = cameraGrid;
 		_vm = vm;
 	}
 
@@ -36,7 +38,6 @@ public partial class CameraPage : ContentPage
 	{
 		base.OnAppearing();
 #if WINDOWS
-    // 使用 Dispatcher 延迟到下一帧执行
     Dispatcher.Dispatch(() =>
     {
         if (this.Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement winView)
@@ -57,6 +58,7 @@ public partial class CameraPage : ContentPage
 #if WINDOWS
         Platforms.Windows.CameraCaptureHelper.RemoveInteraction();
 #endif
+
 	}
 
 	private void PanGestureRecognizer_PanUpdated(object sender, PanUpdatedEventArgs e)

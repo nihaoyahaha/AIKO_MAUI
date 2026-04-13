@@ -24,7 +24,7 @@ namespace Aiko.Common.InkTools.InkToolsList
 
         public override void OnDown(SKPoint point, SKCanvasView canvasView)
         {
-            TextEditRequest(point, Color, Size, Font);
+            TextEditRequest(point, Color, Size, Font, null);
         }
         public override void OnMove(SKPoint point, SKCanvasView canvasView) { }
         public override void OnUp(SKPoint point, SKCanvasView canvasView) { }
@@ -88,11 +88,11 @@ namespace Aiko.Common.InkTools.InkToolsList
             }
         }
 
-        public event Action<SKPoint, SKColor, float, string>? TextEditRequested;
+        public event Action<SKPoint, SKColor, float, string, SKColor?>? TextEditRequested;
 
-        protected void TextEditRequest(SKPoint point, SKColor color, float size, string font)
+        protected void TextEditRequest(SKPoint point, SKColor color, float size, string font, SKColor? bgColor)
         {
-            TextEditRequested?.Invoke(point, color, size, font);
+            TextEditRequested?.Invoke(point, color, size, font, bgColor);
         }
     }
 }
