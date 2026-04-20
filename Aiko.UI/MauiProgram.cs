@@ -20,8 +20,12 @@ public static class MauiProgram
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-				//fonts.AddFont("msgothic.ttc", "ＭＳ ゴシック");
-			});
+                //fonts.AddFont("msgothic.ttc", "ＭＳ ゴシック");
+
+                fonts.AddFont("Hiragino-Kaku-Gothic.otf", "ヒラギノ角ゴシック");
+                fonts.AddFont("Hiragino-Mincho-ProN.otf", "ヒラギノ明朝 ProN");
+                fonts.AddFont("Hiragino-Maru-Go-ProN.otf", "ヒラギノ丸ゴ ProN");
+            });
 
 #if DEBUG
 		builder.Logging.AddDebug();

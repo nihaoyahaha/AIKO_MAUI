@@ -76,7 +76,7 @@ public class WebDavClient
 	/// <param name="localFilePath">ローカルパス</param>
 	/// <param name="ct">キャンセルトークン</param>
 	/// <returns>true：ダウンロード成功、false：ダウンロード失敗</returns>
-	public async Task<bool> DownloadAsync(string remotePath, string localFilePath, CancellationToken ct = default)
+	public async Task<bool> DownloadAsync(string remotePath, string localFilePath)
 	{
 		try
 		{
@@ -87,10 +87,14 @@ public class WebDavClient
 			}
 
 			var client = _httpClientFactory.CreateClient("WebDavClient");
-			client.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
-			var request = new HttpRequestMessage(HttpMethod.Get, BuildUrl(remotePath));
+			//デフォルトのタイムアウト制限をオフにする
+			client.Timeout = Timeout.InfiniteTimeSpan;
+			var request = new HttpRequestMessage(HttpMethod.Get, BuildUrl(remotePath))
+			{
+				Version = HttpVersion.Version11
+			};
 			request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", _authValue);
-			using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+			using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 			if (response.StatusCode == HttpStatusCode.NotFound)
 			{
 				_logger.LogWarning($"webdav-ダウンロード対象のファイルが見つかりません: {remotePath}");
@@ -98,25 +102,20 @@ public class WebDavClient
 			}
 			response.EnsureSuccessStatusCode();
 
-			long? totalSize = response.Content.Headers.ContentLength;
-			long downloaded = 0;
-
-			using var stream = await response.Content.ReadAsStreamAsync(ct);
+			using var stream = await response.Content.ReadAsStreamAsync();
 			using var fileStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, useAsync: true);
+			await stream.CopyToAsync(fileStream, 8192);
 
-			var buffer = new byte[8192];
-			int read;
-			while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
-			{
-				await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
-				downloaded += read;
-			}
-			await fileStream.FlushAsync(ct);
 			return true;
+		}
+		catch (OperationCanceledException)
+		{ 
+			_logger.LogError($"webdav-ネットワークが長時間応答しないため、ダウンロードが中断されました,ファイル{remotePath}");
+			return false;
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError($"webdav-リモートファイルのダウンロードに失敗しました{ex.ToString()}");
+			_logger.LogError($"webdav-リモートファイルのダウンロードに失敗しました,ファイル{remotePath},{ex.ToString()}");
 			return false;
 		}
 	}

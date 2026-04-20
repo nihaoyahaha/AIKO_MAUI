@@ -34,8 +34,7 @@
         <DataTemplate x:Key="DataTemplateDark" x:DataType="model:InspectionItem">
             <Grid HeightRequest="40" RowDefinitions="*, Auto">
                 <Grid
-                    BackgroundColor="{AppThemeBinding Dark=#111827,
-                                                      Light=#FFFFFF}"
+                    BackgroundColor="#FFFFFF"
                     ColumnDefinitions="1*,4*,1*"
                     RowDefinitions="Auto"
                     VerticalOptions="Center">
@@ -239,16 +238,12 @@
 
         <!--  中间 部位、工区、階・グループ...选择框  -->
         <Grid
-    Grid.Row="1"
-    Grid.ColumnSpan="2"
-    ColumnSpacing="10" Padding="10,0,10,0">
+            Grid.Row="1"
+            Grid.ColumnSpan="2"
+            Padding="10,0,10,0"
+            ColumnSpacing="10">
 
             <Grid.Resources>
-                <Style TargetType="Label">
-                    <Setter Property="FontSize" Value="Body" />
-                    <Setter Property="VerticalTextAlignment" Value="Center" />
-                </Style>
-
                 <Style TargetType="Entry">
                     <Setter Property="FontSize" Value="Body" />
                     <Setter Property="IsEnabled" Value="False" />
@@ -275,36 +270,56 @@
                 <ColumnDefinition Width="1.8*" />
             </Grid.ColumnDefinitions>
 
-            <Label Grid.Column="0" Text="部位" />
+            <Label
+                Grid.Column="0"
+                FontSize="Body"
+                Text="部位"
+                VerticalTextAlignment="Center" />
             <Entry
-        x:Name="ety_Buim"
-        Grid.Column="1"
-        Text="{Binding BuimName}" />
+                x:Name="ety_Buim"
+                Grid.Column="1"
+                Text="{Binding BuimName}" />
 
-            <Label Grid.Column="2" Text="階・グループ" />
+            <Label
+                Grid.Column="2"
+                FontSize="Body"
+                Text="階・グループ"
+                VerticalTextAlignment="Center" />
             <Entry
-        x:Name="ety_Grpl"
-        Grid.Column="3"
-        Text="{Binding FloorName}" />
+                x:Name="ety_Grpl"
+                Grid.Column="3"
+                Text="{Binding FloorName}" />
 
-            <Label Grid.Column="4" Text="断面" />
+            <Label
+                Grid.Column="4"
+                FontSize="Body"
+                Text="断面"
+                VerticalTextAlignment="Center" />
             <Entry
-        x:Name="ety_Danm"
-        Grid.Column="5"
-        Text="{Binding DanmName}" />
+                x:Name="ety_Danm"
+                Grid.Column="5"
+                Text="{Binding DanmName}" />
 
-            <Label Grid.Column="6" Text="工区" />
+            <Label
+                Grid.Column="6"
+                FontSize="Body"
+                Text="工区"
+                VerticalTextAlignment="Center" />
             <Entry
-        x:Name="ety_Koku"
-        Grid.Column="7"
-        Text="{Binding KokuName}" />
+                x:Name="ety_Koku"
+                Grid.Column="7"
+                Text="{Binding KokuName}" />
 
-            <Label Grid.Column="8" Text="位置" />
+            <Label
+                Grid.Column="8"
+                FontSize="Body"
+                Text="位置"
+                VerticalTextAlignment="Center" />
             <Entry
-        x:Name="ety_Location"
-        Grid.Column="9"
-        MaxLength="20"
-        Text="{Binding LocationName}" />
+                x:Name="ety_Location"
+                Grid.Column="9"
+                MaxLength="20"
+                Text="{Binding LocationName}" />
         </Grid>
 
         <!--  下左 按钮 图片  -->
@@ -735,7 +750,6 @@
                     x:Name="btn_Open"
                     Grid.Column="1"
                     Padding="10,0"
-                    BackgroundColor="{Binding OpenButtonBackgroundColor}"
                     Command="{Binding PopupPunchListCommand}"
                     IsEnabled="{Binding OpenButtonIsEnabled}"
                     Text="···" />

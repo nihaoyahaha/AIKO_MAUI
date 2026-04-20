@@ -8,7 +8,7 @@
     <ContentView.Resources>
         <Style x:Key="SegmentedTabButtonStyle" TargetType="Button">
             <Setter Property="BackgroundColor" Value="Transparent" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray200}}" />
+            <Setter Property="TextColor" Value="{DynamicResource Gray500}" />
             <Setter Property="BorderWidth" Value="0" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="16,8" />
@@ -19,14 +19,8 @@
         </Style>
     </ContentView.Resources>
 
-    <Border
-        Padding="4"
-        BackgroundColor="{AppThemeBinding Light=#F2F2F7, Dark=#2C2C2E}"
-        Stroke="{AppThemeBinding Light=#D1D1D6, Dark=#3A3A3C}"
-        StrokeShape="RoundRectangle 14">
-        <HorizontalStackLayout
-            BindableLayout.ItemsSource="{Binding Source={x:Reference root}, Path=ItemsSource}"
-            Spacing="4">
+    <Border Padding="4" StrokeShape="RoundRectangle 14">
+        <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Source={x:Reference root}, Path=ItemsSource}" Spacing="4">
             <BindableLayout.ItemTemplate>
                 <DataTemplate x:DataType="controls:SegmentedTabItem">
                     <Button
@@ -39,8 +33,8 @@
                                 Binding="{Binding IsSelected}"
                                 TargetType="Button"
                                 Value="True">
-                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark=#636366}" />
-                                <Setter Property="TextColor" Value="{AppThemeBinding Light=#111111, Dark=White}" />
+                                <Setter Property="BackgroundColor" Value="#CCCCCC" />
+                                <Setter Property="TextColor" Value="#111111" />
                             </DataTrigger>
                         </Button.Triggers>
                     </Button>

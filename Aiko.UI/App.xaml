@@ -39,11 +39,22 @@
                 <Setter Property="VisualStateManager.VisualStateGroups">
                     <VisualStateGroupList>
                         <VisualStateGroup x:Name="CommonStates">
-                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Normal">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}" />
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource ButtonBackgroundColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
                             <VisualState x:Name="Disabled">
                                 <VisualState.Setters>
                                     <Setter Property="TextColor" Value="{DynamicResource ButtonDisabledTextColor}" />
                                     <Setter Property="BackgroundColor" Value="{DynamicResource ButtonDisabledBackgroundColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource ButtonBackgroundColor}" />
                                 </VisualState.Setters>
                             </VisualState>
                         </VisualStateGroup>
@@ -58,7 +69,11 @@
                 <Setter Property="VisualStateManager.VisualStateGroups">
                     <VisualStateGroupList>
                         <VisualStateGroup x:Name="CommonStates">
-                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Normal">
+                                <VisualState.Setters>
+                                    <Setter Property="Color" Value="{DynamicResource CheckBoxColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
                             <VisualState x:Name="Disabled">
                                 <VisualState.Setters>
                                     <Setter Property="Color" Value="{DynamicResource CheckBoxDisabledColor}" />
@@ -123,7 +138,12 @@
                 <Setter Property="VisualStateManager.VisualStateGroups">
                     <VisualStateGroupList>
                         <VisualStateGroup x:Name="CommonStates">
-                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Normal">
+                                <VisualState.Setters>
+                                    <Setter Property="TextColor" Value="{DynamicResource EntryTextColor}" />
+                                </VisualState.Setters>
+                            </VisualState>
+
                             <VisualState x:Name="Disabled">
                                 <VisualState.Setters>
                                     <Setter Property="TextColor" Value="{DynamicResource EntryDisabledTextColor}" />
@@ -187,7 +207,7 @@
 
             <Style TargetType="Picker">
                 <Setter Property="TextColor" Value="{DynamicResource PickerTextColor}" />
-                <Setter Property="TitleColor" Value="{DynamicResource TextColorTitleColor}" />
+                <Setter Property="TitleColor" Value="{DynamicResource PickerTitleColor}" />
                 <Setter Property="BackgroundColor" Value="{DynamicResource PickerBackgroundColor}" />
                 <Setter Property="FontFamily" Value="OpenSansRegular" />
                 <Setter Property="FontSize" Value="14" />

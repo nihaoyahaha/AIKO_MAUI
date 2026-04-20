@@ -10,6 +10,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using System.Collections.ObjectModel;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Path = System.IO.Path;
 
 namespace Aiko.UI.ViewModels.PageVMs;
@@ -331,7 +333,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	public async Task Back()
 	{
 		Service.InitializePhotoPreviews();
-		await Shell.Current.GoToAsync("..?FromPage=CameraPage");
+		await Shell.Current.GoToAsync("..", CreateNavigationParameterForCheckPoint());
 	}
 
 	/// <summary>
@@ -827,6 +829,28 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		inspectionRecordItem.Direction = int.Parse(ReinforcementTypeSelectedItem.Value);
 		inspectionRecordItem.DirectionText = ReinforcementTypeSelectedItem.DisplyName;
 		return inspectionRecordItem;
+	}
+
+	/// <summary>
+	/// 確認项目画面のナビゲーションパラメータを作成する
+	/// </summary>
+	/// <returns></returns>
+	Dictionary<string, object> CreateNavigationParameterForCheckPoint()
+	{
+		var obj = new
+		{
+			FromPage = "CameraPage",
+		};
+		var options = new JsonSerializerOptions
+		{
+			WriteIndented = true,
+			Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+		};
+		string jsonString = JsonSerializer.Serialize(obj, options);
+		return new Dictionary<string, object>
+		{
+			{ "json", jsonString }
+		};
 	}
 	#endregion
 }

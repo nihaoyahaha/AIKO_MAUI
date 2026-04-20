@@ -38,16 +38,20 @@ namespace Aiko.Common.InkTools.InkToolsList
 
             canvas.DrawRect(rect, bgPaint);
 
-            using var typeface = SKTypeface.FromFamilyName(stroke.Font);
-            using var font = new SKFont(typeface, stroke.Size);
-            using var textPaint = new SKPaint
+            using var font = new SKFont
+            {
+                Typeface = Typefaces.TryGetValue(stroke.Font, out SKTypeface? value) ? value : SKTypeface.Default,
+                Size = stroke.Size,
+                Edging = SKFontEdging.Antialias
+            };
+            using var paint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
                 Color = SKColors.White,
                 IsAntialias = true
             };
 
-            DrawMultiLineText(canvas, stroke, font, textPaint);
+            DrawMultiLineText(canvas, stroke, font, paint);
         }
     }
 }

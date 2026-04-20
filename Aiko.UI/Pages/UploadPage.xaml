@@ -13,85 +13,83 @@
             Command="{Binding PageLoadedCommand}"
             EventName="Loaded" />
     </ContentView.Behaviors>
-    <ScrollView Orientation="Both">
+    <Grid
+        Padding="15"
+        MinimumHeightRequest="600"
+        MinimumWidthRequest="600">
+        <VerticalStackLayout Spacing="20">
+            <Border
+                Padding="15"
+                Stroke="#FF8B8B8B"
+                StrokeShape="RoundRectangle 8">
+                <Grid HeightRequest="150" RowDefinitions="*, Auto">
+                    <Label VerticalOptions="Start">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="&#10;　　検査結果、確認履歴を同期する。&#10;" />
+                                <Span Text="　　※サーバー・端末は互いの新しいデータを更新します。" TextColor="Red" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <Button
+                        x:Name="btnUpload"
+                        Grid.Row="1"
+                        Command="{Binding DataSynchronizationCommand}"
+                        HorizontalOptions="End"
+                        Text="同　期"
+                        VerticalOptions="End"
+                        WidthRequest="100" />
+                </Grid>
+            </Border>
+
+            <Border
+                Padding="15"
+                Stroke="#FF8B8B8B"
+                StrokeShape="RoundRectangle 8">
+                <Grid HeightRequest="220" RowDefinitions="*, Auto, Auto">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="&#10;　　写真データを同期する。&#10;" />
+                                <Span Text="　　※サーバー・端末は互いの新しいデータを更新します。&#10;" TextColor="Red" />
+                                <Span Text="{Binding SaveDaysMessageInfo}" TextColor="Red" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <HorizontalStackLayout
+                        Grid.Row="1"
+                        Margin="30,10,0,0"
+                        VerticalOptions="Center">
+                        <CheckBox x:Name="chkDrawing" IsChecked="{Binding IsCheckDrawing}" />
+                        <Label Text="図面ファイルを含む" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <Button
+                        x:Name="btnPUpload"
+                        Grid.Row="2"
+                        Command="{Binding FileSynchronizationCommand}"
+                        HorizontalOptions="End"
+                        Text="同　期"
+                        VerticalOptions="End"
+                        WidthRequest="100" />
+                </Grid>
+            </Border>
+
+        </VerticalStackLayout>
+
         <Grid
-            Padding="15"
-            MinimumHeightRequest="600"
-            MinimumWidthRequest="600">
-
-            <VerticalStackLayout Spacing="20">
-                <Border
-                    Padding="15"
-                    Stroke="#FF8B8B8B"
-                    StrokeShape="RoundRectangle 8">
-                    <Grid HeightRequest="150" RowDefinitions="*, Auto">
-                        <Label VerticalOptions="Start">
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="&#10;　　検査結果、確認履歴を同期する。&#10;" />
-                                    <Span Text="　　※サーバー・端末は互いの新しいデータを更新します。" TextColor="Red" />
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
-
-                        <Button
-                            x:Name="btnUpload"
-                            Grid.Row="1"
-                            Command="{Binding DataSynchronizationCommand}"
-                            HorizontalOptions="End"
-                            Text="同　期"
-                            VerticalOptions="End"
-                            WidthRequest="100" />
-                    </Grid>
-                </Border>
-
-                <Border
-                    Padding="15"
-                    Stroke="#FF8B8B8B"
-                    StrokeShape="RoundRectangle 8">
-                    <Grid HeightRequest="220" RowDefinitions="*, Auto, Auto">
-                        <Label>
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="&#10;　　写真データを同期する。&#10;" />
-                                    <Span Text="　　※サーバー・端末は互いの新しいデータを更新します。&#10;" TextColor="Red" />
-                                    <Span Text="{Binding SaveDaysMessageInfo}" TextColor="Red" />
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
-
-                        <HorizontalStackLayout
-                            Grid.Row="1"
-                            Margin="30,10,0,0"
-                            VerticalOptions="Center">
-                            <CheckBox x:Name="chkDrawing" IsChecked="{Binding IsCheckDrawing}" />
-                            <Label Text="図面ファイルを含む" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-
-                        <Button
-                            x:Name="btnPUpload"
-                            Grid.Row="2"
-                            Command="{Binding FileSynchronizationCommand}"
-                            HorizontalOptions="End"
-                            Text="同　期"
-                            VerticalOptions="End"
-                            WidthRequest="100" />
-                    </Grid>
-                </Border>
-
-            </VerticalStackLayout>
-
-            <Grid
-                x:Name="gridProgress"
-                BackgroundColor="#B0D3D3D3"
-                IsVisible="{Binding IsShowProgressGridFlag}"
-                ZIndex="999">
-                <VerticalStackLayout
-                    Padding="30"
-                    BackgroundColor="White"
-                    HorizontalOptions="Center"
-                    Spacing="15"
-                    VerticalOptions="Center">
+            x:Name="gridProgress"
+            BackgroundColor="#B0D3D3D3"
+            IsVisible="{Binding IsShowProgressGridFlag}"
+            ZIndex="999">
+            <Border
+                BackgroundColor="{DynamicResource PageBackgroundColor}"
+                HorizontalOptions="Center"
+                StrokeShape="RoundRectangle 14"
+                VerticalOptions="Center">
+                <VerticalStackLayout Padding="30" Spacing="15">
                     <Label
                         x:Name="txtBarName"
                         FontSize="16"
@@ -116,7 +114,8 @@
                         WidthRequest="40"
                         Color="#512BD4" />
                 </VerticalStackLayout>
-            </Grid>
+            </Border>
         </Grid>
-    </ScrollView>
+    </Grid>
+
 </ContentView>

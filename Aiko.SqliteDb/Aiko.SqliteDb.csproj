@@ -15,6 +15,13 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DefineConstants>$(DefineConstants);ENCRYPTION22</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>$(DefineConstants);ENCRYPTION22</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="FluentFTP" Version="53.0.2" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
@@ -23,5 +30,4 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.31" />
 		<PackageReference Include="System.ServiceModel.Http" Version="10.0.652802" />
 	</ItemGroup>
-
 </Project>

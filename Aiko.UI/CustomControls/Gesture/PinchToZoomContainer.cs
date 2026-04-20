@@ -7,24 +7,32 @@ namespace Aiko.UI;
 
 public class PinchToZoomContainer : ContentView
 {
+    // 允许的最小/最大缩放比例。
     private const double MinScale = 0.5;
     private const double MaxScale = 8.0;
 
+    // 当前缩放值，以及本次 pinch 开始时的缩放基准值。
     private double currentScale = 1.0;
     private double startScale = 1.0;
 
+    // 当前内容平移偏移量。
     private double xOffset = 0.0;
     private double yOffset = 0.0;
 
+    // 拖动开始时记录的平移基准值。
     private double panX = 0.0;
     private double panY = 0.0;
 
+    // 双指缩放过程中，用来阻止 pan 与 pinch 同时生效。
     private bool isPinching = false;
+    // 记录 pinch 开始时的双指中心点，缩放过程中保持不变，避免双指平移被误当成内容拖动。
+    private Point pinchStartOrigin;
 
+    // 被缩放内容的逻辑尺寸，外部通常在图片加载完成后设置。
     public double LayerWidth { get; private set; }
     public double LayerHeight { get; private set; }
 
-    // 鼠标拖动
+    // Windows 鼠标拖动相关状态。
     private bool isMouseDragging = false;
     private Point mouseStartPoint;
     private double mouseStartX = 0.0;
@@ -41,22 +49,26 @@ public class PinchToZoomContainer : ContentView
 
     public event EventHandler? ViewportChanged;
 
+    // 用于外部判断是否仍处于初始视图，常见于图片左右切换时禁用手势翻页。
     public bool IsAtInitialScale => currentScale < 1.001;//Math.Abs(currentScale - 1.0) < 0.001;
 
 	#endregion
 
 	public PinchToZoomContainer()
     {
+        // 双指缩放。
         var pinchGesture = new PinchGestureRecognizer();
         pinchGesture.PinchUpdated += OnPinchUpdated;
         GestureRecognizers.Add(pinchGesture);
 
+        // 单指拖动。
         var panGesture = new PanGestureRecognizer();
         panGesture.TouchPoints = 1;
         panGesture.PanUpdated += OnPanUpdated;
         GestureRecognizers.Add(panGesture);
 
 #if WINDOWS
+        // Windows 下补充鼠标拖动支持。
         var pointerGesture = new PointerGestureRecognizer();
         pointerGesture.PointerPressed += OnPointerPressed;
         pointerGesture.PointerMoved += OnPointerMoved;
@@ -64,12 +76,15 @@ public class PinchToZoomContainer : ContentView
         pointerGesture.PointerExited += OnPointerReleased;
         GestureRecognizers.Add(pointerGesture);
 #endif
+
+        // 容器尺寸变化后，重新约束内容位置，避免内容越界。
         SizeChanged += (_, _) => RefreshBounds();
 
         HandlerChanged += OnViewHandlerChanged;
         HandlerChanging += OnViewHandlerChanging;
     }
 
+    // 设置内容的基础尺寸，并把内容锚点固定到左上角，后续缩放和平移都基于这个坐标系计算。
     public void SetBaseSize(double width, double height)
     {
         if (width <= 0 || height <= 0 || Content == null)
@@ -88,6 +103,7 @@ public class PinchToZoomContainer : ContentView
         Reset();
     }
 
+    // 恢复到 1 倍缩放，并把内容居中显示。
     public void Reset()
     {
         if (Content == null || Width <= 0 || Height <= 0 || LayerWidth <= 0 || LayerHeight <= 0)
@@ -106,6 +122,8 @@ public class PinchToZoomContainer : ContentView
         RaiseViewportChanged();
     }
 
+    // 在容器大小变化时，把当前位置重新夹到合法范围内。
+    // 如果当前正在缩放或鼠标拖动，则暂时不打断当前手势。
     private void RefreshBounds()
     {
         if (Content == null || Width <= 0 || Height <= 0 || LayerWidth <= 0 || LayerHeight <= 0)
@@ -128,6 +146,8 @@ public class PinchToZoomContainer : ContentView
         RaiseViewportChanged();
     }
 
+    // 处理双指缩放。
+    // 缩放时会尽量保持手指中心点对应的内容位置不跳动。
     private void OnPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
     {
         if (Content == null || Width <= 0 || Height <= 0 || LayerWidth <= 0 || LayerHeight <= 0)
@@ -139,6 +159,7 @@ public class PinchToZoomContainer : ContentView
                 isPinching = true;
                 isMouseDragging = false;
                 startScale = currentScale;
+                pinchStartOrigin = e.ScaleOrigin;
 
                 xOffset = Content.TranslationX;
                 yOffset = Content.TranslationY;
@@ -150,8 +171,8 @@ public class PinchToZoomContainer : ContentView
                 currentScale += (e.Scale - 1.0) * startScale;
                 currentScale = Math.Clamp(currentScale, MinScale, MaxScale);
 
-                double targetX = CalculatePinchX(e.ScaleOrigin.X * Width);
-                double targetY = CalculatePinchY(e.ScaleOrigin.Y * Height);
+                double targetX = CalculatePinchX(pinchStartOrigin.X * Width);
+                double targetY = CalculatePinchY(pinchStartOrigin.Y * Height);
 
                 Content.Scale = currentScale;
                 Content.TranslationX = ClampX(targetX, currentScale);
@@ -173,6 +194,8 @@ public class PinchToZoomContainer : ContentView
         }
     }
 
+    // 处理单指拖动。
+    // 拖动过程中始终通过 ClampX/ClampY 把内容限制在可视范围内。
     private void OnPanUpdated(object? sender, PanUpdatedEventArgs e)
     {
         if (Content == null || Width <= 0 || Height <= 0 || LayerWidth <= 0 || LayerHeight <= 0)
@@ -206,6 +229,7 @@ public class PinchToZoomContainer : ContentView
         }
     }
 
+    // Windows 鼠标左键按下时，记录拖动起点和当前偏移。
     private void OnPointerPressed(object? sender, PointerEventArgs e)
     {
         if (Content == null || isPinching)
@@ -224,6 +248,7 @@ public class PinchToZoomContainer : ContentView
         mouseStartY = Content.TranslationY;
     }
 
+    // Windows 鼠标移动时按住左键，则按鼠标位移同步平移内容。
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
         if (Content == null || !isMouseDragging || isPinching)
@@ -245,6 +270,7 @@ public class PinchToZoomContainer : ContentView
         RaiseViewportChanged();
     }
 
+    // Windows 鼠标释放时，提交本次拖动后的最终偏移。
     private void OnPointerReleased(object? sender, PointerEventArgs e)
     {
         if (Content == null)
@@ -263,6 +289,7 @@ public class PinchToZoomContainer : ContentView
         RaiseViewportChanged();
     }
 
+    // 根据 pinch 焦点计算新的 X 偏移，让缩放围绕手指位置进行。
     private double CalculatePinchX(double focusX)
     {
         double scaledWidth = LayerWidth * currentScale;
@@ -276,6 +303,7 @@ public class PinchToZoomContainer : ContentView
         return focusX - ((focusX - xOffset) / startScale) * currentScale;
     }
 
+    // 根据 pinch 焦点计算新的 Y 偏移，让缩放围绕手指位置进行。
     private double CalculatePinchY(double focusY)
     {
         double scaledHeight = LayerHeight * currentScale;
@@ -289,6 +317,8 @@ public class PinchToZoomContainer : ContentView
         return focusY - ((focusY - yOffset) / startScale) * currentScale;
     }
 
+    // Windows 鼠标滚轮缩放入口。
+    // 以鼠标当前位置为焦点执行缩放。
     private void ZoomAt(double focusX, double focusY, double factor)
     {
         if (Content == null || Width <= 0 || Height <= 0 || LayerWidth <= 0 || LayerHeight <= 0)
@@ -332,6 +362,8 @@ public class PinchToZoomContainer : ContentView
         RaiseViewportChanged();
     }
 
+    // 约束 X 方向偏移。
+    // 如果内容比容器窄，则直接居中；否则限制在左右边界之间。
     private double ClampX(double x, double scale)
     {
         double scaledWidth = LayerWidth * scale;
@@ -344,6 +376,8 @@ public class PinchToZoomContainer : ContentView
         return Math.Clamp(x, minX, maxX);
     }
 
+    // 约束 Y 方向偏移。
+    // 如果内容比容器矮，则直接居中；否则限制在上下边界之间。
     private double ClampY(double y, double scale)
     {
         double scaledHeight = LayerHeight * scale;
@@ -356,16 +390,19 @@ public class PinchToZoomContainer : ContentView
         return Math.Clamp(y, minY, maxY);
     }
 
+    // 计算当前缩放下的水平居中偏移。
     private double GetCenteredX(double scale)
     {
         return (Width - LayerWidth * scale) / 2.0;
     }
 
+    // 计算当前缩放下的垂直居中偏移。
     private double GetCenteredY(double scale)
     {
         return (Height - LayerHeight * scale) / 2.0;
     }
 
+    // 在 MAUI Handler 创建后，挂接 Windows 原生滚轮事件。
     private void OnViewHandlerChanged(object? sender, EventArgs e)
     {
 #if WINDOWS
@@ -376,6 +413,7 @@ public class PinchToZoomContainer : ContentView
 #endif
     }
 
+    // Handler 切换时先解绑旧的原生事件，避免重复订阅。
     private void OnViewHandlerChanging(object? sender, HandlerChangingEventArgs e)
     {
 #if WINDOWS
@@ -384,6 +422,7 @@ public class PinchToZoomContainer : ContentView
     }
 
 #if WINDOWS
+    // 统一处理滚轮事件解绑逻辑。
     private void DetachWindowsWheel(Microsoft.Maui.IElementHandler? oldHandler = null)
     {
         var view = oldHandler?.PlatformView as FrameworkElement ?? _platformView;
@@ -394,6 +433,7 @@ public class PinchToZoomContainer : ContentView
             _platformView = null;
     }
 
+    // 处理 Windows 鼠标滚轮缩放。
     private void OnWindowsPointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
         if (sender is not FrameworkElement nativeView)
@@ -407,11 +447,14 @@ public class PinchToZoomContainer : ContentView
     }
 #endif
 
+    // 通知外部当前视口发生了变化，外部常用它同步覆盖层绘制。
     private void RaiseViewportChanged()
     {
         ViewportChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    // 仅允许真正的 Windows 鼠标左键拖动进入鼠标平移逻辑。
+    // 触屏、触控板或其他 Pointer 类型都不走这里。
     private bool IsWindowsMouseLeftDrag(PointerEventArgs e)
     {
 #if WINDOWS

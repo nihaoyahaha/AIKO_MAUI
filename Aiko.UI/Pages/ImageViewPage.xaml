@@ -22,7 +22,7 @@
             Command="{Binding PageLoadedCommand}"
             EventName="Loaded" />
     </ContentPage.Behaviors>
-    <Grid RowDefinitions="*,40">
+    <Grid RowDefinitions="*,60">
         <Grid BackgroundColor="AliceBlue">
             <Grid
                 x:Name="MainGridView"
@@ -102,7 +102,7 @@
                 VerticalOptions="End" />
         </Grid>
 
-        <Grid Grid.Row="1" VerticalOptions="Center">
+        <Grid Grid.Row="1">
             <HorizontalStackLayout HorizontalOptions="End">
                 <CheckBox
                     x:Name="check_greenBackground"
@@ -131,6 +131,7 @@
                     Command="{Binding RemoveCurrentItemCommand}"
                     FontSize="Body"
                     Text="削除"
+                    VerticalOptions="Center"
                     WidthRequest="70" />
 
                 <Button

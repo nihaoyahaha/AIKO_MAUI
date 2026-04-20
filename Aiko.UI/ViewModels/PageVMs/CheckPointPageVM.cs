@@ -318,9 +318,14 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	private const int _strokeThickness = 2;
 
 	/// <summary>
-	/// Shellナビゲーションパラメータ(工程リスト)
+	/// 工程コード(viewmodelのナビゲーションパラメータ)
 	/// </summary>
 	private string _applyQuery_ProjectCode = "";
+
+	/// <summary>
+	/// 確認项目コード(viewmodelのナビゲーションパラメータ)
+	/// </summary>
+	private string _applyQuery_InspectionItemCode = "";
 
 	/// <summary>
 	/// 現在選択されている検査結果画像
@@ -361,6 +366,11 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// コントロール有効状態の背景色
 	/// </summary>
 	private Color _enableTrueBackgroundColor;
+
+	/// <summary>
+	/// ナビゲーションパラメータ
+	/// </summary>
+	private Dictionary<string, object> _navigationParameter;
 	#endregion
 
 	/// <summary>
@@ -369,13 +379,22 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// <param name="query"></param>
 	public override void ApplyQueryAttributes(IDictionary<string, object> query)
 	{
-		if (query.Keys.Contains("ProjectCode"))
+		if (query.ContainsKey("json"))
 		{
-			_applyQuery_ProjectCode = query["ProjectCode"].ToString();
-		}
-		if (query.Keys.Contains("FromPage"))
-		{
-			_fromPage = query["FromPage"].ToString();
+			_navigationParameter = JsonSerializer.Deserialize<Dictionary<string, object>>(query["json"]?.ToString());
+
+			if (_navigationParameter.ContainsKey("FromPage"))
+			{
+				_fromPage = _navigationParameter["FromPage"].ToString();
+			}
+			if (_navigationParameter.ContainsKey("ProjectCode"))
+			{
+				_applyQuery_ProjectCode = _navigationParameter["ProjectCode"].ToString();
+			}
+			if (_navigationParameter.ContainsKey("InspectionItemCode"))
+			{
+				_applyQuery_InspectionItemCode = _navigationParameter["InspectionItemCode"].ToString();
+			}
 		}
 	}
 
@@ -488,7 +507,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// バインドデータの初期化
 	/// </summary>
 	/// <returns></returns>
-	async Task InitializeControlBindingDataAsync()
+	async Task InitializeDataFromMapViewPageAsync()
 	{
 		DanmTitleName = $"配筋確認：{Convert.ToInt32(Service.GetDanmTitle())}";
 		//部位
@@ -508,6 +527,15 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		_enableTrueBackgroundColor = Preferences.Default.Get("Theme", "Light") == "Light" ? Colors.Transparent : Color.FromArgb("#212121");
 
 		await InitializeRowLayoutAsync();
+	}
+
+	/// <summary>
+	/// バインドデータの初期化
+	/// </summary>
+	void InitializeDataFromCheckPointDetailPage()
+	{
+		var item = Projects.FirstOrDefault(x => x.Value == _applyQuery_ProjectCode);
+		ProjectSelectedIndex = item == null ? 0 : Projects.IndexOf(item);
 	}
 
 	/// <summary>
@@ -959,7 +987,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		{
 			return false;
 		}
-		
+
 		if (micStatus != PermissionStatus.Granted)
 		{
 			micStatus = await Permissions.RequestAsync<Permissions.Microphone>();
@@ -985,7 +1013,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		var videoDevices = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
 		hasCamera = videoDevices != null && videoDevices.Count > 0;
 #else
-        hasCamera = MediaPicker.Default.IsCaptureSupported;
+		hasCamera = MediaPicker.Default.IsCaptureSupported;
 #endif
 		if (!hasCamera)
 		{
@@ -998,7 +1026,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 #if WINDOWS
 		isAllowed = await CheckCameraPermissionForWindowsAsync();
 #else
-        isAllowed = await CheckCameraPermissionForIOSAndMacCatalystAsync();
+		isAllowed = await CheckCameraPermissionForIOSAndMacCatalystAsync();
 #endif
 		if (!isAllowed)
 		{
@@ -1016,7 +1044,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		return true;
 	}
 
-#endregion
+	#endregion
 
 	#region コマンドハンドラ 
 	/// <summary>
@@ -1026,7 +1054,8 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	[RelayCommand]
 	private async Task PageLoadedAsync()
 	{
-		if(_fromPage == "MapViewPage") await InitializeControlBindingDataAsync();
+		if (_fromPage == "MapViewPage") await InitializeDataFromMapViewPageAsync();
+		else if (_fromPage == "CheckPointDetailPage") InitializeDataFromCheckPointDetailPage();
 	}
 
 	/// <summary>
@@ -1088,7 +1117,15 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		InspectionItems = await Service.GetInspectionItemsByProjectCodeAsync(Projects[ProjectSelectedIndex].Value);
 		if (InspectionItems.Count > 0)
 		{
-			InspectionItemSelectedItem = InspectionItems[0];
+			if (string.IsNullOrWhiteSpace(_applyQuery_InspectionItemCode))
+			{
+				InspectionItemSelectedItem = InspectionItems[0];
+			}
+			else
+			{
+				InspectionItemSelectedItem= InspectionItems.FirstOrDefault(x => x.HM13004 == _applyQuery_InspectionItemCode);
+				_applyQuery_InspectionItemCode = "";
+			}
 		}
 	}
 
@@ -1098,6 +1135,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	[RelayCommand]
 	public void ProjectCodeSelectionChanged()
 	{
+		if (InspectionItemSelectedItem == null) return;
 		SetConfirmationProjectPropertiesValue(InspectionItemSelectedItem);
 		SetConfirmationProjectPropertiesEnable(InspectionItemSelectedItem.HR02005 + 1, false, InspectionItemSelectedItem);
 	}
@@ -1288,7 +1326,20 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		try
 		{
 			if (!ValidateBeforeNavigateToDetails()) return;
-			await Shell.Current.GoToAsync($"CheckPointDetailPage", CreateNavigationParameterForCheckPointDetail());
+			if (Service.IsDataChanged())
+			{
+				var result = await DialogHelper.MessageDialogButton2("確認検査結果に変更があり、データを保存しますか？");
+				if (result == NCDialogResult.Yes)
+				{
+					await Service.SaveDirectlyAsync();
+				}
+			}
+			var parameters = CreateNavigationParameterForCheckPointDetail();
+			_photoPathList.Clear();
+			Service.InitializeInspectionItem();
+			ProjectSelectedIndex = -1;
+			InspectionItems.Clear();
+			await Shell.Current.GoToAsync($"CheckPointDetailPage", parameters);
 		}
 		catch (Exception ex)
 		{

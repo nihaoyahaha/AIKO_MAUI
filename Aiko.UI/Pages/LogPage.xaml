@@ -3,20 +3,75 @@
     x:Class="Aiko.UI.LogPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:common="clr-namespace:Aiko.Common;assembly=Aiko.Common"
+    xmlns:local="clr-namespace:Aiko.UI"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
+    x:Name="page_log"
     x:DataType="vm:LogPageVM">
-    <ScrollView Orientation="Both">
-        <Grid MinimumHeightRequest="600" MinimumWidthRequest="600">
-            <Button
-                x:Name="btnUpload"
-                Command="{Binding UploadLogCommand}"
-                HorizontalOptions="Center"
-                IsEnabled="{Binding IsEnabled}"
-                IsVisible="True"
-                Text="アップロード"
-                VerticalOptions="Center"
-                WidthRequest="150" />
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <local:SelectedToStrokeThicknessConverter x:Key="SelectedToStrokeThicknessConverter" />
+        </ResourceDictionary>
+    </ContentView.Resources>
+    <ContentView.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_log}}"
+            Command="{Binding PageLoadedCommand}"
+            EventName="Loaded" />
+    </ContentView.Behaviors>
+    <Grid Padding="5" RowDefinitions="*, 60">
+        <CollectionView
+            Grid.Row="0"
+            ItemsSource="{Binding LogFiles}"
+            SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout ItemSpacing="2" Orientation="Vertical" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="common:LogItem">
+                    <Border
+                        Stroke="#512BD4"
+                        StrokeShape="RoundRectangle 15"
+                        StrokeThickness="{Binding IsSelected, Converter={StaticResource SelectedToStrokeThicknessConverter}}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LogPageVM}}, Path=ToggleSelectionCommand}" CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
 
-        </Grid>
-    </ScrollView>
+                        <Grid Padding="20" ColumnDefinitions="*,*,*">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="15"
+                                HorizontalOptions="Center"
+                                Text="{Binding FileName}" />
+                            <Label
+                                Grid.Column="1"
+                                FontSize="12"
+                                HorizontalOptions="Center"
+                                Text="{Binding CreatedDate, StringFormat='{0:yyyy/MM/dd HH:mm}'}"
+                                VerticalOptions="Center" />
+
+                            <Label
+                                Grid.Column="2"
+                                FontSize="13"
+                                HorizontalOptions="Center"
+                                Text="{Binding FileSize}"
+                                TextColor="#007AFF"
+                                VerticalOptions="Center" />
+                        </Grid>
+
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Button
+            x:Name="btnUpload"
+            Grid.Row="1"
+            Command="{Binding UploadLogCommand}"
+            IsEnabled="{Binding IsEnabled}"
+            Text="アップロード"
+            VerticalOptions="Center"
+            WidthRequest="150" />
+
+    </Grid>
 </ContentView>

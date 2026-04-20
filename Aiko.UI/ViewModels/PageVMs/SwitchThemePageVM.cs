@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,6 +10,8 @@ namespace Aiko.UI.ViewModels.PageVMs;
 
 public partial class SwitchThemePageVM: ObservableValidator
 {
+    private const string ThemeChangedToken = "ThemeChangedToken";
+
 	[ObservableProperty]
 	private ObservableCollection<string> _themes = new() { "Light", "Dark" };
 
@@ -39,6 +42,7 @@ public partial class SwitchThemePageVM: ObservableValidator
 					break;
 			}
 			Preferences.Default.Set("Theme", SelectedTheme);
+			WeakReferenceMessenger.Default.Send(string.Empty, ThemeChangedToken);
 		}
 	}
 }

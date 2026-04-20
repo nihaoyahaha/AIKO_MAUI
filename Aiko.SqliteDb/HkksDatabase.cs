@@ -1322,6 +1322,44 @@ public class HkksDatabase
 	}
 	#endregion
 
+	#region 按地图批量取得工区多边形信息
+	/// <summary>
+	/// 按地图一次性取得全部工区多边形信息，避免界面层循环逐条查询。
+	/// </summary>
+	/// <param name="workCode">工事代码</param>
+	/// <param name="mapCode">地图代码</param>
+	/// <returns></returns>
+	public async Task<List<HR05KOKUMINFO>> GetHR05KOKUMINFOListByMapAsync(string workCode, string mapCode)
+	{
+		try
+		{
+			List<string> parms = new();
+			StringBuilder query = new();
+
+			query.Append("SELECT A.HR05001, A.HR05002, A.HR05003, ");
+			query.Append("(case when C.hm04007 > 0 then A.HR05004 - C.hm04007 else A.HR05004 end) as HR05004, ");
+			query.Append("(case when C.hm04008 > 0 then A.HR05005 - C.hm04008 else A.HR05005 end) as HR05005, ");
+			query.Append("A.HR05006, A.HR05007, A.HR05008, A.HR05009 ");
+			query.Append("FROM hr05kokuminfo A ");
+			query.Append("INNER JOIN hr01item B ON A.HR05001 = B.HR01001 AND A.HR05002 = B.HR01003 ");
+			query.Append("LEFT JOIN hm04mapm C ON B.HR01001 = C.HM04001 AND B.HR01002 = C.HM04002 ");
+			query.Append("WHERE B.HR01001 = ? ");
+			query.Append("AND B.HR01002 = ? ");
+			query.Append("ORDER BY A.HR05002, A.HR05003 ");
+
+			parms.Add(workCode);
+			parms.Add(mapCode);
+
+			return await _db.QueryAsync<HR05KOKUMINFO>(query.ToString(), parms.ToArray());
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex.ToString());
+			return new List<HR05KOKUMINFO>();
+		}
+	}
+	#endregion
+
 	/// <summary>
 	/// 工区多辺形情報を更新する
 	/// </summary>

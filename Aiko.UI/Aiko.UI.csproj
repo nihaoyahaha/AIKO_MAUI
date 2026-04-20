@@ -35,8 +35,8 @@
 	<ItemGroup>
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<MauiFont Include="Resources\Fonts\OpenSans-Regular.ttf" />
 		<MauiImage Include="Resources\Images\**\*" />
-		<MauiFont Include="Resources\Fonts\*" />
 		<MauiAsset Include="Resources\Raw\**" Exclude="Resources\Raw\hkks.db" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
@@ -72,11 +72,26 @@
 		<EmbeddedResource Include="Resources\ReleaseNote\ReleaseNotes.txt" LogicalName="ReleaseNotes.txt">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</EmbeddedResource>
+
+		<EmbeddedResource Include="Resources\Fonts\Hiragino-Kaku-Gothic.otf" LogicalName="ヒラギノ角ゴシック">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
+
+		<EmbeddedResource Include="Resources\Fonts\Hiragino-Maru-Gothic-ProN.otf" LogicalName="ヒラギノ丸ゴ ProN">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
+
+		<EmbeddedResource Include="Resources\Fonts\Hiragino-Mincho-ProN.otf" LogicalName="ヒラギノ明朝 ProN">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">
 		<MauiAsset Include="Resources\Raw\hkks.db" LogicalName="hkks.db" />
 		<MauiAsset Include="Resources\ReleaseNote\ReleaseNotes.txt" LogicalName="ReleaseNotes.txt" />
+		<MauiAsset Include="Resources\Fonts\Hiragino-Kaku-Gothic.otf" LogicalName="ヒラギノ角ゴシック" />
+		<MauiAsset Include="Resources\Fonts\Hiragino-Maru-Gothic-ProN.otf" LogicalName="ヒラギノ丸ゴ ProN" />
+		<MauiAsset Include="Resources\Fonts\Hiragino-Mincho-ProN.otf" LogicalName="ヒラギノ明朝 ProN" />
 	</ItemGroup>
 
 </Project>

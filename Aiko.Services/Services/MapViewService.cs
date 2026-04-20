@@ -324,6 +324,16 @@ public class MapViewService : BaseService<MapViewService>, IMapViewService
     }
 
     /// <summary>
+    /// 按当前地图一次性取得全部工区多边形信息，避免地图切换时逐条查询。
+    /// </summary>
+    /// <param name="mapCode">地图编码</param>
+    /// <returns></returns>
+    public async Task<List<HR05KOKUMINFO>> GetHR05KOKUMINFOListByMap(string mapCode)
+    {
+        return await HkksDb.GetHR05KOKUMINFOListByMapAsync(AikoAppContext.WorkCD, mapCode);
+    }
+
+    /// <summary>
     /// マップガイドマスターを取得する
     /// </summary>
     /// <param name="hm14"></param>

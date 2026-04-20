@@ -8,18 +8,17 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
     x:Name="page_MapView"
-    x:DataType="vm:MapViewPageVM" 
+    x:DataType="vm:MapViewPageVM"
     Shell.NavBarIsVisible="False">
     <Shell.BackButtonBehavior>
-        <BackButtonBehavior IsVisible="False" IsEnabled="False" />
+        <BackButtonBehavior IsEnabled="False" IsVisible="False" />
     </Shell.BackButtonBehavior>
     <ContentPage.Behaviors>
-        <toolkit:EventToCommandBehavior
-            BindingContext="{Binding Path=BindingContext, Source={x:Reference page_MapView}}"
-            EventName="Loaded" />
+        <toolkit:EventToCommandBehavior BindingContext="{Binding Path=BindingContext, Source={x:Reference page_MapView}}" EventName="Loaded" />
     </ContentPage.Behaviors>
     <Grid RowDefinitions="65,*">
         <Grid
+            x:Name="grid_Header"
             Margin="10"
             ColumnDefinitions="0.1*,0.1*,0.1*,0.1*,0.1*,0.1*,0.12*"
             ColumnSpacing="30">
@@ -83,9 +82,9 @@
                 SelectedIndex="{Binding PositionSelectIndex}">
                 <Picker.Behaviors>
                     <toolkit:EventToCommandBehavior
-                     BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Position}}"
-                     Command="{Binding PositionSelectIndexChangedCommand}"
-                     EventName="SelectedIndexChanged" />
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Position}}"
+                        Command="{Binding PositionSelectIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
                 </Picker.Behaviors>
             </Picker>
 
@@ -97,15 +96,15 @@
                 IsEnabled="{Binding ProckEnable}"
                 ItemDisplayBinding="{Binding DisplyName}"
                 ItemsSource="{Binding Procks}"
-                SelectedIndex="{Binding ProckSelectIndex}" >
+                SelectedIndex="{Binding ProckSelectIndex}">
                 <Picker.Behaviors>
                     <toolkit:EventToCommandBehavior
-                     BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Proc}}"
-                     Command="{Binding ProckSelectIndexChangedCommand}"
-                     EventName="SelectedIndexChanged" />
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Proc}}"
+                        Command="{Binding ProckSelectIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
                 </Picker.Behaviors>
             </Picker>
-            
+
             <Picker
                 x:Name="pck_Class"
                 Grid.Column="5"
@@ -113,21 +112,22 @@
                 HorizontalTextAlignment="Center"
                 ItemDisplayBinding="{Binding DisplyName}"
                 ItemsSource="{Binding Classs}"
-                SelectedIndex="{Binding ClassSelectIndex}" >
+                SelectedIndex="{Binding ClassSelectIndex}">
                 <Picker.Behaviors>
                     <toolkit:EventToCommandBehavior
-                     BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Class}}"
-                     Command="{Binding ClassSelectIndexChangedCommand}"
-                     EventName="SelectedIndexChanged" />
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Class}}"
+                        Command="{Binding ClassSelectIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
                 </Picker.Behaviors>
             </Picker>
-                <Grid
+            <Grid
                 Grid.Column="6"
                 ColumnDefinitions="0.1*,0.1*,0.1*"
                 HeightRequest="48"
                 HorizontalOptions="End">
                 <ImageButton
                     x:Name="imgBtn_Home"
+                    BackgroundColor="Transparent"
                     Command="{Binding HomeCommand}"
                     Source="{DynamicResource LoginHomeIcon}">
                     <ImageButton.Aspect>
@@ -141,6 +141,7 @@
                 <ImageButton
                     x:Name="imgBtn_Progress"
                     Grid.Column="1"
+                    BackgroundColor="Transparent"
                     Source="{DynamicResource ProgressIcon}">
                     <ImageButton.Aspect>
                         <OnPlatform x:TypeArguments="Aspect">
@@ -153,6 +154,7 @@
                 <ImageButton
                     x:Name="imgBtn_Set"
                     Grid.Column="2"
+                    BackgroundColor="Transparent"
                     Command="{Binding ToggleSettingCommand}"
                     Source="{DynamicResource SettingIcon}">
                     <ImageButton.Aspect>
@@ -168,32 +170,32 @@
         <Grid Grid.Row="1">
             <Grid BackgroundColor="#FF8B8B8B">
 
-                <!-- 顶部 X guide -->
+                <!--  顶部 X guide  -->
                 <AbsoluteLayout
                     x:Name="GuideXLayer"
                     Margin="80,0,80,0"
                     HeightRequest="48"
+                    InputTransparent="True"
                     VerticalOptions="Start"
-                    ZIndex="99" InputTransparent="True">
-                </AbsoluteLayout>
+                    ZIndex="99" />
 
-                <!-- 左侧 Y guide -->
+                <!--  左侧 Y guide  -->
                 <AbsoluteLayout
                     x:Name="GuideYLayer"
                     Margin="0,48,0,0"
                     HorizontalOptions="Start"
+                    InputTransparent="True"
                     WidthRequest="80"
-                    ZIndex="99" InputTransparent="True">
-                </AbsoluteLayout>
+                    ZIndex="99" />
 
-                <!-- 右侧 Y2 guide -->
+                <!--  右侧 Y2 guide  -->
                 <AbsoluteLayout
                     x:Name="GuideY2Layer"
                     Margin="0,48,0,0"
                     HorizontalOptions="End"
+                    InputTransparent="True"
                     WidthRequest="80"
-                    ZIndex="99" InputTransparent="True">
-                </AbsoluteLayout>
+                    ZIndex="99" />
                 <Grid
                     x:Name="MainGridView"
                     Margin="80,48,80,0"
@@ -203,18 +205,18 @@
                         <AbsoluteLayout x:Name="ZoomLayer">
                             <Image
                                 x:Name="ContainerImg"
-                                Loaded="OnContainerImgLoaded"
-                                Source="{Binding ImageSource}" 
-                                Aspect="Fill"
                                 AbsoluteLayout.LayoutBounds="0,0,1,1"
-                                AbsoluteLayout.LayoutFlags="All" />
+                                AbsoluteLayout.LayoutFlags="All"
+                                Aspect="Fill"
+                                Loaded="OnContainerImgLoaded"
+                                Source="{Binding ImageSource}" />
                         </AbsoluteLayout>
                     </local:PinchToZoomContainer>
-                    <!-- 新增：叠加绘制层（不模糊） -->
+                    <!--  新增：叠加绘制层（不模糊）  -->
                     <skia:SKCanvasView
                         x:Name="OverlayCanvas"
-                        PaintSurface="OnOverlayCanvasPaintSurface"
                         InputTransparent="True"
+                        PaintSurface="OnOverlayCanvasPaintSurface"
                         ZIndex="200" />
                 </Grid>
             </Grid>
@@ -233,7 +235,7 @@
                 x:Name="settingPopup"
                 Margin="0,0,0,0"
                 Padding="1"
-                BackgroundColor="White"
+                BackgroundColor="{DynamicResource PageBackgroundColor}"
                 HeightRequest="350"
                 HorizontalOptions="End"
                 IsVisible="{Binding IsSettingVisible}"
@@ -263,8 +265,9 @@
                                     VerticalOptions="Center" />
                                 <Switch
                                     Grid.Column="1"
+                                    IsToggled="{Binding ThemeFlag}"
                                     OnColor="#87CEEB"
-                                    VerticalOptions="Center" IsToggled="{Binding ThemeFlag}" />
+                                    VerticalOptions="Center" />
                             </Grid>
 
                             <!--  アイテムNo (项目编号)  -->
@@ -281,8 +284,9 @@
                                     VerticalOptions="Center" />
                                 <Switch
                                     Grid.Column="1"
+                                    IsToggled="{Binding Hr01003Flag}"
                                     OnColor="#87CEEB"
-                                    VerticalOptions="Center"  IsToggled="{Binding Hr01003Flag}"/>
+                                    VerticalOptions="Center" />
                             </Grid>
 
                             <!--  断面符号 (断面符号)  -->
@@ -299,8 +303,9 @@
                                     VerticalOptions="Center" />
                                 <Switch
                                     Grid.Column="1"
+                                    IsToggled="{Binding Hr01020Flag}"
                                     OnColor="#87CEEB"
-                                    VerticalOptions="Center"  IsToggled="{Binding Hr01020Flag}"/>
+                                    VerticalOptions="Center" IsEnabled="False"/>
                             </Grid>
 
                             <!--  工区名 (工区名称)  -->
@@ -317,8 +322,9 @@
                                     VerticalOptions="Center" />
                                 <Switch
                                     Grid.Column="1"
+                                    IsToggled="{Binding Hr01007Flag}"
                                     OnColor="#87CEEB"
-                                    VerticalOptions="Center"  IsToggled="{Binding Hr01007Flag}"/>
+                                    VerticalOptions="Center" />
                             </Grid>
 
                             <!--  サイズ拡大 (尺寸放大)  -->
@@ -335,8 +341,9 @@
                                     VerticalOptions="Center" />
                                 <Switch
                                     Grid.Column="1"
+                                    IsToggled="{Binding SizeFlag}"
                                     OnColor="#87CEEB"
-                                    VerticalOptions="Center" IsToggled="{Binding SizeFlag}"/>
+                                    VerticalOptions="Center" />
                             </Grid>
 
                             <!--  採用枚数/枚 (采用张数/张)  -->
@@ -353,8 +360,9 @@
                                     VerticalOptions="Center" />
                                 <Switch
                                     Grid.Column="1"
+                                    IsToggled="{Binding PhotoCountFlag}"
                                     OnColor="#87CEEB"
-                                    VerticalOptions="Center" IsToggled="{Binding PhotoCountFlag}"/>
+                                    VerticalOptions="Center" />
                             </Grid>
 
                             <!--  ガイド (指南/引导)  -->
@@ -374,18 +382,18 @@
                                     Grid.Column="1"
                                     FontSize="14"
                                     HeightRequest="35"
-                                    VerticalOptions="Center"                                     
                                     ItemDisplayBinding="{Binding DisplyName}"
                                     ItemsSource="{Binding Guide}"
-                                    SelectedIndex="{Binding GuideSelectIndex}">
+                                    SelectedIndex="{Binding GuideSelectIndex}"
+                                    VerticalOptions="Center">
                                     <Picker.Behaviors>
                                         <toolkit:EventToCommandBehavior
-                                         BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Guide}}"
-                                         Command="{Binding GuideSelectedIndexChangedCommand}"
-                                         EventName="SelectedIndexChanged" />
+                                            BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Guide}}"
+                                            Command="{Binding GuideSelectedIndexChangedCommand}"
+                                            EventName="SelectedIndexChanged" />
                                     </Picker.Behaviors>
                                 </Picker>
-                                
+
                             </Grid>
 
                         </StackLayout>

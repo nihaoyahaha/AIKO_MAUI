@@ -10,6 +10,7 @@ public partial class App : Application
 	public App(IAppInitializationService appInitializationService, AppShell shell)
 	{
 		InitializeComponent();
+		Application.Current.UserAppTheme = AppTheme.Light;
 		_appInitializationService = appInitializationService;
 		_shell = shell;
 	}

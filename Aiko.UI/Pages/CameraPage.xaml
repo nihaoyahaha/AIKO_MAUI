@@ -121,7 +121,6 @@
         </Grid>
         <Grid
             Grid.Row="1"
-            BackgroundColor="LightGray"
             ColumnDefinitions="auto,*"
             ColumnSpacing="15">
             <HorizontalStackLayout Margin="10,0,0,0">
@@ -144,7 +143,6 @@
                     VerticalOptions="Center" />
                 <Entry
                     x:Name="ety_remark"
-                    Background="White"
                     Text="{Binding Remark}"
                     VerticalOptions="Center"
                     WidthRequest="200">

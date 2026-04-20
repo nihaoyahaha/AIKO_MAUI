@@ -32,6 +32,7 @@
     <Color x:Key="EntryBackgroundColor">transparent</Color>
     <Color x:Key="EntryPlaceholderColor">#C8C8C8</Color>
     <Color x:Key="EntryDisabledTextColor">#ACACAC</Color>
+    <Color x:Key="EntryReadOnlyBackgroundColor">#C8C8C8</Color>
 
     <Color x:Key="FrameBorderColor">#C8C8C8</Color>
 
@@ -136,4 +137,7 @@
     <Color x:Key="Gray600">#404040</Color>
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
+
+    <Color x:Key="SelectedImageColor">#DDDDEE</Color>
+    <Color x:Key="InkToolsBarBackgroundColor">#EEEEEE</Color>
 </ResourceDictionary>

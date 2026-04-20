@@ -10,13 +10,12 @@ namespace Aiko.Common.InkTools.InkToolsList
     {
         public override string Type => "Accept";
 
-        public string AcceptSymbol { get; } = "✔";
+        public string AcceptSymbol { get; } = "✓";
 
         public AcceptTool(InkToolManager manager) : base(manager)
         {
             Color = SKColors.Green;
             Size = 36;
-            Font = "Segoe UI Symbol";
         }
 
         public override void OnDown(SKPoint point, SKCanvasView canvasView)
@@ -43,8 +42,12 @@ namespace Aiko.Common.InkTools.InkToolsList
 
             UpdateTextBounds(stroke);
 
-            using var typeface = SKTypeface.FromFamilyName(stroke.Font);
-            using var font = new SKFont(typeface, stroke.Size);
+            using var font = new SKFont
+            {
+                Typeface = Typefaces.TryGetValue(stroke.Font, out SKTypeface? value) ? value : SKTypeface.Default,
+                Size = stroke.Size,
+                Edging = SKFontEdging.Antialias
+            };
             using var paint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
@@ -62,8 +65,12 @@ namespace Aiko.Common.InkTools.InkToolsList
         {
             if (string.IsNullOrEmpty(stroke.Text) || stroke.Points.Count == 0) return;
 
-            using var typeface = SKTypeface.FromFamilyName(stroke.Font);
-            using var font = new SKFont(typeface, stroke.Size);
+            using var font = new SKFont
+            {
+                Typeface = Typefaces.TryGetValue(stroke.Font, out SKTypeface? value) ? value : SKTypeface.Default,
+                Size = stroke.Size,
+                Edging = SKFontEdging.Antialias
+            };
             using var paint = new SKPaint();
 
             var position = stroke.Points[0];

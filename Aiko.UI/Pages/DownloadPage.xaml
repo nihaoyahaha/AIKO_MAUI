@@ -13,120 +13,117 @@
             Command="{Binding PageLoadedCommand}"
             EventName="Loaded" />
     </ContentView.Behaviors>
-    <ScrollView Orientation="Both">
-        <Grid
-            Padding="10"
-            MinimumHeightRequest="600"
-            MinimumWidthRequest="600">
+    <Grid
+        Padding="10"
+        MinimumHeightRequest="600"
+        MinimumWidthRequest="600">
+        <VerticalStackLayout Spacing="15">
+            <Border
+                Padding="10"
+                HeightRequest="160"
+                Stroke="#FF8B8B8B"
+                StrokeShape="RoundRectangle 8">
+                <Grid RowDefinitions="*, Auto">
+                    <Label VerticalOptions="Start">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="&#10;　　会社マスタ・オペレータマスタ・プロジェクト情報をこの端末に同期する。&#10;" />
+                                <Span Text="　　※新しくプロジェクトを開始する際や各マスタを追加・変更した際に必ず実行してください。" TextColor="Red" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Button
+                        x:Name="btnMDownload"
+                        Grid.Row="1"
+                        Command="{Binding btnMDownloadCommand}"
+                        HorizontalOptions="End"
+                        IsEnabled="{Binding IsEnableFlag}"
+                        Text="ダウンロード"
+                        WidthRequest="120" />
+                </Grid>
+            </Border>
 
-            <VerticalStackLayout Spacing="15">
+            <Border
+                Padding="10"
+                HeightRequest="280"
+                IsVisible="{Binding DownLoadFrameIsVisible}"
+                Stroke="#FF8B8B8B"
+                StrokeShape="RoundRectangle 8">
+                <Grid RowDefinitions="*, Auto, Auto">
+                    <Label Grid.Row="0">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="&#10;　　マップ情報・断面リスト・配筋確認・工区などの情報をこの端末に同期する。&#10;" />
+                                <Span Text="　　※こちらを実行する前に必ず上のマスタダウンロードを実行してください。&#10;" TextColor="Red" />
+                                <Span Text="　　※PC版でマップ情報・断面リスト・配筋確認・工区などを変更・追加した場合こちらを実行してください。&#10;" TextColor="Red" />
+                                <Span Text="{Binding SaveDaysMessageInfo}" TextColor="Red" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
 
-                <Border
-                    Padding="10"
-                    HeightRequest="160"
-                    Stroke="#FF8B8B8B"
-                    StrokeShape="RoundRectangle 8">
-                    <Grid RowDefinitions="*, Auto">
-                        <Label VerticalOptions="Start">
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="&#10;　　会社マスタ・オペレータマスタ・プロジェクト情報をこの端末に同期する。&#10;" />
-                                    <Span Text="　　※新しくプロジェクトを開始する際や各マスタを追加・変更した際に必ず実行してください。" TextColor="Red" />
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
-                        <Button
-                            x:Name="btnMDownload"
-                            Grid.Row="1"
-                            Command="{Binding btnMDownloadCommand}"
-                            HorizontalOptions="End"
+                    <HorizontalStackLayout
+                        Grid.Row="1"
+                        Margin="30,10"
+                        Spacing="20">
+                        <HorizontalStackLayout VerticalOptions="Center">
+                            <CheckBox
+                                x:Name="chkDrawing"
+                                IsChecked="{Binding IsIncludeDrawingFile}"
+                                IsEnabled="{Binding IsEnableFlag}" />
+                            <Label Text="図面ファイルを含む" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout VerticalOptions="Center">
+                            <CheckBox
+                                x:Name="chkPhoto"
+                                IsChecked="{Binding IsIncludePhotoFile}"
+                                IsEnabled="{Binding IsEnableFlag}" />
+                            <Label Text="写真ファイルを含む" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
+
+                    <Grid
+                        Grid.Row="2"
+                        Margin="30,10,0,0"
+                        ColumnDefinitions="Auto, *, Auto"
+                        ColumnSpacing="10">
+                        <Label Text="プロジェクト：" VerticalOptions="Center" />
+                        <Picker
+                            x:Name="pck_Proj"
+                            Grid.Column="1"
                             IsEnabled="{Binding IsEnableFlag}"
+                            ItemDisplayBinding="{Binding DisplyName}"
+                            ItemsSource="{Binding Constructions}"
+                            SelectedItem="{Binding SelectedConstruction}">
+                            <Picker.Behaviors>
+                                <toolkit:EventToCommandBehavior
+                                    BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Proj}}"
+                                    Command="{Binding ConstructionSelectedIndexChangedCommand}"
+                                    EventName="SelectedIndexChanged" />
+                            </Picker.Behaviors>
+                        </Picker>
+                        <Button
+                            x:Name="btnPDownload"
+                            Grid.Column="2"
+                            Command="{Binding DownLoadCommand}"
+                            IsEnabled="{Binding DownLoadButtonIsEnabled}"
                             Text="ダウンロード"
                             WidthRequest="120" />
                     </Grid>
-                </Border>
+                </Grid>
+            </Border>
+        </VerticalStackLayout>
 
-                <Border
-                    Padding="10"
-                    HeightRequest="280"
-                    IsVisible="{Binding DownLoadFrameIsVisible}"
-                    Stroke="#FF8B8B8B"
-                    StrokeShape="RoundRectangle 8">
-                    <Grid RowDefinitions="*, Auto, Auto">
-                        <Label Grid.Row="0">
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="&#10;　　マップ情報・断面リスト・配筋確認・工区などの情報をこの端末に同期する。&#10;" />
-                                    <Span Text="　　※こちらを実行する前に必ず上のマスタダウンロードを実行してください。&#10;" TextColor="Red" />
-                                    <Span Text="　　※PC版でマップ情報・断面リスト・配筋確認・工区などを変更・追加した場合こちらを実行してください。&#10;" TextColor="Red" />
-                                    <Span Text="{Binding SaveDaysMessageInfo}" TextColor="Red" />
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
-
-                        <HorizontalStackLayout
-                            Grid.Row="1"
-                            Margin="30,10"
-                            Spacing="20">
-                            <HorizontalStackLayout VerticalOptions="Center">
-                                <CheckBox
-                                    x:Name="chkDrawing"
-                                    IsChecked="{Binding IsIncludeDrawingFile}"
-                                    IsEnabled="{Binding IsEnableFlag}" />
-                                <Label Text="図面ファイルを含む" VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                            <HorizontalStackLayout VerticalOptions="Center">
-                                <CheckBox
-                                    x:Name="chkPhoto"
-                                    IsChecked="{Binding IsIncludePhotoFile}"
-                                    IsEnabled="{Binding IsEnableFlag}" />
-                                <Label Text="写真ファイルを含む" VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                        </HorizontalStackLayout>
-
-                        <Grid
-                            Grid.Row="2"
-                            Margin="30,10,0,0"
-                            ColumnDefinitions="Auto, *, Auto"
-                            ColumnSpacing="10">
-                            <Label Text="プロジェクト：" VerticalOptions="Center" />
-                            <Picker
-                                x:Name="pck_Proj"
-                                Grid.Column="1"
-                                IsEnabled="{Binding IsEnableFlag}"
-                                ItemDisplayBinding="{Binding DisplyName}"
-                                ItemsSource="{Binding Constructions}"
-                                SelectedItem="{Binding SelectedConstruction}">
-                                <Picker.Behaviors>
-                                    <toolkit:EventToCommandBehavior
-                                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_Proj}}"
-                                        Command="{Binding ConstructionSelectedIndexChangedCommand}"
-                                        EventName="SelectedIndexChanged" />
-                                </Picker.Behaviors>
-                            </Picker>
-                            <Button
-                                x:Name="btnPDownload"
-                                Grid.Column="2"
-                                Command="{Binding DownLoadCommand}"
-                                IsEnabled="{Binding DownLoadButtonIsEnabled}"
-                                Text="ダウンロード"
-                                WidthRequest="120" />
-                        </Grid>
-                    </Grid>
-                </Border>
-            </VerticalStackLayout>
-
-            <Grid
-                x:Name="gridProgress"
-                BackgroundColor="#B0D3D3D3"
-                IsVisible="{Binding IsShowProgressGridFlag}"
-                ZIndex="999">
-                <VerticalStackLayout
-                    Padding="30"
-                    BackgroundColor="White"
-                    HorizontalOptions="Center"
-                    Spacing="15"
-                    VerticalOptions="Center">
+        <Grid
+            x:Name="gridProgress"
+            BackgroundColor="#B0D3D3D3"
+            IsVisible="{Binding IsShowProgressGridFlag}"
+            ZIndex="999">
+            <Border
+                BackgroundColor="{DynamicResource PageBackgroundColor}"
+                HorizontalOptions="Center"
+                StrokeShape="RoundRectangle 14"
+                VerticalOptions="Center">
+                <VerticalStackLayout Padding="30" Spacing="15">
                     <Label
                         x:Name="txtBarName"
                         FontSize="16"
@@ -151,7 +148,9 @@
                         WidthRequest="40"
                         Color="#512BD4" />
                 </VerticalStackLayout>
-            </Grid>
+            </Border>
+
         </Grid>
-    </ScrollView>
+    </Grid>
+
 </ContentView>

@@ -51,7 +51,7 @@ public class DataSyncService
 
 	#region プライベートフィールド
 
-	int _timeout = 15000;
+	int _timeout = 30000;
 	decimal _pageSize = 10000;
 	IUWPServiceAPI _serviceApi02;
 	string[] _mimeTypes = { ".jpg", ".svg", ".json" };
@@ -2319,14 +2319,14 @@ public class DataSyncService
 			{
 				string message = $"ペイントファイル画像のダウンロード:{++count}/{allCount}";
 				await asyncMethod(message, currentStep, totalSteps);
-				using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
+				using CancellationTokenSource cts = new CancellationTokenSource();
 				string fileUri = $"{workCode}/paint/{item.HM04042.Trim()}.jpg";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "paint", $"{item.HM04042.Trim()}.jpg");
 				bool result;
 				if (_appContext.FileServerType == 2)
 				{
 					//ファイルサーバタイプ:webdav
-					result = await _webDavClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
+					result = await _webDavClient.DownloadAsync(fileUri, localFilePath);
 				}
 				else
 				{
@@ -2363,12 +2363,12 @@ public class DataSyncService
 				string fileName = $"{item.HM12002.Trim()}{Path.GetExtension(item.HM12003.Trim())}";
 				string fileUri = $"{workCode}/{fileName}";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, fileName);
-				using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
+				using CancellationTokenSource cts = new CancellationTokenSource();
 				bool result;
 				if (_appContext.FileServerType == 2)
 				{
 					//ファイルサーバタイプ:webdav
-					result = await _webDavClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
+					result = await _webDavClient.DownloadAsync(fileUri, localFilePath);
 				}
 				else
 				{
@@ -2405,12 +2405,12 @@ public class DataSyncService
 				await asyncMethod(message, currentStep, totalSteps);
 				string fileUri = $"{workCode}/danm/{item.HM10025.Trim()}.jpg";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "danm", $"{item.HM10025.Trim()}.jpg");
-				using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
+				using CancellationTokenSource cts = new CancellationTokenSource();
 				bool result;
 				if (_appContext.FileServerType == 2)
 				{
 					//ファイルサーバタイプ:webdav
-					result = await _webDavClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
+					result = await _webDavClient.DownloadAsync(fileUri, localFilePath);
 				}
 				else
 				{
@@ -2453,12 +2453,12 @@ public class DataSyncService
 
 					if (mimetype == ".json" && !await JsonFileExistsAsync(fileUri)) continue;
 
-					using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
+					using CancellationTokenSource cts = new CancellationTokenSource();
 					bool result;
 					if (_appContext.FileServerType == 2)
 					{
 						//ファイルサーバタイプ:webdav
-						result = await _webDavClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
+						result = await _webDavClient.DownloadAsync(fileUri, localFilePath);
 					}
 					else
 					{

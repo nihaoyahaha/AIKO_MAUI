@@ -67,4 +67,10 @@ public interface ICheckPointService: IServiceBase
 
 	//データの保存
 	public Task<bool> SaveAsync();
+
+	//データの直接保存
+	public Task<bool> SaveDirectlyAsync();
+
+	//データが変更されたかどうか
+	public bool IsDataChanged();
 }

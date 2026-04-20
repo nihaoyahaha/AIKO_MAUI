@@ -13,56 +13,54 @@
             Command="{Binding PageLoadedCommand}"
             EventName="Loaded" />
     </ContentView.Behaviors>
-    <ScrollView Orientation="Both">
+    <Grid
+        Padding="40"
+        MinimumHeightRequest="600"
+        MinimumWidthRequest="800">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Label
+            Grid.Row="0"
+            Margin="0,0,0,20"
+            FontSize="16"
+            HorizontalOptions="Start"
+            Text="対象の現場を削除します。" />
+
         <Grid
-            Padding="40"
-            MinimumHeightRequest="600"
-            MinimumWidthRequest="800">
+            Grid.Row="1"
+            ColumnDefinitions="*, Auto"
+            ColumnSpacing="20">
 
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+            <Picker
+                x:Name="pck_proj"
+                Title="プロジェクトを選択してください"
+                Grid.Column="0"
+                HorizontalOptions="Fill"
+                ItemDisplayBinding="{Binding DisplyName}"
+                ItemsSource="{Binding Projects}"
+                SelectedIndex="{Binding SelectedIndex}">
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_proj}}"
+                        Command="{Binding ProjectsSelectedIndexChangedCommand}"
+                        EventName="SelectedIndexChanged" />
+                </Picker.Behaviors>
+            </Picker>
 
-            <Label
-                Grid.Row="0"
-                Margin="0,0,0,20"
-                FontSize="16"
-                HorizontalOptions="Start"
-                Text="対象の現場を削除します。" />
-
-            <Grid
-                Grid.Row="1"
-                ColumnDefinitions="*, Auto"
-                ColumnSpacing="20">
-
-                <Picker
-                    x:Name="pck_proj"
-                    Title="プロジェクトを選択してください"
-                    Grid.Column="0"
-                    HorizontalOptions="Fill"
-                    ItemDisplayBinding="{Binding DisplyName}"
-                    ItemsSource="{Binding Projects}"
-                    SelectedIndex="{Binding SelectedIndex}">
-                    <Picker.Behaviors>
-                        <toolkit:EventToCommandBehavior
-                            BindingContext="{Binding Path=BindingContext, Source={x:Reference pck_proj}}"
-                            Command="{Binding ProjectsSelectedIndexChangedCommand}"
-                            EventName="SelectedIndexChanged" />
-                    </Picker.Behaviors>
-                </Picker>
-
-                <Button
-                    x:Name="btnDelete"
-                    Grid.Column="1"
-                    Command="{Binding DeleteProjectCommand}"
-                    IsEnabled="{Binding IsEnabled}"
-                    Text="削除"
-                    VerticalOptions="End"
-                    WidthRequest="105" />
-            </Grid>
-
+            <Button
+                x:Name="btnDelete"
+                Grid.Column="1"
+                Command="{Binding DeleteProjectCommand}"
+                IsEnabled="{Binding IsEnabled}"
+                Text="削除"
+                VerticalOptions="End"
+                WidthRequest="105" />
         </Grid>
-    </ScrollView>
+
+    </Grid>
 </ContentView>

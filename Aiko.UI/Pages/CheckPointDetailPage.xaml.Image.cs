@@ -57,34 +57,22 @@ public partial class CheckPointDetailPage : ContentPage
     {
         if (!Directory.Exists(path)) return;
 
-        var extensions = new[] { ".jpg", ".jpeg", ".png", ".svg" };
+        if (images == null) return;
 
-        var files = Directory.EnumerateFiles(path)
-            .Where(file => extensions.Any(ext => string.Equals(ext, Path.GetExtension(file), StringComparison.OrdinalIgnoreCase)))
-            .Select(file => new FileInfo(file))
-            .ToList();
+        images = images.Where(image => File.Exists(Path.Combine(path, image.Name))).ToList();
 
-        if (images != null)
-        {
-            List<string> imageNames = images.Select(image => image.Name).ToList();
-            for (int i = files.Count - 1; i >= 0; i--)
-            {
-                var file = files[i];
+        _vm.ImagesCount = images.Count;
+        _vm.NoditySummary();
 
-                if (!imageNames.Contains(file.Name))
-                {
-                    files.Remove(file);
-                }
-            }
-        }
+        List<FileInfo> files = images.Select(image => new FileInfo(Path.Combine(path, image.Name))).ToList();
 
         _vm.SourceImageList.Clear();
 
-        for (int i = 0; i < files.Count; i++)
+        for (int i = 0; i < images.Count; i++)
         {
-            var file = files[i];
+            var file = new FileInfo(Path.Combine(path, images[i].Name));
 
-            var image = await CreateInkImage(file, images?.Where(image => image.Name == file.Name).First());
+            var image = await CreateInkImage(file, images[i]);
 
             if (i < _vm.SourceImageList.Count)
                 _vm.SourceImageList.Insert(i, image);
@@ -137,6 +125,8 @@ public partial class CheckPointDetailPage : ContentPage
 
             PhotoCanvasView.InvalidateSurface();
             BlackboardCanvasView.InvalidateSurface();
+
+            _needsRedrawBackground = true;
             InkCanvasView.InvalidateSurface();
 
             return;
@@ -164,6 +154,8 @@ public partial class CheckPointDetailPage : ContentPage
 
         PhotoCanvasView.InvalidateSurface();
         BlackboardCanvasView.InvalidateSurface();
+
+        _needsRedrawBackground = true;
         InkCanvasView.InvalidateSurface();
     }
 

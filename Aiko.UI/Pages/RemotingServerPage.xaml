@@ -14,93 +14,91 @@
             Command="{Binding PageLoadCommand}"
             EventName="Loaded" />
     </ContentView.Behaviors>
-    <ScrollView>
-        <Grid
-            Margin="120,70,0,0"
-            ColumnDefinitions="200,auto"
-            ColumnSpacing="25"
-            HeightRequest="400"
-            RowDefinitions="auto,auto,auto,auto,auto"
-            RowSpacing="15"
-            VerticalOptions="Start">
-            <Label
-                FontSize="Body"
-                HorizontalOptions="End"
-                Text="リモート サーバー"
-                VerticalTextAlignment="Center" />
-            <Entry
-                x:Name="ety_Server"
-                Grid.Column="1"
-                FontSize="Body"
-                HorizontalOptions="Start"
-                Text="{Binding Server}"
-                WidthRequest="300">
-                <Entry.Behaviors>
-                    <behaviors:RegExRestrictionBehavior />
-                </Entry.Behaviors>
-            </Entry>
+    <Grid
+        Margin="0,70,0,0"
+        ColumnDefinitions="200,auto"
+        ColumnSpacing="25"
+        HeightRequest="400"
+        RowDefinitions="auto,auto,auto,auto,auto"
+        RowSpacing="15"
+        VerticalOptions="Start">
+        <Label
+            FontSize="Body"
+            HorizontalOptions="End"
+            Text="リモート サーバー"
+            VerticalTextAlignment="Center" />
+        <Entry
+            x:Name="ety_Server"
+            Grid.Column="1"
+            FontSize="Body"
+            HorizontalOptions="Start"
+            Text="{Binding Server}"
+            WidthRequest="300">
+            <Entry.Behaviors>
+                <behaviors:RegExRestrictionBehavior />
+            </Entry.Behaviors>
+        </Entry>
 
-            <Label
-                Grid.Row="1"
-                FontSize="Body"
-                HorizontalTextAlignment="End"
-                Text="ポート"
-                VerticalTextAlignment="Center" />
+        <Label
+            Grid.Row="1"
+            FontSize="Body"
+            HorizontalTextAlignment="End"
+            Text="ポート"
+            VerticalTextAlignment="Center" />
+        <Entry
+            x:Name="ety_ServerPort"
+            Grid.Row="1"
+            Grid.Column="1"
+            FontSize="Body"
+            HorizontalOptions="Start"
+            Text="{Binding ServerPort}"
+            WidthRequest="300">
+            <Entry.Behaviors>
+                <behaviors:NumericOnlyBehavior MaxLength="5" />
+            </Entry.Behaviors>
+        </Entry>
+
+        <Label
+            Grid.Row="2"
+            FontSize="Body"
+            HorizontalTextAlignment="End"
+            Text="タイムアウト"
+            VerticalTextAlignment="Center" />
+        <HorizontalStackLayout Grid.Row="2" Grid.Column="1">
             <Entry
-                x:Name="ety_ServerPort"
-                Grid.Row="1"
-                Grid.Column="1"
+                x:Name="ety_Timeout"
                 FontSize="Body"
-                HorizontalOptions="Start"
-                Text="{Binding ServerPort}"
-                WidthRequest="300">
+                Text="{Binding ServerTimeOut}"
+                WidthRequest="150">
                 <Entry.Behaviors>
                     <behaviors:NumericOnlyBehavior MaxLength="5" />
                 </Entry.Behaviors>
             </Entry>
-
             <Label
-                Grid.Row="2"
+                Margin="20,0,0,0"
                 FontSize="Body"
-                HorizontalTextAlignment="End"
-                Text="タイムアウト"
+                Text="(秒)"
                 VerticalTextAlignment="Center" />
-            <HorizontalStackLayout Grid.Row="2" Grid.Column="1">
-                <Entry
-                    x:Name="ety_Timeout"
-                    FontSize="Body"
-                    Text="{Binding ServerTimeOut}"
-                    WidthRequest="150">
-                    <Entry.Behaviors>
-                        <behaviors:NumericOnlyBehavior MaxLength="5" />
-                    </Entry.Behaviors>
-                </Entry>
-                <Label
-                    Margin="20,0,0,0"
-                    FontSize="Body"
-                    Text="(秒)"
-                    VerticalTextAlignment="Center" />
-            </HorizontalStackLayout>
+        </HorizontalStackLayout>
 
-            <Label
-                Grid.Row="3"
-                Grid.ColumnSpan="2"
-                Margin="80,0,0,0"
-                FontSize="Body"
-                HorizontalTextAlignment="Start"
-                Text="（リモート　サーバーに接続するタイムアウト時間間隔です。無期限待機 &#10; の場合はを指定してください。）" />
+        <Label
+            Grid.Row="3"
+            Grid.ColumnSpan="2"
+            Margin="80,0,0,0"
+            FontSize="Body"
+            HorizontalTextAlignment="Start"
+            Text="（リモート　サーバーに接続するタイムアウト時間間隔です。無期限待機 &#10; の場合はを指定してください。）" />
 
-            <Button
-                x:Name="btn_Save"
-                Grid.Row="4"
-                Grid.Column="1"
-                Command="{Binding SaveCommand}"
-                FontSize="Body"
-                HorizontalOptions="End"
-                Text="保存"
-                VerticalOptions="End"
-                WidthRequest="100" />
+        <Button
+            x:Name="btn_Save"
+            Grid.Row="4"
+            Grid.Column="1"
+            Command="{Binding SaveCommand}"
+            FontSize="Body"
+            HorizontalOptions="End"
+            Text="保存"
+            VerticalOptions="End"
+            WidthRequest="100" />
 
-        </Grid>
-    </ScrollView>
+    </Grid>
 </ContentView>

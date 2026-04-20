@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace Aiko.UI.ViewModels.PageVMs;
@@ -15,6 +16,8 @@ namespace Aiko.UI.ViewModels.PageVMs;
 public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPageVM, ICheckPointDetailService>
 {
     private readonly ICheckPointService _checkPointService;
+
+    private bool _first = false;
 
     [ObservableProperty]
     private bool _isDarkenMode = true;
@@ -40,7 +43,10 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     private ObservableCollection<InkImage> _imageList = new ObservableCollection<InkImage>();
     [ObservableProperty]
     private List<InkImage> _original‌ImageList = new List<InkImage>();
-    public string Summary => $"{SourceImageList.Count(image => image.IsVisualized)}/{SourceImageList.Count}";
+    public string Summary => $"{SourceImageList.Count(image => image.IsVisualized)}/{ImagesCount}";
+
+    [ObservableProperty]
+    private int _imagesCount = 0;
 
     [ObservableProperty]
     private bool _isAscending = true;
@@ -196,6 +202,8 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     public CheckPointDetailPageVM(ILogger<CheckPointDetailPageVM> logger, ICheckPointDetailService service, ICheckPointService checkPointService) : base(logger, service)
     {
         _checkPointService = checkPointService;
+
+        InitViewModel();
     }
 
     public override async void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -215,6 +223,12 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         }
 
         await LoadData();
+
+        await LoadDanmImage();
+
+        SetSelectedTool("Empty");
+
+        _first = false;
     }
 
     private async Task LoadData(Dictionary<string, object>? query = null)
@@ -323,7 +337,12 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
     partial void OnProcChanged(ListItem value)
     {
-        SetProj(value.Value);
+        if (_first) return;
+
+        if (value != null && !string.IsNullOrEmpty(value.Value))
+        {
+            SetProj(value.Value);
+        }
     }
 
     partial void OnProjChanged(ListItem value)
@@ -443,8 +462,9 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         bool? success = (bool?)message.Result["success"];
         if (success != false)
         {
-            ToggleImageGallery();
-            await Shell.Current.GoToAsync("..");
+            await Shell.Current.GoToAsync("..", CreateNavigationParameterForCheckPoint());
+
+            InitViewModel();
         }
         else
         {
@@ -478,8 +498,9 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         bool? success = (bool?)message.Result["success"];
         if (success != false)
         {
-            ToggleImageGallery();
-            await Shell.Current.GoToAsync("..");
+            await Shell.Current.GoToAsync("..", CreateNavigationParameterForCheckPoint());
+
+            InitViewModel();
         }
         else
         {
@@ -536,6 +557,47 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         var message = new AsyncRequestMessage("SwitchImage", new Dictionary<string, object?> { { "image", nextImage } });
         _ = WeakReferenceMessenger.Default.Send(message);
         await message.Tcs.Task;
+    }
+
+    private void InitViewModel()
+    {
+        ImageList.Clear();
+        SourceImageList.Clear();
+        ImagesCount = 0;
+
+        DanmImageSource = null;
+
+        DanmTitle = "";
+        Buim = "";
+        Grpl = "";
+        Danm = "";
+        Koku = "";
+        Location = "";
+
+        Dirs = null;
+        Comment = "";
+        Date = "";
+        Author = "";
+
+        Proc = null;
+        Proj = null;
+        Hantei = "";
+
+        Checkrsl1StrokeThickness = 0;
+        Checkrsl2StrokeThickness = 0;
+        Checkrsl4StrokeThickness = 0;
+        Checkrsl5StrokeThickness = 0;
+        Sign = -1;
+
+        IsBlackboardVisible = false;
+        IsStrokesVisible = false;
+        IsSvg = false;
+
+        ClearSelectedTool();
+
+        ToggleImageGallery();
+
+        _first = true;
     }
 
     public void LoadImageInfo(InkImage image)
@@ -627,12 +689,28 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
             Original‌ImageList = SourceImageList.Select(image => image.Clone()).ToList();
         }
     }
-    public void RevertImageList()
+    public void RevertImageList(InkImage? image = null)
     {
         if (Original‌ImageList != null)
         {
-            SourceImageList.Clear();
-            SourceImageList = new List<InkImage>(Original‌ImageList.Select(image => image.Clone()).ToList());
+            if (image == null)
+            {
+                SourceImageList.Clear();
+                SourceImageList = new List<InkImage>(Original‌ImageList.Select(image => image.Clone()).ToList());
+            }
+            else
+            {
+                int index = SourceImageList.IndexOf(image);
+                if (index != -1)
+                {
+                    var originalImage = Original‌ImageList.FirstOrDefault(x => x.Code == image.Code);
+                    if (originalImage != null)
+                    {
+                        SourceImageList[index] = originalImage.Clone();
+                        SourceImageList[index].IsVisualized = true;
+                    }
+                }
+            }
         }
     }
     public List<InkImage> GetChangedImageList()
@@ -926,6 +1004,27 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
             "FixedCircle" => (1f, 50f),
             _ => (1f, 24f)
         };
+    }
+
+    /// <summary>
+    /// 確認项目画面のナビゲーションパラメータを作成する
+    /// </summary>
+    /// <returns></returns>
+    Dictionary<string, object> CreateNavigationParameterForCheckPoint()
+    {
+        var obj = new
+        {
+            FromPage = "CheckPointDetailPage",
+            ProjectCode = Proc.Value,        //工程コード		
+            InspectionItemCode = Proj.Value  //確認项目コード
+        };
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        string jsonString = JsonSerializer.Serialize(obj, options);
+        return new Dictionary<string, object> { { "json", jsonString } };
     }
 
     public class AsyncRequestMessage : RequestMessage<bool>

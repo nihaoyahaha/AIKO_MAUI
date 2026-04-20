@@ -19,6 +19,8 @@ public partial class CheckPointDetailPage : ContentPage
 
     private InkImage? _currentImage;
 
+    private readonly TaskCompletionSource<bool> _appearingTcs = new();
+
     private bool CanvasViewVisibleChanged =>
         (_vm.IsBlackboardVisible != _currentImage?.IsBlackboardVisible) ||
         (_vm.IsStrokesVisible != _currentImage?.IsStrokesVisible);
@@ -31,25 +33,12 @@ public partial class CheckPointDetailPage : ContentPage
         _toolManager = new InkToolManager();
         _toolManager.TextEditRequested += OnTextEditRequested;
 
-        _vm.ClearSelectedImage();
+        await LoadTypeface("ヒラギノ角ゴシック");
+        await LoadTypeface("ヒラギノ明朝 ProN");
+        await LoadTypeface("ヒラギノ丸ゴ ProN");
+        _toolManager.LoadTypefaces(_typefaces);
 
-        _currentImage = null;
-        PhotoCanvasView.InvalidateSurface();
-        BlackboardCanvasView.InvalidateSurface();
-        InkCanvasView.InvalidateSurface();
-
-        if (_vm.Proj != null)
-        {
-            List<InkImage> images = await _vm.GetImageInfo(_vm.Query, _vm.Proj.Value);
-            await LoadGalleryImages(_vm.ImageFolderPath, images);
-            if (_vm.ImageList.Count > 0) await LoadCanvasViewImage(_vm.ImageList[0]);
-        }
-
-        // 默认选中状态
-        SwitchTool("Empty");
-
-        await _vm.LoadDanmImage();
-        UpdateDanmImageDimensions();
+        _appearingTcs.TrySetResult(true);
     }
 
     public CheckPointDetailPage(CheckPointDetailPageVM checkPointDetailPageVM)
@@ -111,10 +100,17 @@ public partial class CheckPointDetailPage : ContentPage
 
     private async void OnViewModelPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        await _appearingTcs.Task;
+
         // 监听 Proj 属性变化，加载指定的图片集
         if (e.PropertyName == nameof(_vm.Proj))
         {
             await OnProjChanged();
+        }
+
+        if (e.PropertyName == nameof(_vm.DanmImageSource))
+        {
+            UpdateDanmImageDimensions();
         }
     }
 
@@ -128,8 +124,6 @@ public partial class CheckPointDetailPage : ContentPage
             DialogHelper.MessageDialog("画像フォルダが見つかりません。");
             return;
         }
-
-        _vm.ClearSelectedImage();
 
         List<InkImage> images = await _vm.GetImageInfo(_vm.Query, _vm.Proj.Value);
         await LoadGalleryImages(_vm.ImageFolderPath, images);
@@ -425,7 +419,7 @@ public partial class CheckPointDetailPage : ContentPage
             }
             else
             {
-                _vm.RevertImageList();
+                _vm.RevertImageList(all ? null : _currentImage);
             }
         }
 

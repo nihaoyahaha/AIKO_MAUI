@@ -1,10 +1,11 @@
-﻿using Aiko.UI.ViewModels.PageVMs;
+﻿using Aiko.Common;
+using Aiko.UI.ViewModels.PageVMs;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
-using System.Globalization;
+using System.ComponentModel;
 
 namespace Aiko.UI;
 
@@ -21,7 +22,9 @@ public partial class MapViewPage : ContentPage
     // 动态图层是否已初始化
     private bool _isShapesInitialized = false;
     // 需要动态更新位置/尺寸的图元集合（来自 VM）
-    private readonly List<VisualElement> _dynamicShapes = new();
+    private readonly List<MapShape> _dynamicShapes = new();
+    // 由图元数据创建出的可交互控件缓存，避免重复创建图片/Windows 控件。
+    private readonly Dictionary<MapShape, VisualElement> _shapeElements = new();
 
     // 标尺标签对象池（减少频繁创建 Label 带来的抖动）
     private readonly List<Label> _guideXPool = new();
@@ -43,14 +46,159 @@ public partial class MapViewPage : ContentPage
     private const int ImageSizeRetryCount = 10;
     private const int ImageSizeRetryDelayMs = 50;
 
-    protected override async void OnAppearing()
+    /// <summary>
+    /// 需要跟随主题刷新的 Picker 集合
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerable<Picker> GetThemeAwarePickers()
     {
-        base.OnAppearing();
-
-        _jpTypeface = GetJapaneseTypeface();
+        yield return pck_Area;
+        yield return pck_Position;
+        yield return pck_Proc;
     }
 
-        public MapViewPage(MapViewPageVM mapViewPageVM)
+    /// <summary>
+    /// 判断是否为需要触发主题刷新的属性
+    /// </summary>
+    /// <param name="propertyName"></param>
+    /// <returns></returns>
+    private static bool IsThemeAwarePickerProperty(string? propertyName)
+    {
+        return propertyName == nameof(VisualElement.IsEnabled)
+            || propertyName == nameof(Picker.ItemsSource)
+            || propertyName == nameof(Picker.SelectedIndex);
+    }
+
+    /// <summary>
+    /// 为主题相关 Picker 注册监听
+    /// </summary>
+    private void RegisterThemeAwarePickers()
+    {
+        foreach (var picker in GetThemeAwarePickers())
+        {
+            picker.PropertyChanged += OnThemeAwarePickerPropertyChanged;
+            picker.HandlerChanged += OnThemeAwarePickerHandlerChanged;
+        }
+    }
+
+    /// <summary>
+    /// 统一刷新主题相关 Picker 的样式
+    /// </summary>
+    private void RefreshThemeAwarePickers()
+    {
+        foreach (var picker in GetThemeAwarePickers())
+        {
+            RefreshPickerTheme(picker);
+        }
+    }
+
+    /// <summary>
+    /// 在主线程刷新单个 Picker 的主题样式
+    /// </summary>
+    /// <param name="picker"></param>
+    private void RefreshPickerThemeOnMainThread(Picker picker)
+    {
+        MainThread.BeginInvokeOnMainThread(() => RefreshPickerTheme(picker));
+    }
+
+    /// <summary>
+    /// 在主线程刷新全部主题相关 Picker 的样式
+    /// </summary>
+    private void RefreshThemeAwarePickersOnMainThread()
+    {
+        MainThread.BeginInvokeOnMainThread(RefreshThemeAwarePickers);
+    }
+
+    /// <summary>
+    /// 原生 Handler 变化时重新应用当前主题样式
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void OnThemeAwarePickerHandlerChanged(object? sender, EventArgs e)
+    {
+        if (sender is Picker picker)
+        {
+            RefreshPickerThemeOnMainThread(picker);
+        }
+    }
+
+    /// <summary>
+    /// Picker 状态或数据源变化时，重新应用当前主题样式
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void OnThemeAwarePickerPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is Picker picker && IsThemeAwarePickerProperty(e.PropertyName))
+        {
+            RefreshPickerThemeOnMainThread(picker);
+        }
+    }
+
+    /// <summary>
+    /// 按当前主题刷新单个 Picker 的前景色、标题色和背景色
+    /// </summary>
+    /// <param name="picker"></param>
+    private void RefreshPickerTheme(Picker picker)
+    {
+        if (TryGetPickerColor(picker.IsEnabled ? "PickerTextColor" : "PickerDisabledTextColor", out var textColor))
+        {
+            picker.TextColor = textColor;
+        }
+
+        if (TryGetPickerColor(picker.IsEnabled ? "PickerTitleColor" : "PickerDisabledTitleColor", out var titleColor))
+        {
+            picker.TitleColor = titleColor;
+        }
+
+        if (TryGetPickerColor("PickerBackgroundColor", out var backgroundColor))
+        {
+            picker.BackgroundColor = backgroundColor;
+        }
+
+        picker.InvalidateMeasure();
+
+        VisualStateManager.GoToState(picker, "Normal");
+        if (!picker.IsEnabled)
+        {
+            VisualStateManager.GoToState(picker, "Disabled");
+        }
+
+        picker.Handler?.UpdateValue(nameof(Picker.TextColor));
+        picker.Handler?.UpdateValue(nameof(Picker.TitleColor));
+        picker.Handler?.UpdateValue(nameof(VisualElement.IsEnabled));
+        picker.Handler?.UpdateValue(nameof(VisualElement.BackgroundColor));
+    }
+
+    /// <summary>
+    /// 从应用资源中读取 Picker 颜色资源
+    /// </summary>
+    /// <param name="resourceKey"></param>
+    /// <param name="color"></param>
+    /// <returns></returns>
+    private static bool TryGetPickerColor(string resourceKey, out Color color)
+    {
+        color = Colors.Transparent;
+
+        if (Application.Current?.Resources.TryGetValue(resourceKey, out var value) != true)
+        {
+            return false;
+        }
+
+        if (value is Color mauiColor)
+        {
+            color = mauiColor;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="mapViewPageVM"></param>
+    public MapViewPage(MapViewPageVM mapViewPageVM)
     {
         InitializeComponent();
 
@@ -67,8 +215,30 @@ public partial class MapViewPage : ContentPage
         // 监听主容器尺寸变化，确保旋转/窗口变化后依旧按比例显示
         MainGridView.SizeChanged += (_, _) => UpdateImageDimensions();
         pinchToZoom.ViewportChanged += (_, _) => OnViewportChanged();
+        // 注册需要跟随主题变化刷新的 Picker
+        RegisterThemeAwarePickers();
+        // 首次进入页面时先应用一次当前主题样式
+        RefreshThemeAwarePickers();
 
         RegisterMessages();
+
+#if !WINDOWS
+        _ = LoadTypefaceAsync();
+#endif
+
+    }
+
+    private async Task LoadTypefaceAsync()
+    {
+        if (_jpTypeface != null)
+            return;
+
+        _jpTypeface = await GetJapaneseTypefaceAsync("ヒラギノ角ゴシック");
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            OverlayCanvas?.InvalidateSurface();
+        });
     }
 
     /// <summary>
@@ -92,10 +262,23 @@ public partial class MapViewPage : ContentPage
             UpdateShapes(showW, showH);
         });
 
+        // 仅更新现有图元的显示状态与文字，不重建整页数据
+        WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshMapDisplayToken", (_, _) =>
+        {
+            // 轻量刷新：只根据现有图元数据更新布局与绘制，不清空也不重建。
+            UpdateShapes(showW, showH);
+        });
+
         // 刷新标尺
         WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshGuideToken", (_, _) =>
         {
             RenderGuides();
+        });
+
+        // 主题切换后，页面即使被缓存也主动刷新这三个 Picker 的样式
+        WeakReferenceMessenger.Default.Register<string, string>(this, "ThemeChangedToken", (_, _) =>
+        {
+            RefreshThemeAwarePickersOnMainThread();
         });
     }
 
@@ -112,6 +295,135 @@ public partial class MapViewPage : ContentPage
         {
             ZoomLayer.Children.Remove(item);
         }
+
+        _shapeElements.Clear();
+    }
+
+    /// <summary>
+    /// 按图元数据获取或创建对应的真实控件实例。
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <returns></returns>
+    private VisualElement GetOrCreateElement(MapShape shape)
+    {
+        if (_shapeElements.TryGetValue(shape, out var existing))
+            return existing;
+
+        // 真实控件只在首次需要时创建，后续复用，降低频繁刷新成本。
+        VisualElement element = shape.Type switch
+        {
+            MapShapeType.Image => CreateImageElement(shape),
+            MapShapeType.Rectangle => CreateRectangleElement(shape),
+            MapShapeType.Polygon => CreatePolygonElement(shape),
+            MapShapeType.Label => CreateLabelElement(shape),
+            _ => throw new NotSupportedException($"Unsupported shape type: {shape.Type}")
+        };
+
+        _shapeElements[shape] = element;
+        return element;
+    }
+
+    /// <summary>
+    /// 根据图元数据创建图片控件。
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <returns></returns>
+    private Image CreateImageElement(MapShape shape)
+    {
+        var image = new Image
+        {
+            Source = shape.ImageSource,
+            HorizontalOptions = LayoutOptions.Start,
+            VerticalOptions = LayoutOptions.Start,
+            Aspect = Aspect.AspectFill,
+            ZIndex = shape.ZIndex,
+            IsVisible = shape.IsVisible
+        };
+
+        if (shape.CommandParameter != null && BindingContext is MapViewPageVM vm)
+        {
+            image.GestureRecognizers.Add(new TapGestureRecognizer
+            {
+                NumberOfTapsRequired = 2,
+                Command = vm.GoToCheckPointPageCommand,
+                CommandParameter = shape.CommandParameter
+            });
+        }
+
+        return image;
+    }
+
+    /// <summary>
+    /// 根据图元数据创建矩形控件。
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <returns></returns>
+    private static Rectangle CreateRectangleElement(MapShape shape)
+    {
+        return new Rectangle
+        {
+            HorizontalOptions = LayoutOptions.Start,
+            VerticalOptions = LayoutOptions.Start,
+            InputTransparent = true,
+            IsVisible = shape.IsVisible,
+            Stroke = new SolidColorBrush(shape.StrokeColor),
+            StrokeThickness = shape.StrokeThickness
+        };
+    }
+
+    /// <summary>
+    /// 根据图元数据创建多边形控件。
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <returns></returns>
+    private static Polygon CreatePolygonElement(MapShape shape)
+    {
+        return new Polygon
+        {
+            HorizontalOptions = LayoutOptions.Start,
+            VerticalOptions = LayoutOptions.Start,
+            InputTransparent = true,
+            IsVisible = shape.IsVisible,
+            Stroke = new SolidColorBrush(shape.StrokeColor),
+            StrokeThickness = shape.StrokeThickness
+        };
+    }
+
+    /// <summary>
+    /// 根据图元数据创建文本标签控件。
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <returns></returns>
+    private static Label CreateLabelElement(MapShape shape)
+    {
+        return new Label
+        {
+            HorizontalOptions = LayoutOptions.Start,
+            VerticalOptions = LayoutOptions.Start,
+            LineBreakMode = LineBreakMode.NoWrap,
+            Text = shape.Text,
+            TextColor = shape.TextColor,
+            FontSize = shape.FontSize,
+            IsVisible = shape.IsVisible
+        };
+    }
+
+    /// <summary>
+    /// 按当前缩放比例把图元点集转换为页面坐标点集。
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <param name="sx"></param>
+    /// <param name="sy"></param>
+    /// <returns></returns>
+    private static PointCollection BuildPointCollection(MapShape shape, double sx, double sy)
+    {
+        var points = new PointCollection();
+        foreach (var point in shape.Points)
+        {
+            points.Add(new Point(point.X * sx, point.Y * sy));
+        }
+
+        return points;
     }
 
     /// <summary>
@@ -208,21 +520,20 @@ public partial class MapViewPage : ContentPage
         return Size.Zero;
     }
 
-        // 1. 初始化形状（仅在图片首次加载成功后执行一次）
-        private void InitializeShapesOnce()
+    // 1. 初始化形状（仅在图片首次加载成功后执行一次）
+    private void InitializeShapesOnce()
     {
         if (_isShapesInitialized) return;
 
-        foreach (var element in _dynamicShapes)
+        foreach (var shape in _dynamicShapes)
         {
 #if WINDOWS
-            // Windows：IMG/RECT/POLY/LBL 全部放在 ZoomLayer
-            ZoomLayer.Children.Add(element);
+            ZoomLayer.Children.Add(GetOrCreateElement(shape));
 #else
             // iOS/Mac：仅图片元素放入 ZoomLayer，其它由 SKCanvasView 绘制
-            if (element.AutomationId?.StartsWith("IMG|") == true)
+            if (shape.Type == MapShapeType.Image)
             {
-                ZoomLayer.Children.Add(element);
+                ZoomLayer.Children.Add(GetOrCreateElement(shape));
             }
 #endif
         }
@@ -233,7 +544,7 @@ public partial class MapViewPage : ContentPage
 
 
     // 2. 更新尺寸与重绘（在 UpdateImageDimensions 中调用）
-        private void UpdateShapes(double layerWidth, double layerHeight)
+    private void UpdateShapes(double layerWidth, double layerHeight)
     {
         if (!_isShapesInitialized) InitializeShapesOnce();
         if (originalWidth <= 0 || originalHeight <= 0) return;
@@ -244,115 +555,73 @@ public partial class MapViewPage : ContentPage
 
         ZoomLayer.BatchBegin();
 
-        foreach (var element in _dynamicShapes)
+        foreach (var shape in _dynamicShapes)
         {
-            if (string.IsNullOrWhiteSpace(element.AutomationId))
-                continue;
-
-            var data = element.AutomationId.Split('|');
-            if (data.Length < 3)
-                continue;
-
-            string type = data[0];
-
 #if WINDOWS
-            if (type == "IMG")
-            {
-                var vals = ParseNumbers(data[2]);
-                if (vals.Length < 4)
-                    continue;
+            var element = GetOrCreateElement(shape);
+            element.IsVisible = shape.IsVisible;
 
+            if (shape.Type == MapShapeType.Image)
+            {
                 element.AnchorX = 0;
                 element.AnchorY = 0;
 
                 AbsoluteLayout.SetLayoutBounds(element, new Rect(
-                    vals[0] * sx,
-                    vals[1] * sy,
-                    vals[2] * sx,
-                    vals[3] * sy));
+                    shape.Bounds.X * sx,
+                    shape.Bounds.Y * sy,
+                    shape.Bounds.Width * sx,
+                    shape.Bounds.Height * sy));
                 AbsoluteLayout.SetLayoutFlags(element, AbsoluteLayoutFlags.None);
             }
-            else if (type == "RECT" && element is Rectangle rect)
+            else if (shape.Type == MapShapeType.Rectangle && element is Rectangle rect)
             {
-                var vals = ParseNumbers(data[2]);
-                if (vals.Length < 4)
-                    continue;
-
-                rect.StrokeThickness = Math.Max(1d, 3d * baseScale);
+                rect.StrokeThickness = Math.Max(1d, shape.StrokeThickness * baseScale);
+                rect.Stroke = new SolidColorBrush(shape.StrokeColor);
 
                 AbsoluteLayout.SetLayoutBounds(rect, new Rect(
-                    vals[0] * sx,
-                    vals[1] * sy,
-                    vals[2] * sx,
-                    vals[3] * sy));
+                    shape.Bounds.X * sx,
+                    shape.Bounds.Y * sy,
+                    shape.Bounds.Width * sx,
+                    shape.Bounds.Height * sy));
                 AbsoluteLayout.SetLayoutFlags(rect, AbsoluteLayoutFlags.None);
             }
-            else if (type == "POLY" && element is Polygon poly)
+            else if (shape.Type == MapShapeType.Polygon && element is Polygon poly)
             {
-                if (data.Length < 4)
-                    continue;
-
-                var points = new PointCollection();
-                for (int i = 2; i < data.Length; i++)
-                {
-                    var xy = ParseNumbers(data[i]);
-                    if (xy.Length < 2)
-                        continue;
-
-                    points.Add(new Point(xy[0] * sx, xy[1] * sy));
-                }
-
-                poly.Points = points;
-                poly.StrokeThickness = Math.Max(1d, 3d * baseScale);
+                poly.Points = BuildPointCollection(shape, sx, sy);
+                poly.StrokeThickness = Math.Max(1d, shape.StrokeThickness * baseScale);
+                poly.Stroke = new SolidColorBrush(shape.StrokeColor);
 
                 AbsoluteLayout.SetLayoutBounds(poly, new Rect(0, 0, layerWidth, layerHeight));
                 AbsoluteLayout.SetLayoutFlags(poly, AbsoluteLayoutFlags.None);
             }
-            else if (type == "LBL" && element is Label lbl)
+            else if (shape.Type == MapShapeType.Label && element is Label lbl)
             {
-                var vals = ParseNumbers(data[2]);
-                if (vals.Length < 2)
-                    continue;
-
-                double baseFontSize = lbl.FontSize;
-                if (data.Length > 3 && double.TryParse(data[3], CultureInfo.InvariantCulture, out var parsedFont))
-                {
-                    baseFontSize = parsedFont;
-                }
-                 lbl.FontAutoScalingEnabled = false;
-
-                lbl.LineBreakMode = LineBreakMode.NoWrap;
-
-                lbl.MaxLines = 1;
-
-                lbl.Margin = 0;
-
-                lbl.Padding = 0;
-                lbl.FontSize = Math.Max(1d, baseFontSize * baseScale);
+                lbl.Text = shape.Text;
+                lbl.FontSize = Math.Max(1d, shape.FontSize * baseScale);
+                lbl.TextColor = shape.TextColor;
 
                 AbsoluteLayout.SetLayoutBounds(lbl, new Rect(
-                    vals[0] * sx,
-                    vals[1] * sy,
+                    shape.Bounds.X * sx,
+                    shape.Bounds.Y * sy,
                     AbsoluteLayout.AutoSize,
                     AbsoluteLayout.AutoSize));
                 AbsoluteLayout.SetLayoutFlags(lbl, AbsoluteLayoutFlags.None);
             }
 #else
-			// iOS/Mac：仅更新 IMG（RECT/POLY/LBL 在 OverlayCanvas 绘制）
-			if (type == "IMG")
+            // iOS/Mac：仅更新 IMG（RECT/POLY/LBL 在 OverlayCanvas 绘制）
+            if (shape.Type == MapShapeType.Image)
             {
-                var vals = ParseNumbers(data[2]);
-                if (vals.Length < 4)
-                    continue;
+                var element = GetOrCreateElement(shape);
+                element.IsVisible = shape.IsVisible;
 
                 element.AnchorX = 0;
                 element.AnchorY = 0;
 
                 AbsoluteLayout.SetLayoutBounds(element, new Rect(
-                    vals[0] * sx,
-                    vals[1] * sy,
-                    vals[2] * sx,
-                    vals[3] * sy));
+                    shape.Bounds.X * sx,
+                    shape.Bounds.Y * sy,
+                    shape.Bounds.Width * sx,
+                    shape.Bounds.Height * sy));
 
                 AbsoluteLayout.SetLayoutFlags(element, AbsoluteLayoutFlags.None);
             }
@@ -365,24 +634,6 @@ public partial class MapViewPage : ContentPage
         OverlayCanvas?.InvalidateSurface();
 #endif
     }
-
-
-
-        private static double[] ParseNumbers(string text)
-    {
-        // 使用 TryParse 避免脏数据导致绘制流程异常中断
-        return text
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(s =>
-            {
-                return double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
-                    ? value
-                    : double.NaN;
-            })
-            .Where(v => !double.IsNaN(v))
-            .ToArray();
-    }
-
     private enum GuideLayerKind
     {
         X,
@@ -390,6 +641,9 @@ public partial class MapViewPage : ContentPage
         Y2
     }
 
+    /// <summary>
+    /// 隐藏全部标尺标签。
+    /// </summary>
     private void HideAllGuides()
     {
         HideUnusedGuides(_guideXPool, 0);
@@ -397,6 +651,11 @@ public partial class MapViewPage : ContentPage
         HideUnusedGuides(_guideY2Pool, 0);
     }
 
+    /// <summary>
+    /// 隐藏对象池中当前未使用的标尺标签。
+    /// </summary>
+    /// <param name="pool"></param>
+    /// <param name="usedCount"></param>
     private static void HideUnusedGuides(List<Label> pool, int usedCount)
     {
         for (int i = usedCount; i < pool.Count; i++)
@@ -405,6 +664,9 @@ public partial class MapViewPage : ContentPage
         }
     }
 
+    /// <summary>
+    /// 开始一次标尺渲染并重置对象池使用计数。
+    /// </summary>
     private void BeginGuideRender()
     {
         _guideXUsed = 0;
@@ -416,6 +678,9 @@ public partial class MapViewPage : ContentPage
         GuideY2Layer.BatchBegin();
     }
 
+    /// <summary>
+    /// 结束一次标尺渲染并提交批量布局更新。
+    /// </summary>
     private void EndGuideRender()
     {
         HideUnusedGuides(_guideXPool, _guideXUsed);
@@ -427,6 +692,13 @@ public partial class MapViewPage : ContentPage
         GuideXLayer.BatchCommit();
     }
 
+    /// <summary>
+    /// 从对象池中获取可复用的标尺标签，不存在时创建新实例。
+    /// </summary>
+    /// <param name="kind"></param>
+    /// <param name="item"></param>
+    /// <param name="isX"></param>
+    /// <returns></returns>
     private Label AcquireGuideLabel(GuideLayerKind kind, GuideDrawItem item, bool isX)
     {
         List<Label> pool;
@@ -469,6 +741,12 @@ public partial class MapViewPage : ContentPage
         return lbl;
     }
 
+    /// <summary>
+    /// 把标尺绘制数据同步到指定标签控件。
+    /// </summary>
+    /// <param name="lbl"></param>
+    /// <param name="item"></param>
+    /// <param name="isX"></param>
     private static void UpdateGuideLabel(Label lbl, GuideDrawItem item, bool isX)
     {
         lbl.Text = item.Text;
@@ -484,6 +762,11 @@ public partial class MapViewPage : ContentPage
         lbl.Margin = 0;
     }
 
+    /// <summary>
+    /// 标准化字体名称，去除空白后返回。
+    /// </summary>
+    /// <param name="fontFamily"></param>
+    /// <returns></returns>
     private static string? NormalizeFontFamily(string? fontFamily)
     {
         if (string.IsNullOrWhiteSpace(fontFamily))
@@ -492,12 +775,23 @@ public partial class MapViewPage : ContentPage
         return fontFamily.Trim();
     }
 
+    /// <summary>
+    /// 设置标尺标签在绝对布局中的位置和尺寸。
+    /// </summary>
+    /// <param name="lbl"></param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
     private void LayoutGuideLabel(Label lbl, double x, double y, double width, double height)
     {
         AbsoluteLayout.SetLayoutBounds(lbl, new Rect(x, y, width, height));
         AbsoluteLayout.SetLayoutFlags(lbl, AbsoluteLayoutFlags.None);
     }
 
+    /// <summary>
+    /// 按当前视口与地图比例重新绘制上下左右标尺。
+    /// </summary>
     private void RenderGuides()
     {
         if (BindingContext is not MapViewPageVM vm || vm.CurrentMap == null || showW <= 0 || showH <= 0)
@@ -539,6 +833,17 @@ public partial class MapViewPage : ContentPage
         }
     }
 
+    /// <summary>
+    /// 绘制 X 方向相关的标尺标签。
+    /// </summary>
+    /// <param name="vm"></param>
+    /// <param name="sx"></param>
+    /// <param name="sy"></param>
+    /// <param name="scale"></param>
+    /// <param name="tx"></param>
+    /// <param name="ty"></param>
+    /// <param name="startX"></param>
+    /// <param name="startY"></param>
     private void RenderXGuides(MapViewPageVM vm, double sx, double sy, double scale, double tx, double ty, double startX, double startY)
     {
         var map = vm.CurrentMap;
@@ -654,6 +959,17 @@ public partial class MapViewPage : ContentPage
         }
     }
 
+    /// <summary>
+    /// 绘制 Y 方向相关的标尺标签。
+    /// </summary>
+    /// <param name="vm"></param>
+    /// <param name="sx"></param>
+    /// <param name="sy"></param>
+    /// <param name="scale"></param>
+    /// <param name="tx"></param>
+    /// <param name="ty"></param>
+    /// <param name="startX"></param>
+    /// <param name="startY"></param>
     private void RenderYGuides(MapViewPageVM vm, double sx, double sy, double scale, double tx, double ty, double startX, double startY)
     {
         var map = vm.CurrentMap;
@@ -809,7 +1125,13 @@ public partial class MapViewPage : ContentPage
         }
     }
 
-        private Label CreateGuideLabel(GuideDrawItem item, bool isX)
+    /// <summary>
+    /// 创建单个标尺标签控件。
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="isX"></param>
+    /// <returns></returns>
+    private Label CreateGuideLabel(GuideDrawItem item, bool isX)
     {
         return new Label
         {
@@ -827,7 +1149,12 @@ public partial class MapViewPage : ContentPage
         };
     }
 
-        private void OnOverlayCanvasPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+    /// <summary>
+    /// 使用 Skia 在叠加层绘制矩形、多边形和文本等图元。
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void OnOverlayCanvasPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
     {
 #if WINDOWS
         return;
@@ -855,74 +1182,45 @@ public partial class MapViewPage : ContentPage
         double tx = pinchToZoom.OffsetX;
         double ty = pinchToZoom.OffsetY;
 
-        foreach (var element in _dynamicShapes)
+        foreach (var shape in _dynamicShapes)
         {
-            if (!element.IsVisible || string.IsNullOrWhiteSpace(element.AutomationId))
+            if (!shape.IsVisible)
                 continue;
 
-            var data = element.AutomationId.Split('|');
-            if (data.Length < 3)
-                continue;
-
-            string type = data[0];
-
-            if (type == "RECT" && element is Rectangle rect)
+            if (shape.Type == MapShapeType.Rectangle)
             {
-                var vals = ParseNumbers(data[2]);
-                if (vals.Length < 4)
-                    continue;
-
-                float x = SnapPx(ToPx(tx + vals[0] * sx * zoomScale, density));
-                float y = SnapPx(ToPx(ty + vals[1] * sy * zoomScale, density));
-                float w = Math.Max(1f, ToPx(vals[2] * sx * zoomScale, density));
-                float h = Math.Max(1f, ToPx(vals[3] * sy * zoomScale, density));
-
-                var strokeColor = SKColors.Red;
-                if (rect.Stroke is SolidColorBrush sb)
-                {
-                    strokeColor = ToSkColor(sb.Color);
-                }
+                float x = SnapPx(ToPx(tx + shape.Bounds.X * sx * zoomScale, density));
+                float y = SnapPx(ToPx(ty + shape.Bounds.Y * sy * zoomScale, density));
+                float w = Math.Max(1f, ToPx(shape.Bounds.Width * sx * zoomScale, density));
+                float h = Math.Max(1f, ToPx(shape.Bounds.Height * sy * zoomScale, density));
 
                 using var paint = new SKPaint
                 {
                     IsAntialias = true,
                     Style = SKPaintStyle.Stroke,
-                    Color = strokeColor,
-                    StrokeWidth = Math.Max(1f, ToPx(3d * baseScale * zoomScale, density))
+                    Color = ToSkColor(shape.StrokeColor),
+                    StrokeWidth = Math.Max(1f, ToPx(shape.StrokeThickness * baseScale * zoomScale, density))
                 };
 
                 canvas.DrawRect(new SKRect(x, y, x + w, y + h), paint);
             }
-            else if (type == "POLY" && element is Polygon poly)
+            else if (shape.Type == MapShapeType.Polygon)
             {
-                if (data.Length < 4)
-                    continue;
-
-                var strokeColor = SKColors.Red;
-                if (poly.Stroke is SolidColorBrush sb)
-                {
-                    strokeColor = ToSkColor(sb.Color);
-                }
-
                 using var paint = new SKPaint
                 {
                     IsAntialias = true,
                     Style = SKPaintStyle.Stroke,
-                    Color = strokeColor,
-                    StrokeWidth = Math.Max(1f, ToPx(3d * baseScale * zoomScale, density))
+                    Color = ToSkColor(shape.StrokeColor),
+                    StrokeWidth = Math.Max(1f, ToPx(shape.StrokeThickness * baseScale * zoomScale, density))
                 };
 
                 using var path = new SKPath();
 
                 bool started = false;
-                for (int i = 2; i < data.Length; i++)
+                foreach (var point in shape.Points)
                 {
-                    var xy = ParseNumbers(data[i]);
-                    if (xy.Length < 2)
-                        continue;
-
-                    float px = SnapPx(ToPx(tx + xy[0] * sx * zoomScale, density));
-                    float py = SnapPx(ToPx(ty + xy[1] * sy * zoomScale, density));
+                    float px = SnapPx(ToPx(tx + point.X * sx * zoomScale, density));
+                    float py = SnapPx(ToPx(ty + point.Y * sy * zoomScale, density));
 
                     if (!started)
                     {
@@ -941,28 +1239,16 @@ public partial class MapViewPage : ContentPage
                     canvas.DrawPath(path, paint);
                 }
             }
-            else if (type == "LBL" && element is Label lbl)
+            else if (shape.Type == MapShapeType.Label)
             {
-                var vals = ParseNumbers(data[2]);
-                if (vals.Length < 2)
+                float textSizePx = Math.Max(1f, ToPx(shape.FontSize * baseScale * zoomScale, density));
+                if (string.IsNullOrEmpty(shape.Text))
                     continue;
-
-                double baseFontSize = lbl.FontSize;
-                if (data.Length > 3 && double.TryParse(data[3], CultureInfo.InvariantCulture, out var parsedFont))
-                {
-                    baseFontSize = parsedFont;
-                }
-
-                float textSizePx = Math.Max(1f, ToPx(baseFontSize * baseScale * zoomScale, density));
-                if (string.IsNullOrEmpty(lbl.Text))
-                    continue;
-
-                //using var typeface = GetTypefaceForJapaneseText(lbl.Text);
 
                 using var paint = new SKPaint
                 {
                     IsAntialias = true,
-                    Color = ToSkColor(lbl.TextColor),
+                    Color = ToSkColor(shape.TextColor),
                     IsStroke = false
                 };
 
@@ -977,71 +1263,78 @@ public partial class MapViewPage : ContentPage
                     Edging = SKFontEdging.Antialias
                 };
 
-                float x = ToPx(tx + vals[0] * sx * zoomScale, density);
-                float yTop = ToPx(ty + vals[1] * sy * zoomScale, density);
+                float x = ToPx(tx + shape.Bounds.X * sx * zoomScale, density);
+                float yTop = ToPx(ty + shape.Bounds.Y * sy * zoomScale, density);
 
                 var metrics = font.Metrics;
                 float baseline = yTop - metrics.Ascent;
 
-                canvas.DrawText(lbl.Text, x, baseline, font, paint);
+                canvas.DrawText(shape.Text, x, baseline, font, paint);
             }
         }
     }
 
-    private SKTypeface GetJapaneseTypeface()
+    /// <summary>
+    /// 获取适合显示日文文本的字体。
+    /// </summary>
+    /// <returns></returns>
+    private async Task<SKTypeface> GetJapaneseTypefaceAsync(string font)
     {
-        var fm = SKFontManager.Default;
+        if (string.IsNullOrWhiteSpace(font))
+            return SKTypeface.Default;
 
-#if WINDOWS
-    string[] preferredFamilies =
-    {
-        "Yu Gothic UI",
-        "Yu Gothic",
-        "Meiryo UI",
-        "Meiryo",
-        "MS Gothic"
-    };
-#elif IOS || MACCATALYST
-        string[] preferredFamilies =
+        Stream? stream = null;
+
+        try
         {
-        "Hiragino Sans",
-        "Hiragino Kaku Gothic ProN",
-        "Hiragino Kaku Gothic Pro"
-    };
+#if WINDOWS
+        stream = typeof(App).Assembly.GetManifestResourceStream(font);
 #else
-    string[] preferredFamilies =
-    {
-        "Noto Sans CJK JP",
-        "Noto Sans JP"
-    };
+            stream = await FileSystem.OpenAppPackageFileAsync(font);
 #endif
 
-        foreach (var family in preferredFamilies)
-        {
-            try
-            {
-                var tf = SKTypeface.FromFamilyName(family);
-                if (tf != null && tf != SKTypeface.Default)
-                    return tf;
-            }
-            catch
-            {
-            }
-        }
+            if (stream == null)
+                return SKTypeface.Default;
 
-        return SKTypeface.Default;
+            using var data = SKData.Create(stream);
+            return SKTypeface.FromData(data) ?? SKTypeface.Default;
+        }
+        catch (Exception ex)
+        {
+            return SKTypeface.Default;
+        }
+        finally
+        {
+            stream?.Dispose();
+        }
     }
 
+    /// <summary>
+    /// 把设备无关单位转换为物理像素。
+    /// </summary>
+    /// <param name="dp"></param>
+    /// <param name="density"></param>
+    /// <returns></returns>
     private static float ToPx(double dp, float density)
     {
         return (float)(dp * density);
     }
 
+    /// <summary>
+    /// 将像素值对齐到整数像素，减少边缘抖动。
+    /// </summary>
+    /// <param name="px"></param>
+    /// <returns></returns>
     private static float SnapPx(float px)
     {
         return (float)Math.Round(px);
     }
 
+    /// <summary>
+    /// 把 MAUI 颜色转换为 Skia 颜色。
+    /// </summary>
+    /// <param name="color"></param>
+    /// <returns></returns>
     private static SKColor ToSkColor(Color? color)
     {
         if (color == null)
@@ -1054,7 +1347,10 @@ public partial class MapViewPage : ContentPage
             (byte)(Math.Clamp(color.Alpha, 0, 1) * 255));
     }
 
-        private void OnViewportChanged()
+    /// <summary>
+    /// 在缩放容器视口变化时刷新标尺与叠加绘制层。
+    /// </summary>
+    private void OnViewportChanged()
     {
         long now = Environment.TickCount64;
         if (now - _lastGuideTick < GuideThrottleMs)

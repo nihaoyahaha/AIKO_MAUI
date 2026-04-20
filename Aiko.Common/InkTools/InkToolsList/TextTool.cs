@@ -9,7 +9,9 @@ namespace Aiko.Common.InkTools.InkToolsList
     public class TextTool : InkTool
     {
         public override string Type => "Text";
-        public string Font { get; set; } = "Microsoft YaHei";
+        public string Font { get; set; } = "ヒラギノ丸ゴ ProN";
+
+        public Dictionary<string, SKTypeface> Typefaces { get; set; } = new Dictionary<string, SKTypeface>();
 
         public TextTool(InkToolManager manager) : base(manager)
         {
@@ -35,8 +37,12 @@ namespace Aiko.Common.InkTools.InkToolsList
 
             UpdateTextBounds(stroke);
 
-            using var typeface = SKTypeface.FromFamilyName(stroke.Font);
-            using var font = new SKFont(typeface, stroke.Size);
+            using var font = new SKFont
+            {
+                Typeface = Typefaces.TryGetValue(stroke.Font, out SKTypeface? value) ? value : SKTypeface.Default,
+                Size = stroke.Size,
+                Edging = SKFontEdging.Antialias
+            };
             using var paint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
@@ -51,8 +57,12 @@ namespace Aiko.Common.InkTools.InkToolsList
         {
             if (string.IsNullOrEmpty(stroke.Text) || stroke.Points.Count == 0) return;
 
-            using var typeface = SKTypeface.FromFamilyName(stroke.Font);
-            using var font = new SKFont(typeface, stroke.Size);
+            using var font = new SKFont
+            {
+                Typeface = Typefaces.TryGetValue(stroke.Font, out SKTypeface? value) ? value : SKTypeface.Default,
+                Size = stroke.Size,
+                Edging = SKFontEdging.Antialias
+            };
             using var paint = new SKPaint();
 
             var position = stroke.Points[0];

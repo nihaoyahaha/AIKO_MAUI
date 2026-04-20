@@ -9,6 +9,8 @@ public partial class CheckPointDetailPage : ContentPage
 {
     private IInkTool _currentTool => _toolManager.CurrentTool;
 
+    private Dictionary<string, SKTypeface> _typefaces = new Dictionary<string, SKTypeface>();
+
     // 文本编辑状态
     private bool _isTextEditing = false;
     private SKPoint _currentTextPosition;
@@ -48,15 +50,6 @@ public partial class CheckPointDetailPage : ContentPage
                 canvas.DrawPicture(_currentImage.PhotoSvg.Picture);
             }
         }
-
-        using (var paint = new SKPaint())
-        {
-            paint.Style = SKPaintStyle.Stroke;
-            paint.Color = Color.FromArgb("#CCCCCC").ToSKColor();
-            paint.StrokeWidth = 1;
-
-            canvas.DrawRect(new SKRect(0, 0, e.Info.Width, e.Info.Height), paint);
-        }
     }
     private void OnBlackboardCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
@@ -67,15 +60,6 @@ public partial class CheckPointDetailPage : ContentPage
 
         if (_currentImage != null)
         {
-            if (_currentImage.Bitmap != null)
-            {
-                canvas.DrawBitmap(_currentImage.Bitmap, 0, 0);
-            }
-            else if (_currentImage.PhotoSvg != null)
-            {
-                canvas.DrawPicture(_currentImage.PhotoSvg.Picture);
-            }
-
             if (_currentImage.BlackboardSvg != null)
             {
                 canvas.DrawPicture(_currentImage.BlackboardSvg.Picture);
@@ -87,11 +71,65 @@ public partial class CheckPointDetailPage : ContentPage
         var canvas = e.Surface.Canvas;
         var info = e.Info;
 
+        UpdateBackgroundCache(info);
+
         canvas.Clear(SKColors.Transparent);
 
-        if (_currentImage != null)
+        if (_vm.IsDarkenMode && _backgroundCache != null)
+        {
+            canvas.DrawBitmap(_backgroundCache, 0, 0, null);
+        }
+
+        if (_currentImage != null && _vm.IsStrokesVisible)
         {
             _toolManager.HandleDrawing(canvas, null, null);
+        }
+
+        // 绘制边框以区分画布边界
+        using (var paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = Color.FromArgb("#CCCCCC").ToSKColor();
+            paint.StrokeWidth = 1;
+
+            canvas.DrawRect(new SKRect(0, 0, e.Info.Width, e.Info.Height), paint);
+        }
+    }
+
+    private SKBitmap? _backgroundCache;
+    private bool _needsRedrawBackground = true;
+    private void UpdateBackgroundCache(SKImageInfo info)
+    {
+        if (!_vm.IsDarkenMode) return;
+
+        if (_needsRedrawBackground || _backgroundCache == null || _backgroundCache.Width != info.Width || _backgroundCache.Height != info.Height)
+        {
+            _backgroundCache?.Dispose();
+            _backgroundCache = new SKBitmap(info.Width, info.Height);
+
+            using (var cacheCanvas = new SKCanvas(_backgroundCache))
+            {
+                cacheCanvas.Clear(SKColors.Transparent);
+
+                if (_currentImage != null)
+                {
+                    if (_currentImage.Bitmap != null)
+                    {
+                        cacheCanvas.DrawBitmap(_currentImage.Bitmap, 0, 0);
+                    }
+                    else if (_currentImage.PhotoSvg != null)
+                    {
+                        cacheCanvas.DrawPicture(_currentImage.PhotoSvg.Picture);
+                    }
+
+                    if (_vm.IsBlackboardVisible && _currentImage.BlackboardSvg != null)
+                    {
+                        cacheCanvas.DrawPicture(_currentImage.BlackboardSvg.Picture);
+                    }
+                }
+            }
+
+            _needsRedrawBackground = false;
         }
     }
 
@@ -124,10 +162,15 @@ public partial class CheckPointDetailPage : ContentPage
     private void OnBtnBlackboardClicked(object sender, EventArgs e)
     {
         _vm.IsBlackboardVisible = !_vm.IsBlackboardVisible;
+
+        _needsRedrawBackground = true;
+        InkCanvasView.InvalidateSurface();
     }
     private void OnBtnInkClicked(object sender, EventArgs e)
     {
         _vm.IsStrokesVisible = !_vm.IsStrokesVisible;
+
+        InkCanvasView.InvalidateSurface();
     }
     private async void OnBtnSaveClicked(object sender, EventArgs e)
     {
@@ -502,10 +545,9 @@ public partial class CheckPointDetailPage : ContentPage
 
         TextTool textTool = _currentTool as TextTool;
 
-        using var typeface = SKTypeface.FromFamilyName(textTool.Font, SKFontStyle.Normal);
         using var font = new SKFont
         {
-            Typeface = typeface,
+            Typeface = textTool.Typefaces.TryGetValue(textTool.Font, out SKTypeface? value) ? value : SKTypeface.Default,
             Size = textTool.Size,
             Edging = SKFontEdging.Antialias
         };
@@ -514,7 +556,7 @@ public partial class CheckPointDetailPage : ContentPage
             Color = textTool.Color,
             IsAntialias = true
         };
-        string previewText = textTool.Font; // 预览文本
+        string previewText = "フォントプレビュー"; // 预览文本
         if (textTool is AcceptTool acceptTool) previewText = acceptTool.AcceptSymbol; // 确认符号的特殊预览文本
 
         float textWidth = font.MeasureText(previewText, paint);
@@ -562,7 +604,7 @@ public partial class CheckPointDetailPage : ContentPage
         var text = TextEditor.Text?.Trim();
         if (!string.IsNullOrEmpty(text))
         {
-            if (_currentTool.Type == "textTool")
+            if (_currentTool.Type == "Text")
             {
                 _toolManager.AddTextStroke(_currentTool.Type, text, _currentTextPosition, _currentTextColor, _currentTextSize, _currentTextFont);
             }
@@ -602,5 +644,29 @@ public partial class CheckPointDetailPage : ContentPage
             (_currentTextPosition.Y - 10) / InkUtils.Density,
             newWidth,
             newHeight));
+    }
+
+    public async Task LoadTypeface(string font)
+    {
+        if (_typefaces.ContainsKey(font)) return;
+
+#if WINDOWS
+        using var stream = typeof(App).Assembly.GetManifestResourceStream(font);
+#else
+        using var stream = await FileSystem.OpenAppPackageFileAsync(font);
+#endif
+
+        if (stream != null)
+        {
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+
+            var typeface = SKTypeface.FromStream(ms);
+            if (typeface != null)
+            {
+                _typefaces[font] = typeface;
+            }
+        }
     }
 }

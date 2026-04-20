@@ -28,14 +28,5 @@ namespace Aiko.Common.InkTools
 #endif
             return Rect.Zero;
         }
-
-        public static double GetFitScale((double width, double height) container, (double width, double height) content)
-        {
-            if (container.width < 0 || container.height < 0 || content.width < 0 || content.height < 0) return 1;
-
-            double scaleX = container.width / content.width;
-            double scaleY = container.height / content.height;
-            return Math.Min(scaleX, scaleY);
-        }
     }
 }

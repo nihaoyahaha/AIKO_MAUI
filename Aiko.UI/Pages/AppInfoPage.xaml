@@ -35,8 +35,6 @@
 
             <Border
                 Padding="0"
-                BackgroundColor="{AppThemeBinding Light=White,
-                                                  Dark=#1C1C1E}"
                 StrokeShape="RoundRectangle 12"
                 StrokeThickness="0">
                 <VerticalStackLayout>
@@ -97,8 +95,6 @@
                 TextColor="Gray" />
             <Border
                 Padding="15"
-                BackgroundColor="{AppThemeBinding Light=White,
-                                                  Dark=#1C1C1E}"
                 StrokeShape="RoundRectangle 12"
                 StrokeThickness="0">
                 <Label

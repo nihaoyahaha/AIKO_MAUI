@@ -60,6 +60,17 @@ namespace Aiko.Common.InkTools
             }
         }
 
+        public void LoadTypefaces(Dictionary<string, SKTypeface> typefaces)
+        {
+            foreach (var tool in _tools.Values)
+            {
+                if (tool is TextTool textTool)
+                {
+                    textTool.Typefaces = typefaces;
+                }
+            }
+        }
+
         // 分发触摸事件
         public void HandleTouch(SKTouchEventArgs e, SKCanvasView canvasView, string[]? allowedTypes, string[]? bannedTypes)
         {

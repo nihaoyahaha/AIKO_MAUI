@@ -45,6 +45,13 @@ public interface IMapViewService:IServiceBase
     public Task<List<HR05KOKUMINFO>> GetHR05KOKUMINFOList(HR05KOKUMINFO hr05);
 
     /// <summary>
+    /// 按地图一次性取得全部工区多边形信息。
+    /// </summary>
+    /// <param name="mapCode">地图编码</param>
+    /// <returns></returns>
+    public Task<List<HR05KOKUMINFO>> GetHR05KOKUMINFOListByMap(string mapCode);
+
+    /// <summary>
     /// マップガイドマスターを取得する
     /// </summary>
     /// <param name="hm14"></param>

@@ -1,18 +1,19 @@
 ﻿using Aiko.Common;
 using Aiko.IServices.IServices;
 using Aiko.SqliteDb;
+using Aiko.UI;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ExCSS;
 using Microsoft.Extensions.Logging;
-using Microsoft.Maui.Controls.Shapes;
 using SkiaSharp;
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Color = Microsoft.Maui.Graphics.Color;
 using Colors = Microsoft.Maui.Graphics.Colors;
-using Label = Microsoft.Maui.Controls.Label;
 using Path = System.IO.Path;
 using Point = Microsoft.Maui.Graphics.Point;
 using SKCanvas = SkiaSharp.SKCanvas;
@@ -24,6 +25,13 @@ namespace Aiko.UI.ViewModels.PageVMs;
 public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewService>
 {
     private readonly ICheckPointService _checkPointService;
+
+    /// <summary>
+    /// 地图页面视图模型构造函数。
+    /// </summary>
+    /// <param name="service"></param>
+    /// <param name="logger"></param>
+    /// <param name="checkPointService"></param>
     public MapViewPageVM(IMapViewService service,
         ILogger<MapViewPageVM> logger,
         ICheckPointService checkPointService) : base(logger, service)
@@ -115,6 +123,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// </summary>
     private Dictionary<string, int> dicHR02005 = new Dictionary<string, int>();
 
+    /// <summary>
+    /// 底图裁剪缓存。
+    /// Key 使用地图编码，Value 保存最近一次裁剪后的图片信息，
+    /// 这样在地图之间来回切换时可以直接复用结果，避免重复裁剪。
+    /// </summary>
+    private readonly Dictionary<string, CroppedMapImageCache> _croppedMapImageCache = new();
+
     // アイテムテーブルを取得する
     private List<ITEMMETA> hr01ItemList = new List<ITEMMETA>();
 
@@ -123,8 +138,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
 
 
-    // 存储需要动态更新位置的控件引用
-    public List<VisualElement> dynamicShapes = new();
+    // 存储地图上的动态图元数据
+    public List<MapShape> dynamicShapes = new();
 
     private Dictionary<string, string> dictionaryHR01003 = new Dictionary<string, string>();
     private Dictionary<string, string> dictionaryHM10004 = new Dictionary<string, string>();
@@ -190,8 +205,60 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     private List<HM14GUIDANDHM20> _guideRawX = new();
     private List<HM14GUIDANDHM20> _guideRawY = new();
 
+    /// <summary>
+    /// Guide 延迟加载版本号。
+    /// 每次切换地图时递增，用来丢弃已经过期的异步加载结果。
+    /// </summary>
+    private int _guideLoadVersion = 0;
+
+    /// <summary>
+    /// 裁剪后底图缓存实体。
+    /// </summary>
+    private sealed class CroppedMapImageCache
+    {
+        /// <summary>
+        /// 当前缓存对应的原始文件路径。
+        /// </summary>
+        public string FilePath { get; init; } = string.Empty;
+
+        /// <summary>
+        /// 当前缓存对应的文件最后写入时间，用于文件变更时自动失效。
+        /// </summary>
+        public DateTime LastWriteTimeUtc { get; init; }
+
+        /// <summary>
+        /// 当前缓存对应的裁剪区域 X。
+        /// </summary>
+        public int X { get; init; }
+
+        /// <summary>
+        /// 当前缓存对应的裁剪区域 Y。
+        /// </summary>
+        public int Y { get; init; }
+
+        /// <summary>
+        /// 当前缓存对应的裁剪宽度。
+        /// </summary>
+        public int Width { get; init; }
+
+        /// <summary>
+        /// 当前缓存对应的裁剪高度。
+        /// </summary>
+        public int Height { get; init; }
+
+        /// <summary>
+        /// 裁剪后的 PNG 字节数据。
+        /// 这里缓存字节而不是直接缓存 ImageSource，避免重复使用同一个流对象。
+        /// </summary>
+        public byte[] ImageBytes { get; init; } = Array.Empty<byte>();
+    }
 
 
+
+    /// <summary>
+    /// 接收导航参数并触发页面初始化流程。
+    /// </summary>
+    /// <param name="query"></param>
     public override async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         string fromPage = "";
@@ -249,6 +316,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             }
             else if (fromPage == "LoginOutPage")
             {
+                if (Floors.Count <= 1) 
+                {
+                    //层
+                    await InitCboHM05Async();
+                }
+
                 //工程
                 await InitCboHM09Async();
 
@@ -387,18 +460,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     partial void OnHr01003FlagChanged(bool value)
     {
         Preferences.Default.Set("Hr01003Flag", Hr01003Flag);
-
-        // 2. 异步处理后续逻辑
-        Task.Run(async () =>
-        {
-            await GetdataSource();
-
-            // 3. 回到主线程发送消息（UI 刷新通常需要主线程）
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
-            });
-        });
+        // 仅更新现有图元的文本与显隐状态，不再重新查库。
+        RefreshDynamicShapeDisplayState();
     }
 
     /// <summary>
@@ -407,18 +470,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     partial void OnHr01020FlagChanged(bool value)
     {
         Preferences.Default.Set("Hr01020Flag", Hr01020Flag);
-
-        // 2. 异步处理后续逻辑
-        Task.Run(async () =>
-        {
-            await GetdataSource();
-
-            // 3. 回到主线程发送消息（UI 刷新通常需要主线程）
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
-            });
-        });
+        // 仅更新现有图元的文本与显隐状态，不再重新查库。
+        RefreshDynamicShapeDisplayState();
     }
 
     /// <summary>
@@ -427,18 +480,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     partial void OnHr01007FlagChanged(bool value)
     {
         Preferences.Default.Set("Hr01007Flag", Hr01007Flag);
-
-        // 2. 异步处理后续逻辑
-        Task.Run(async () =>
-        {
-            await GetdataSource();
-
-            // 3. 回到主线程发送消息（UI 刷新通常需要主线程）
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
-            });
-        });
+        // 仅更新现有图元的文本与显隐状态，不再重新查库。
+        RefreshDynamicShapeDisplayState();
     }
 
     /// <summary>
@@ -447,18 +490,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     partial void OnSizeFlagChanged(bool value)
     {
         Preferences.Default.Set("SizeFlag", SizeFlag);
-
-        // 2. 异步处理后续逻辑
-        Task.Run(async () =>
-        {
-            await GetdataSource();
-
-            // 3. 回到主线程发送消息（UI 刷新通常需要主线程）
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
-            });
-        });
+        // 仅重算图标尺寸、文字偏移和字号，不再重新查库。
+        RefreshDynamicShapeLayoutState();
     }
 
     /// <summary>
@@ -467,32 +500,166 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     partial void OnPhotoCountFlagChanged(bool value)
     {
         Preferences.Default.Set("PhotoCountFlag", PhotoCountFlag);
+        // 仅更新现有图元的文本与显隐状态，不再重新查库。
+        RefreshDynamicShapeDisplayState();
+    }
 
-        // 2. 异步处理后续逻辑
-        Task.Run(async () =>
+    /// <summary>
+    /// 刷新图元的显示内容与显隐状态，并通知页面做轻量重绘。
+    /// </summary>
+    private void RefreshDynamicShapeDisplayState()
+    {
+        // 先同步文本和显隐，再同步字号/偏移，确保轻量刷新时数据一致。
+        ApplyDisplayFlagsToDynamicShapes();
+        ApplySizeFlagToDynamicShapes();
+
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            await GetdataSource();
-
-            // 3. 回到主线程发送消息（UI 刷新通常需要主线程）
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
-            });
+            WeakReferenceMessenger.Default.Send("", "RefreshMapDisplayToken");
         });
     }
 
+    /// <summary>
+    /// 刷新图元的布局信息，并通知页面做轻量重绘。
+    /// </summary>
+    private void RefreshDynamicShapeLayoutState()
+    {
+        // SizeFlag 变化时只改布局相关字段，避免整页重建。
+        ApplySizeFlagToDynamicShapes();
+        ApplyDisplayFlagsToDynamicShapes();
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            WeakReferenceMessenger.Default.Send("", "RefreshMapDisplayToken");
+        });
+    }
+
+    /// <summary>
+    /// 按当前设置开关更新现有图元的文本内容与显隐状态。
+    /// </summary>
+    private void ApplyDisplayFlagsToDynamicShapes()
+    {
+        foreach (var shape in dynamicShapes)
+        {
+            if (shape.Type == MapShapeType.Label)
+            {
+                if (dictionaryKoKu.ContainsKey(shape.Tag))
+                {
+                    // 工区标签只受工区名开关控制。
+                    shape.Text = dictionaryKoKu[shape.Tag];
+                    shape.IsVisible = Hr01007Flag;
+                }
+                else
+                {
+                    // 确认点标签由多个开关组合生成文本。
+                    shape.Text = BuildCheckPointLabelText(shape.Tag);
+                    shape.IsVisible = !string.IsNullOrEmpty(shape.Text);
+                }
+            }
+            else if (shape.Type == MapShapeType.Image && string.Equals(shape.ImageSource, "smallarea.png", StringComparison.OrdinalIgnoreCase))
+            {
+                // smallarea.png 只用于工区标记图标。
+                shape.IsVisible = Hr01007Flag;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 按当前 SizeFlag 更新图标尺寸、标签偏移和字号。
+    /// </summary>
+    private void ApplySizeFlagToDynamicShapes()
+    {
+        int iconSize = SizeFlag ? 32 : 16;
+        int fontSize = SizeFlag ? 24 : 12;
+
+        foreach (var shape in dynamicShapes)
+        {
+            switch (shape.LayoutRole)
+            {
+                case MapShapeLayoutRole.CheckPointIcon:
+                case MapShapeLayoutRole.AreaIcon:
+                    // 图标基于锚点只改宽高。
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X, shape.LayoutOrigin.Y, iconSize, iconSize);
+                    break;
+
+                case MapShapeLayoutRole.CheckPointLabel:
+                case MapShapeLayoutRole.AreaLabel:
+                    // 标签始终跟在图标右侧，偏移量等于当前图标尺寸。
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconSize, shape.LayoutOrigin.Y, 0, 0);
+                    shape.FontSize = fontSize;
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 根据确认点编号拼接当前应显示的标签文本。
+    /// </summary>
+    /// <param name="tag"></param>
+    /// <returns></returns>
+    private string BuildCheckPointLabelText(string tag)
+    {
+        // 根据当前设置开关拼出确认点标签内容。
+        var parts = new List<string>();
+
+        if (Hr01003Flag && dictionaryHR01003.TryGetValue(tag, out var itemNo))
+        {
+            parts.Add(itemNo);
+        }
+
+        if (Hr01020Flag && dictionaryHM10004.TryGetValue(tag, out var section))
+        {
+            parts.Add(section);
+        }
+
+        if (PhotoCountFlag && dicPicCount != null && dicPicCount.TryGetValue(tag, out var picCount))
+        {
+            parts.Add(picCount);
+        }
+
+        return string.Concat(parts);
+    }
+
+    /// <summary>
+    /// 跳转到确认点页面。
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     [RelayCommand]
     private async Task GoToCheckPointPage(HR01ITEM item)
     {
         _checkPointService.SetHR01ITEM(item);
         string projectSelectedItemCode = prockSelectIndex > -1 ? Procks[prockSelectIndex].Value : "";
-        await Shell.Current.GoToAsync($"CheckPoint?ProjectCode={projectSelectedItemCode}&FromPage=MapViewPage");
+        await Shell.Current.GoToAsync("CheckPoint", CreateNavigationParameterForCheckPoint(projectSelectedItemCode));
     }
 
-    /// <summary>
-    /// 控制工区、部位、工程的picker是否可用
-    /// </summary>
-    private void SetPickersEnable()
+	/// <summary>
+	/// 確認项目画面のナビゲーションパラメータを作成する
+	/// </summary>
+	/// <returns></returns>
+	private Dictionary<string, object> CreateNavigationParameterForCheckPoint(string projectCode)
+	{
+		var obj = new
+		{
+			FromPage = "MapViewPage",
+			ProjectCode = projectCode //工程コード
+		};
+		var options = new JsonSerializerOptions
+		{
+			WriteIndented = true,
+			Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+		};
+		string jsonString = JsonSerializer.Serialize(obj, options);
+		return new Dictionary<string, object>
+		{
+			{ "json", jsonString }
+		};
+	}
+
+	/// <summary>
+	/// 控制工区、部位、工程的picker是否可用
+	/// </summary>
+	private void SetPickersEnable()
     {
         bool isEnable = MapSelectIndex > 0;
         AreaEnable = isEnable;
@@ -519,6 +686,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task MapSelectedIndexChanged()
     {
+        int currentGuideLoadVersion = ++_guideLoadVersion;
+
         ProckSelectIndex = Procks.Count > 0 ? 0 : -1;
 
         await InitCboHM07Async();
@@ -567,35 +736,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
             if (File.Exists(imagePath))
             {
-                int x = 0;
-                int y = 0;
-                // 表示範囲のwidth
-                int width = Convert.ToInt32(drSelect.HM04009);
-                // 表示範囲のheight
-                int height = Convert.ToInt32(drSelect.HM04010);
-
-                // 表示範囲のstart位置のX
-                if (drSelect.HM04007 < 0)
-                {
-                    x = 0;
-                    width = Convert.ToInt32(drSelect.HM04009 + drSelect.HM04007);
-                }
-                else
-                {
-                    x = Convert.ToInt32(drSelect.HM04007);
-                }
-                // 表示範囲のstart位置のY
-                if (drSelect.HM04008 < 0)
-                {
-                    y = 0;
-                    height = Convert.ToInt32(drSelect.HM04010 + drSelect.HM04008);
-                }
-                else
-                {
-                    y = Convert.ToInt32(drSelect.HM04008);
-                }
-
-                ImageSource = await CropImageAsync(imagePath, x, y, width, height);
+                ImageSource = await GetOrCreateCroppedMapImageAsync(mapCode, imagePath, drSelect);
 
                 // 「マップビュー」を表示する。
                 //imgMap.Visibility = Visibility.Visible;
@@ -610,18 +751,15 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             ImageSource = "";
         }
 
-        // マップガイドヘッダマスター
-        Guide = await Service.GetHM20GUIDHEADNUMList(mapCode);
-        GuideSelectIndex = 0;
-
+        // 先清空上一张地图残留的 Guide，让底图和点位优先显示。
+        ClearGuideDisplayState();
 
         await GetdataSource();
 
         WeakReferenceMessenger.Default.Send("", "RefreshMapToken");
 
-        await LoadGuideDataAsync();
-
-        WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
+        // 首屏渲染完成后再异步加载 Guide，避免地图切换时首屏等待标尺数据。
+        _ = LoadGuideAfterMapRenderedAsync(mapCode, currentGuideLoadVersion);
     }
 
     /// <summary>
@@ -698,9 +836,151 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     }
 
     /// <summary>
+    /// 根据地图信息获取裁剪后的底图，命中缓存时直接复用。
+    /// </summary>
+    /// <param name="mapCode">地图编码</param>
+    /// <param name="filePath">原始底图路径</param>
+    /// <param name="mapInfo">当前地图信息</param>
+    /// <returns></returns>
+    private async Task<ImageSource> GetOrCreateCroppedMapImageAsync(string mapCode, string filePath, HM04MAPM mapInfo)
+    {
+        (int x, int y, int width, int height) = GetMapCropArea(mapInfo);
+        DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filePath);
+
+        if (_croppedMapImageCache.TryGetValue(mapCode, out CroppedMapImageCache cache)
+            && string.Equals(cache.FilePath, filePath, StringComparison.OrdinalIgnoreCase)
+            && cache.LastWriteTimeUtc == lastWriteTimeUtc
+            && cache.X == x
+            && cache.Y == y
+            && cache.Width == width
+            && cache.Height == height
+            && cache.ImageBytes.Length > 0)
+        {
+            return CreateImageSourceFromBytes(cache.ImageBytes);
+        }
+
+        byte[] imageBytes = await CropImageToBytesAsync(filePath, x, y, width, height);
+
+        _croppedMapImageCache[mapCode] = new CroppedMapImageCache
+        {
+            FilePath = filePath,
+            LastWriteTimeUtc = lastWriteTimeUtc,
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+            ImageBytes = imageBytes
+        };
+
+        return CreateImageSourceFromBytes(imageBytes);
+    }
+
+    /// <summary>
+    /// 根据地图显示范围计算裁剪区域。
+    /// </summary>
+    /// <param name="mapInfo">当前地图信息</param>
+    /// <returns></returns>
+    private static (int X, int Y, int Width, int Height) GetMapCropArea(HM04MAPM mapInfo)
+    {
+        int x = 0;
+        int y = 0;
+
+        // 表示範囲のwidth
+        int width = Convert.ToInt32(mapInfo.HM04009);
+        // 表示範囲のheight
+        int height = Convert.ToInt32(mapInfo.HM04010);
+
+        // 表示範囲のstart位置のX
+        if (mapInfo.HM04007 < 0)
+        {
+            x = 0;
+            width = Convert.ToInt32(mapInfo.HM04009 + mapInfo.HM04007);
+        }
+        else
+        {
+            x = Convert.ToInt32(mapInfo.HM04007);
+        }
+
+        // 表示範囲のstart位置のY
+        if (mapInfo.HM04008 < 0)
+        {
+            y = 0;
+            height = Convert.ToInt32(mapInfo.HM04010 + mapInfo.HM04008);
+        }
+        else
+        {
+            y = Convert.ToInt32(mapInfo.HM04008);
+        }
+
+        return (x, y, width, height);
+    }
+
+    /// <summary>
+    /// 根据缓存的字节数据创建可重复使用的 ImageSource。
+    /// </summary>
+    /// <param name="imageBytes">图片字节</param>
+    /// <returns></returns>
+    private static ImageSource CreateImageSourceFromBytes(byte[] imageBytes)
+    {
+        return ImageSource.FromStream(() => new MemoryStream(imageBytes, writable: false));
+    }
+
+    /// <summary>
+    /// 清空当前 Guide 的显示状态，避免切图过程中继续显示上一张地图的标尺。
+    /// </summary>
+    private void ClearGuideDisplayState()
+    {
+        Guide = new ObservableCollection<ListItem>();
+        GuideSelectIndex = -1;
+        GuideXItems = new List<GuideDrawItem>();
+        GuideYItems = new List<GuideDrawItem>();
+        GuideY2Items = new List<GuideDrawItem>();
+        _guideRawX.Clear();
+        _guideRawY.Clear();
+
+        WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
+    }
+
+    /// <summary>
+    /// 在地图首屏渲染后异步加载 Guide 数据。
+    /// </summary>
+    /// <param name="mapCode">当前地图编码</param>
+    /// <param name="guideLoadVersion">本次加载版本号</param>
+    /// <returns></returns>
+    private async Task LoadGuideAfterMapRenderedAsync(string mapCode, int guideLoadVersion)
+    {
+        // 先让出当前消息循环，优先把底图和图元刷新到界面上。
+        await Task.Yield();
+
+        if (guideLoadVersion != _guideLoadVersion)
+            return;
+
+        var guideHeaders = await Service.GetHM20GUIDHEADNUMList(mapCode);
+
+        if (guideLoadVersion != _guideLoadVersion)
+            return;
+
+        Guide = guideHeaders;
+        GuideSelectIndex = guideHeaders.Count > 0 ? 0 : -1;
+
+        await LoadGuideDataAsync(guideLoadVersion);
+
+        if (guideLoadVersion != _guideLoadVersion)
+            return;
+
+        WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
+    }
+
+    /// <summary>
     /// 使用 SkiaSharp 裁剪图片
     /// </summary>
-    private async Task<ImageSource> CropImageAsync(string filePath, int x, int y, int width, int height)
+    /// <param name="filePath">原始图片路径</param>
+    /// <param name="x">裁剪起点 X</param>
+    /// <param name="y">裁剪起点 Y</param>
+    /// <param name="width">裁剪宽度</param>
+    /// <param name="height">裁剪高度</param>
+    /// <returns></returns>
+    private async Task<byte[]> CropImageToBytesAsync(string filePath, int x, int y, int width, int height)
     {
         return await Task.Run(() =>
         {
@@ -732,9 +1012,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
             var memoryStream = new MemoryStream();
             data.SaveTo(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
-
-            return ImageSource.FromStream(() => memoryStream);
+            return memoryStream.ToArray();
         });
     }
 
@@ -764,11 +1042,19 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         //マップコード
         hr01DC.HR01002 = mapCode;
 
+        // 这四组数据彼此独立，改为并行查询以缩短地图切换等待时间。
+        var hr02005Task = Service.GetHR02005(hr01DC, procksCode.Trim());
+        var hr01ItemListTask = Service.GetHR01ITEMcodeList(hr01DC);
+        var picCountTask = Service.GetPicCount(procksCode.Trim());
+        var polygonListTask = Service.GetHR05KOKUMINFOListByMap(mapCode);
+
+        await Task.WhenAll(hr02005Task, hr01ItemListTask, picCountTask, polygonListTask);
+
         // 获取每个确认点的图标颜色状态
-        dicHR02005 = await Service.GetHR02005(hr01DC, procksCode.Trim());
+        dicHR02005 = await hr02005Task;
 
         // アイテムテーブルを取得する
-        hr01ItemList = await Service.GetHR01ITEMcodeList(hr01DC);
+        hr01ItemList = await hr01ItemListTask;
 
         List<ITEMMETA> dataList = hr01ItemList.ToList();
 
@@ -785,7 +1071,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         }
 
         // 採用写真枚数/写真枚数
-        dicPicCount = await Service.GetPicCount(procksCode.Trim());
+        dicPicCount = await picCountTask;
+
+        // 预先把当前地图的工区多边形按确认点编码分组，避免 foreach 内部反复查库。
+        Dictionary<string, List<HR05KOKUMINFO>> polygonDictionary = (await polygonListTask)
+            .GroupBy(p => p.HR05002?.Trim() ?? string.Empty)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         Assembly assembly = GetType().GetTypeInfo().Assembly;
 
@@ -884,12 +1175,10 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
                 dictionaryKoKu.Add(item.HR01003.TrimEnd(), strName);
 
-                //List<int> lst = numberToArgb(item.HR01021);
-
-                HR05KOKUMINFO hr05DC = new HR05KOKUMINFO();
-                hr05DC.HR05001 = item.HR01001.Trim();
-                hr05DC.HR05002 = item.HR01003.Trim();
-                List<HR05KOKUMINFO> datalist05 =await Service.GetHR05KOKUMINFOList(hr05DC);
+                // 直接从当前地图的多边形缓存中取值，不再逐个工区查询数据库。
+                string polygonKey = item.HR01003.TrimEnd();
+                polygonDictionary.TryGetValue(polygonKey, out List<HR05KOKUMINFO> datalist05);
+                datalist05 ??= new List<HR05KOKUMINFO>();
 
                 //itemDictionary.Add(item.HR01003.TrimEnd(), new ControlObject(strName, null, 0, datalist05));
 
@@ -932,79 +1221,30 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         int imgWidth = SizeFlag ? 32 : 16;
         int imgHeight = SizeFlag ? 32 : 16;
 
-        Image checkPoint = new Image();
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Image,
+            LayoutRole = MapShapeLayoutRole.CheckPointIcon,
+            Tag = strTag.Trim(),
+            LayoutOrigin = e,
+            Bounds = new Rect(e.X, e.Y, imgWidth, imgHeight),
+            ImageSource = strBuimName,
+            ZIndex = 999,
+            CommandParameter = item
+        });
 
-        checkPoint.Source = strBuimName;
-        checkPoint.HorizontalOptions = LayoutOptions.Start;
-        checkPoint.VerticalOptions = LayoutOptions.Start;
-        //checkPoint.Tag = strTag.Trim();
-        checkPoint.Aspect = Aspect.AspectFill;
-        checkPoint.ZIndex = 999;
-        //checkPoint.WidthRequest = SizeFlag ? 32 : 16;
-        //if (e.X + checkPoint.WidthRequest > width)
-        //{
-        //    checkPoint.WidthRequest = width - e.X < 0 ? 0 : width - e.X;
-        //}
-
-        //checkPoint.HeightRequest = SizeFlag ? 32 : 16;
-        //if (e.Y + checkPoint.HeightRequest > height)
-        //{
-        //    checkPoint.HeightRequest = height - e.Y < 0 ? 0 : height - e.Y;
-        //}
-
-        checkPoint.AutomationId = $"IMG|{strTag.Trim()}|{e.X},{e.Y},{imgWidth},{imgHeight}";
-
-        // 1. 创建手势
-        var tap = new TapGestureRecognizer { NumberOfTapsRequired = 2 };
-
-        // 2. 绑定命令路径
-        tap.SetBinding(TapGestureRecognizer.CommandProperty, "GoToCheckPointPageCommand");
-
-        // 3. 关键：绑定命令参数
-        // 如果你想传递 strTag 字符串：
-        tap.CommandParameter = item;
-
-        // 或者，如果你的 ViewModel 里的命令需要更复杂的对象，也可以直接传对象
-        // tap.CommandParameter = item; 
-
-        checkPoint.GestureRecognizers.Add(tap);
-
-
-        dynamicShapes.Add(checkPoint);
-
-
-        Label lblText = new Label();
-        lblText.AutomationId = $"LBL|{strTag.Trim()}|{e.X + (SizeFlag ? 32 : 16)},{e.Y}|{(SizeFlag ? 24 : 12)}";
-        lblText.HorizontalOptions = LayoutOptions.Start;
-        lblText.VerticalOptions = LayoutOptions.Start;
-
-        lblText.Text = strName.TrimEnd();
-
-        //lblText.Tag = strTag.Trim();
-        //lblText.FontSize = SizeFlag ? 24 : 12;
-
-        lblText.IsVisible = (Hr01020Flag || Hr01003Flag || PhotoCountFlag) ? true : false;
-
-        //if (e.X + (SizeFlag ? 32 : 16) < width && e.Y + (SizeFlag ? 32 : 16) < height)
-        //{
-        //    if (e.X * dRate + (SizeFlag ? 32 : 16) >= width - 160)
-        //    {
-        //        if (width - (e.X * dRate + (SizeFlag ? 32 : 16)) < 0)
-        //        {
-        //            lblText.WidthRequest = 0;
-        //        }
-        //        else
-        //        {
-        //            lblText.WidthRequest = width - (e.X * dRate + (SizeFlag ? 32 : 16));
-        //        }
-        //    }
-
-        //lblText.TranslationX = e.X + (SizeFlag ? 32 : 16);
-        //lblText.TranslationY = e.Y;
-
-        dynamicShapes.Add(lblText);
-
-        //}
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Label,
+            LayoutRole = MapShapeLayoutRole.CheckPointLabel,
+            Tag = strTag.Trim(),
+            LayoutOrigin = e,
+            Bounds = new Rect(e.X + (SizeFlag ? 32 : 16), e.Y, 0, 0),
+            Text = strName.TrimEnd(),
+            FontSize = SizeFlag ? 24 : 12,
+            TextColor = Colors.Black,
+            IsVisible = Hr01020Flag || Hr01003Flag || PhotoCountFlag
+        });
     }
 
     /// <summary>
@@ -1012,57 +1252,75 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// </summary>
     private void AddKoku(string strTag, string strName, Color corKOKU, int intWidth, int intHeight, Point e, Point img, bool blRemove = true)
     {
- 
-        // 工区カラーの設定
-        Rectangle rect = new Rectangle();
-        rect.AutomationId = $"RECT|{strTag.Trim()}|{e.X},{e.Y},{intWidth},{intHeight}"; 
-        rect.HorizontalOptions = LayoutOptions.Start;
-        rect.VerticalOptions = LayoutOptions.Start;
-        rect.StrokeThickness = 3;
-        rect.Stroke = new SolidColorBrush(corKOKU);
-        rect.InputTransparent = true;
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Rectangle,
+            Tag = strTag.Trim(),
+            Bounds = new Rect(e.X, e.Y, intWidth, intHeight),
+            StrokeColor = corKOKU,
+            StrokeThickness = 3d
+        });
 
         int imgWidth = SizeFlag ? 32 : 16;
         int imgHeight = SizeFlag ? 32 : 16;
 
-        // 工区名
-        Image rectImg = new Image();
+        Rect rectImageBounds;
         if (img.X <= 0 && img.Y <= 0)
         {
-            rectImg.AutomationId = $"IMG|{strTag.Trim()}|{e.X + intWidth / 2},{e.Y + intHeight / 2},{imgWidth},{imgHeight}";
+            rectImageBounds = new Rect(e.X + intWidth / 2, e.Y + intHeight / 2, imgWidth, imgHeight);
         }
         else 
         {
-            rectImg.AutomationId = $"IMG|{strTag.Trim()}|{img.X},{img.Y},{imgWidth},{imgHeight}";
+            rectImageBounds = new Rect(img.X, img.Y, imgWidth, imgHeight);
         }
-        rectImg.Source = "smallarea.png";
-        rectImg.HorizontalOptions = LayoutOptions.Start;
-        rectImg.VerticalOptions = LayoutOptions.Start;
-        rectImg.IsVisible= Hr01007Flag?true:false;
-        rectImg.Aspect = Aspect.AspectFill;
 
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Image,
+            LayoutRole = MapShapeLayoutRole.AreaIcon,
+            Tag = strTag.Trim(),
+            LayoutOrigin = new Point(rectImageBounds.X, rectImageBounds.Y),
+            Bounds = rectImageBounds,
+            ImageSource = "smallarea.png",
+            IsVisible = Hr01007Flag
+        });
 
-        Label rectText = new Label();
+        Rect rectTextBounds;
         if (img.X <= 0 && img.Y <= 0)
         {
-            rectText.AutomationId = $"LBL|{strTag.Trim()}|{e.X + intWidth / 2 + (SizeFlag ? 32 : 16)},{e.Y + intHeight / 2}|{(SizeFlag ? 24 : 12)}";
+            rectTextBounds = new Rect(e.X + intWidth / 2 + (SizeFlag ? 32 : 16), e.Y + intHeight / 2, 0, 0);
         }
         else 
         {
-            rectText.AutomationId = $"LBL|{strTag.Trim()}|{img.X + (SizeFlag ? 32 : 16)},{img.Y }|{(SizeFlag ? 24 : 12)}";
+            rectTextBounds = new Rect(img.X + (SizeFlag ? 32 : 16), img.Y, 0, 0);
         }
-        rectText.HorizontalOptions = LayoutOptions.Start;
-        rectText.VerticalOptions = LayoutOptions.Start;
-        rectText.Text = strName.TrimEnd();
-        //rectText.FontSize = SizeFlag ? 24 : 12;
 
-        rectText.IsVisible = Hr01007Flag ? true : false;
-
-        dynamicShapes.Add(rect);
-        dynamicShapes.Add(rectImg);
-        dynamicShapes.Add(rectText);
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Label,
+            LayoutRole = MapShapeLayoutRole.AreaLabel,
+            Tag = strTag.Trim(),
+            LayoutOrigin = new Point(rectImageBounds.X, rectImageBounds.Y),
+            Bounds = rectTextBounds,
+            Text = strName.TrimEnd(),
+            FontSize = SizeFlag ? 24 : 12,
+            TextColor = Colors.Black,
+            IsVisible = Hr01007Flag
+        });
     }
 
+    /// <summary>
+    /// 添加工区多边形图元及其对应的图标和文字。
+    /// </summary>
+    /// <param name="strTag"></param>
+    /// <param name="datalist05"></param>
+    /// <param name="strName"></param>
+    /// <param name="cor"></param>
+    /// <param name="hr01010"></param>
+    /// <param name="hr01011"></param>
+    /// <param name="hr01008"></param>
+    /// <param name="hr01009"></param>
+    /// <param name="img"></param>
     private void AddPolygon(string strTag, List<HR05KOKUMINFO> datalist05, string strName, Color cor, int hr01010, int hr01011, int hr01008, int hr01009, Point img)
     {
         //double width = Convert.ToUInt32(m_drSelectInfo.HM04009);
@@ -1073,11 +1331,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         int min_x = 0;
         int min_y = 0;
 
-        var polygon = new Polygon();
-        polygon.Stroke = new SolidColorBrush(cor);
-        polygon.StrokeThickness = 3;
-
-        var points = new PointCollection();
+        var points = new List<Point>();
 
         foreach (var itempoints in datalist05)
         {
@@ -1086,63 +1340,64 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             min_x = min_x == 0 ? itempoints.HR05004 : min_x > itempoints.HR05004 ? itempoints.HR05004 : min_x;
             min_y = min_y == 0 ? itempoints.HR05005 : min_y > itempoints.HR05005 ? itempoints.HR05005 : min_y;
 
-            points.Add(new Point(itempoints.HR05004 + polygon.StrokeThickness / 2, itempoints.HR05005 + polygon.StrokeThickness / 2));
+            points.Add(new Point(itempoints.HR05004 + 1.5, itempoints.HR05005 + 1.5));
         }
 
-        // 1. 先提取所有坐标点并格式化为 "x,y" 形式的字符串列表
-        var pointStrings = points.Select(p => $"{p.X},{p.Y}");
-
-        // 2. 使用 "|" 拼接所有部分
-        string polyString = $"POLY|{strTag.Trim()}|{string.Join("|", pointStrings)}";
-
-        // 3. 赋值给 AutomationId 供后续缩放逻辑使用
-        polygon.AutomationId = polyString;
-
-
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Polygon,
+            Tag = strTag.Trim(),
+            Points = points,
+            StrokeColor = cor,
+            StrokeThickness = 3d
+        });
 
         int imgWidth = SizeFlag ? 32 : 16;
         int imgHeight = SizeFlag ? 32 : 16;
 
-        // 工区名
-        Image polygonImg = new Image();
-
+        Rect polygonImageBounds;
         if (img.X <= 0 && img.Y <= 0)
         {
-            polygonImg.AutomationId = $"IMG|{strTag.Trim()}|{(min_x + max_x) / 2.0},{(max_y + min_y) / 2.0},{imgWidth},{imgHeight}";
+            polygonImageBounds = new Rect((min_x + max_x) / 2.0, (max_y + min_y) / 2.0, imgWidth, imgHeight);
         }
         else
         {
-            polygonImg.AutomationId = $"IMG|{strTag.Trim()}|{img.X},{img.Y},{imgWidth},{imgHeight}";
+            polygonImageBounds = new Rect(img.X, img.Y, imgWidth, imgHeight);
         }
 
-        polygonImg.Source = "smallarea.png";
-        polygonImg.HorizontalOptions = LayoutOptions.Start;
-        polygonImg.VerticalOptions = LayoutOptions.Start;
-        polygonImg.IsVisible = Hr01007Flag ? true : false;
-        polygonImg.Aspect = Aspect.AspectFill;
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Image,
+            LayoutRole = MapShapeLayoutRole.AreaIcon,
+            Tag = strTag.Trim(),
+            LayoutOrigin = new Point(polygonImageBounds.X, polygonImageBounds.Y),
+            Bounds = polygonImageBounds,
+            ImageSource = "smallarea.png",
+            IsVisible = Hr01007Flag
+        });
 
-
-
-        Label polygonText = new Label();
+        Rect polygonTextBounds;
         if (img.X <= 0 && img.Y <= 0)
         {
-            polygonText.AutomationId = $"LBL|{strTag.Trim()}|{(min_x + max_x) / 2.0 + (SizeFlag ? 32 : 16)},{(max_y + min_y) / 2.0}|{(SizeFlag ? 24 : 12)}";
+            polygonTextBounds = new Rect((min_x + max_x) / 2.0 + (SizeFlag ? 32 : 16), (max_y + min_y) / 2.0, 0, 0);
         }
         else
         {
-            polygonText.AutomationId = $"LBL|{strTag.Trim()}|{img.X + (SizeFlag ? 32 : 16)},{img.Y}|{(SizeFlag ? 24 : 12)}";
+            polygonTextBounds = new Rect(img.X + (SizeFlag ? 32 : 16), img.Y, 0, 0);
         }
-        polygonText.HorizontalOptions = LayoutOptions.Start;
-        polygonText.VerticalOptions = LayoutOptions.Start;
-        polygonText.Text = strName.TrimEnd();
-        //polygonText.FontSize = SizeFlag ? 24 : 12;
 
-        polygonText.IsVisible = Hr01007Flag ? true : false;
-
-
-        dynamicShapes.Add(polygon);
-        dynamicShapes.Add(polygonImg);
-        dynamicShapes.Add(polygonText);
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Label,
+            LayoutRole = MapShapeLayoutRole.AreaLabel,
+            Tag = strTag.Trim(),
+            LayoutOrigin = new Point(polygonImageBounds.X, polygonImageBounds.Y),
+            Bounds = polygonTextBounds,
+            Text = strName.TrimEnd(),
+            FontSize = SizeFlag ? 24 : 12,
+            TextColor = Colors.Black,
+            IsVisible = Hr01007Flag
+        });
     }
 
     /// <summary>
@@ -1167,19 +1422,39 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task GuideSelectedIndexChanged()
     {
-        await LoadGuideDataAsync();
+        await LoadGuideDataAsync(_guideLoadVersion);
         WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
     }
 
 
+    /// <summary>
+    /// 读取并生成当前地图的全部标尺绘制数据。
+    /// </summary>
+    /// <returns></returns>
     public async Task LoadGuideDataAsync()
     {
-        GuideXItems.Clear();
-        GuideYItems.Clear();
-        GuideY2Items.Clear();
+        await LoadGuideDataAsync(_guideLoadVersion);
+    }
+
+    /// <summary>
+    /// 读取并生成当前地图的全部标尺绘制数据。
+    /// 带版本号校验，避免旧地图的异步结果覆盖当前界面。
+    /// </summary>
+    /// <param name="guideLoadVersion">本次加载版本号</param>
+    /// <returns></returns>
+    private async Task LoadGuideDataAsync(int guideLoadVersion)
+    {
+        List<GuideDrawItem> guideXItems = new();
+        List<GuideDrawItem> guideYItems = new();
+        List<GuideDrawItem> guideY2Items = new();
 
         if (CurrentMap == null || MapSelectIndex < 0 || GuideSelectIndex < 0 || Maps.Count == 0 || Guide.Count == 0)
+        {
+            GuideXItems = guideXItems;
+            GuideYItems = guideYItems;
+            GuideY2Items = guideY2Items;
             return;
+        }
 
         string mapCode = Maps[MapSelectIndex].Value;
         int guideNo = int.Parse(Guide[GuideSelectIndex].Value);
@@ -1197,7 +1472,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
             _guideRawX = await Service.GetHM14GUIDCODEList(hm14X);
 
+            if (guideLoadVersion != _guideLoadVersion)
+                return;
+
             var xStyle = await GetGuideStyleAsync(mapCode, 0, guideNo);
+
+            if (guideLoadVersion != _guideLoadVersion)
+                return;
 
             double picScaleX = GetPicScaleX(_guideRawX);
             picScaleX = double.IsInfinity(picScaleX) ? 0 : picScaleX;
@@ -1215,7 +1496,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     ? CalcXGuidePositionWhenAngleZero(item, CurrentMap)
                     : CalcXGuidePositionWhenAngleNotZero(item, CurrentMap, picScaleX);
 
-                GuideXItems.Add(new GuideDrawItem
+                guideXItems.Add(new GuideDrawItem
                 {
                     Text = item.HM14006?.Trim() ?? "",
                     LogicalValue = intEX,
@@ -1243,7 +1524,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
             _guideRawY = await Service.GetHM14GUIDCODEList(hm14Y);
 
+            if (guideLoadVersion != _guideLoadVersion)
+                return;
+
             var yStyle = await GetGuideStyleAsync(mapCode, 1, guideNo);
+
+            if (guideLoadVersion != _guideLoadVersion)
+                return;
 
             double picScaleY = GetPicScaleY(_guideRawY);
             picScaleY = double.IsInfinity(picScaleY) ? 0 : picScaleY;
@@ -1262,7 +1549,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     : CalcYGuidePositionWhenAngleNotZero(item, CurrentMap, picScaleY);
 
                 // Y方向也先不过滤，交给页面判断显示位置
-                GuideYItems.Add(new GuideDrawItem
+                guideYItems.Add(new GuideDrawItem
                 {
                     Text = item.HM14006?.Trim() ?? "",
                     LogicalValue = intEY,
@@ -1276,8 +1563,22 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                 });
             }
         }
+
+        if (guideLoadVersion != _guideLoadVersion)
+            return;
+
+        GuideXItems = guideXItems;
+        GuideYItems = guideYItems;
+        GuideY2Items = guideY2Items;
     }
 
+    /// <summary>
+    /// 获取指定标尺类型的字体、字体名和颜色配置。
+    /// </summary>
+    /// <param name="mapCode"></param>
+    /// <param name="type"></param>
+    /// <param name="guideNo"></param>
+    /// <returns></returns>
     private async Task<(double FontSize, string FontFamily, Color Color)> GetGuideStyleAsync(string mapCode, int type, int guideNo)
     {
         var list = await Service.GetHM19GUIDCOLORList(mapCode, type, guideNo);
@@ -1300,6 +1601,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             : (18, "", Colors.Fuchsia);
     }
 
+    /// <summary>
+    /// 计算 X 方向水平标尺在角度为 0 时的逻辑位置。
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="map"></param>
+    /// <returns></returns>
     private int CalcXGuidePositionWhenAngleZero(HM14GUIDANDHM20 item, HM04MAPM map)
     {
         int intEX = 0;
@@ -1356,6 +1663,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         return intEX;
     }
 
+    /// <summary>
+    /// 计算 X 方向倾斜标尺在非 0 角度时的逻辑位置。
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="map"></param>
+    /// <param name="picScaleX"></param>
+    /// <returns></returns>
     private int CalcXGuidePositionWhenAngleNotZero(HM14GUIDANDHM20 item, HM04MAPM map, double picScaleX)
     {
         int xx = Convert.ToInt32(Math.Ceiling(
@@ -1398,6 +1712,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
         return intEX;
     }
+
+    /// <summary>
+    /// 计算 X 方向标尺的图片缩放比。
+    /// </summary>
+    /// <param name="dr"></param>
+    /// <returns></returns>
     private double GetPicScaleX(List<HM14GUIDANDHM20> dr)
     {
         if (dr == null || dr.Count == 0)
@@ -1448,6 +1768,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         return width1 / width2;
     }
 
+    /// <summary>
+    /// 计算 Y 方向标尺的图片缩放比。
+    /// </summary>
+    /// <param name="dr"></param>
+    /// <returns></returns>
     private double GetPicScaleY(List<HM14GUIDANDHM20> dr)
     {
         if (dr == null || dr.Count == 0)
@@ -1493,6 +1818,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
         return width1 / width2;
     }
+
+    /// <summary>
+    /// 计算 Y 方向水平标尺在角度为 0 时的逻辑位置。
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="map"></param>
+    /// <returns></returns>
     private int CalcYGuidePositionWhenAngleZero(HM14GUIDANDHM20 item, HM04MAPM map)
     {
         int intEY = 0;
@@ -1554,6 +1886,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         return intEY;
     }
 
+    /// <summary>
+    /// 计算 Y 方向倾斜标尺在非 0 角度时的逻辑位置。
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="map"></param>
+    /// <param name="picScaleY"></param>
+    /// <returns></returns>
     private int CalcYGuidePositionWhenAngleNotZero(HM14GUIDANDHM20 item, HM04MAPM map, double picScaleY)
     {
         int yy = Convert.ToInt32(Math.Ceiling(

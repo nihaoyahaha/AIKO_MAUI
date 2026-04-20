@@ -544,6 +544,36 @@ namespace Aiko.Services.Services
 		{
 			bool isChanged = CompareData();
 			if (!isChanged) return true;
+			return await SaveDataAsync();
+		}
+
+		/// <summary>
+		/// データの直接保存
+		/// </summary>
+		/// <returns></returns>
+		public async Task<bool> SaveDirectlyAsync()
+		{
+			return await SaveDataAsync();
+		}
+
+		/// <summary>
+		/// データが変更されたかどうか
+		/// </summary>
+		/// <returns></returns>
+		public bool IsDataChanged()
+		{
+			return CompareData();
+		}
+		#endregion
+
+		#region プライベート処理方法
+
+		/// <summary>
+		/// データの保存
+		/// </summary>
+		/// <returns></returns>
+		async Task<bool> SaveDataAsync()
+		{
 			List<HR02KSKK> hr02List = new List<HR02KSKK>();
 			List<HR04KSHIS> hr04List = new List<HR04KSHIS>();
 			foreach (var item in _inspectionGroups)
@@ -556,10 +586,6 @@ namespace Aiko.Services.Services
 			}
 			return await HkksDb.UpdateTableAsync(hr02List, null, null, hr04List, null);
 		}
-
-		#endregion
-
-		#region プライベート処理方法
 
 		/// <summary>
 		/// 判定結果を取得した画像

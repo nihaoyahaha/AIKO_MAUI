@@ -9,24 +9,25 @@
     HorizontalOptions="End"
     VerticalOptions="Start"
     WidthRequest="350">
-    <Grid Padding="20" RowDefinitions="*, Auto">
-        <CollectionView Grid.Row="0" ItemsSource="{Binding PunchList}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="model:PunchListModel">
-                    <HorizontalStackLayout Padding="5" Spacing="10">
-                        <CheckBox IsChecked="{Binding IsSelected}" />
-                        <Label Text="{Binding Text}" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+    <Border BackgroundColor="{DynamicResource PageBackgroundColor}">
+        <Grid Padding="20" RowDefinitions="*, Auto">
+            <CollectionView Grid.Row="0" ItemsSource="{Binding PunchList}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:PunchListModel">
+                        <HorizontalStackLayout Padding="5" Spacing="10">
+                            <CheckBox IsChecked="{Binding IsSelected}" />
+                            <Label Text="{Binding Text}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
 
-        <Button
-            Grid.Row="1"
-            Margin="0,20,0,0"
-            Command="{Binding AddCommand}"
-            Text="追加"
-            WidthRequest="150" />
-    </Grid>
-
+            <Button
+                Grid.Row="1"
+                Margin="0,20,0,0"
+                Command="{Binding AddCommand}"
+                Text="追加"
+                WidthRequest="150" />
+        </Grid>
+    </Border>
 </ContentView>
