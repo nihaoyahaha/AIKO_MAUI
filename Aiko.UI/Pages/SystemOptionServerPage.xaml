@@ -18,11 +18,64 @@
 
     <ContentView.Resources>
         <local:ComparisonConverter x:Key="ComparisonConverter" />
+        <ControlTemplate x:Key="RadioButtonTemplate">
+            <Grid
+                HorizontalOptions="Start"
+                InputTransparent="False"
+                VerticalOptions="Center">
+                <Grid ColumnDefinitions="auto, *">
+                    <Grid HorizontalOptions="End" VerticalOptions="Center">
+                        <Ellipse
+                            HeightRequest="18"
+                            HorizontalOptions="Center"
+                            Stroke="{DynamicResource RadioButtonTextColor}"
+                            StrokeThickness="2"
+                            VerticalOptions="Center"
+                            WidthRequest="18" />
+                        <Ellipse
+                            x:Name="check"
+                            Fill="{DynamicResource RadioButtonTextColor}"
+                            HeightRequest="10"
+                            HorizontalOptions="Center"
+                            Opacity="0"
+                            VerticalOptions="Center"
+                            WidthRequest="10">
+                            <Ellipse.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding IsChecked, Source={RelativeSource TemplatedParent}}"
+                                    TargetType="Ellipse"
+                                    Value="True">
+                                    <Setter Property="Opacity" Value="1" />
+                                </DataTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                    </Grid>
+                    <Label
+                        Grid.Column="1"
+                        Margin="5,0,0,0"
+                        FontAttributes="{TemplateBinding FontAttributes}"
+                        FontFamily="{TemplateBinding FontFamily}"
+                        FontSize="{TemplateBinding FontSize}"
+                        HorizontalOptions="Start"
+                        Text="{TemplateBinding Content}"
+                        TextColor="{TemplateBinding TextColor}"
+                        VerticalOptions="Center" />
+                </Grid>
+            </Grid>
+        </ControlTemplate>
+        <Style x:Key="IpadOptimizedRadio" TargetType="RadioButton">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Setter Property="TextColor" Value="{DynamicResource RadioButtonTextColor}" />
+            <Setter Property="ControlTemplate" Value="{StaticResource RadioButtonTemplate}" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="MinimumHeightRequest" Value="44" />
+            <Setter Property="MinimumWidthRequest" Value="44" />
+        </Style>
     </ContentView.Resources>
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="25">
-
             <Grid>
                 <Border
                     Padding="20,25,20,15"
@@ -35,13 +88,15 @@
                             Content="JPEG"
                             FontSize="Body"
                             GroupName="imgType"
-                            IsChecked="{Binding PhotoType, Converter={StaticResource ComparisonConverter}, ConverterParameter='JPEG'}" />
+                            IsChecked="{Binding PhotoType, Converter={StaticResource ComparisonConverter}, ConverterParameter='JPEG'}"
+                            Style="{StaticResource IpadOptimizedRadio}" />
                         <RadioButton
                             x:Name="rdbtn_svg"
                             Content="SVG"
                             FontSize="Body"
                             GroupName="imgType"
-                            IsChecked="{Binding PhotoType, Converter={StaticResource ComparisonConverter}, ConverterParameter='SVG'}" />
+                            IsChecked="{Binding PhotoType, Converter={StaticResource ComparisonConverter}, ConverterParameter='SVG'}"
+                            Style="{StaticResource IpadOptimizedRadio}" />
                     </HorizontalStackLayout>
                 </Border>
                 <Label
@@ -125,8 +180,6 @@
                                 ItemsSource="{Binding FrontResolutions}"
                                 SelectedIndex="{Binding SelectedFrontResolutionIndex}"
                                 WidthRequest="150" />
-
-
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

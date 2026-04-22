@@ -63,6 +63,18 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [ObservableProperty]
     private ImageSource _danmImageSource;
 
+    private int _selectImageIndex
+    {
+        get
+        {
+            InkImage? image = SourceImageList.Where(image => image.IsSelected).FirstOrDefault();
+            if (image == null) return -1;
+
+            return SourceImageList.IndexOf(image);
+
+        }
+    }
+
     /// <summary>
     /// 配筋確認
     /// </summary>
@@ -192,12 +204,15 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [ObservableProperty]
     private bool _emptySelected;
 
-    public bool IsSwitchable => !IsSvg || EmptySelected;
+    public bool IsPreviousSwitchable => (!IsSvg || EmptySelected) && _selectImageIndex > 0;
+    public bool IsNextSwitchable => (!IsSvg || EmptySelected) && (_selectImageIndex > -1 && _selectImageIndex < SourceImageList.Count - 1);
 
     [ObservableProperty]
     private bool _isImageGalleryVisible = true;
     [ObservableProperty]
     private bool _isImageGridVisible = false;
+
+    private List<ProjectPhotoMessage> _projectPhotoList = new List<ProjectPhotoMessage>();
 
     public CheckPointDetailPageVM(ILogger<CheckPointDetailPageVM> logger, ICheckPointDetailService service, ICheckPointService checkPointService) : base(logger, service)
     {
@@ -215,6 +230,10 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         if (query.ContainsKey("json"))
         {
             Query = JsonSerializer.Deserialize<Dictionary<string, object>>(query["json"]?.ToString());
+            if (Query.ContainsKey("ProjectPhotoList"))
+            {
+                _projectPhotoList = JsonSerializer.Deserialize<List<ProjectPhotoMessage>>(Query["ProjectPhotoList"]?.ToString());
+            }
         }
 
         if (Query == null || Query.Count == 0)
@@ -455,6 +474,8 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [RelayCommand]
     private async Task BackAsync()
     {
+        if (!await ValidateBeforeBackAsync()) return;
+
         var message = new AsyncRequestMessage("Back");
         _ = WeakReferenceMessenger.Default.Send(message);
         await message.Tcs.Task;
@@ -474,6 +495,8 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [RelayCommand]
     private async Task SaveAsync()
     {
+        RemoveProjectPhotosBeforeSave();
+
         var message = new AsyncRequestMessage("Save");
         _ = WeakReferenceMessenger.Default.Send(message);
         await message.Tcs.Task;
@@ -491,6 +514,8 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [RelayCommand]
     private async Task SaveBackAsync()
     {
+        RemoveProjectPhotosBeforeSave();
+
         var message = new AsyncRequestMessage("SaveBack");
         _ = WeakReferenceMessenger.Default.Send(message);
         await message.Tcs.Task;
@@ -619,7 +644,8 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
         IsSvg = image.IsSvg;
 
-        OnPropertyChanged(nameof(IsSwitchable));
+        OnPropertyChanged(nameof(IsPreviousSwitchable));
+        OnPropertyChanged(nameof(IsNextSwitchable));
     }
 
     public async Task<bool> SaveImageInfo(InkImage image)
@@ -976,7 +1002,8 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
                 EmptySelected = true; break;
         }
 
-        OnPropertyChanged(nameof(IsSwitchable));
+        OnPropertyChanged(nameof(IsPreviousSwitchable));
+        OnPropertyChanged(nameof(IsNextSwitchable));
     }
 
     // 颜料版可选颜色集合
@@ -1016,7 +1043,9 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         {
             FromPage = "CheckPointDetailPage",
             ProjectCode = Proc.Value,        //工程コード		
-            InspectionItemCode = Proj.Value  //確認项目コード
+            InspectionItemCode = Proj.Value, //確認项目コード
+            ProjectPhotoList = _projectPhotoList //写真コレクション
+
         };
         var options = new JsonSerializerOptions
         {
@@ -1025,6 +1054,32 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         };
         string jsonString = JsonSerializer.Serialize(obj, options);
         return new Dictionary<string, object> { { "json", jsonString } };
+    }
+
+    async Task<bool> ValidateBeforeBackAsync()
+    {
+        if (_projectPhotoList.Count == 0) return true;
+
+        var photoPathList = _projectPhotoList
+            .Where(x => x.ProjectCode == Proc.Value && x.InspectionItemCode == Proj.Value)
+            .Select(x => x.PhotoPath)
+            .ToList();
+
+        if (photoPathList.Count == 0) return true;
+
+        string ErrMsg = ErrorMessage.ERRORPOP("CM01031");
+        var result = await DialogHelper.MessageDialogButton2(ErrMsg);
+
+        if (result == NCDialogResult.No) return false;
+
+        await _checkPointService.DiscardImageAsync(photoPathList);
+        RemoveProjectPhotosBeforeSave();
+        return true;
+    }
+
+    void RemoveProjectPhotosBeforeSave()
+    {
+        _projectPhotoList.RemoveAll(x => x.ProjectCode == Proc.Value && x.InspectionItemCode == Proj.Value);
     }
 
     public class AsyncRequestMessage : RequestMessage<bool>

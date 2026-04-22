@@ -17,7 +17,7 @@ public partial class CheckPointDetailPage : ContentPage
     private SKColor _currentTextColor;
     private float _currentTextSize;
     private string _currentTextFont;
-    private SKColor? _currentBackgoundColor;
+    private SKColor? _currentBackgroundColor;
 
     // 存储当前选中的颜色 Border，用于视觉状态切换
     private Border _selectedColorBorder;
@@ -26,16 +26,31 @@ public partial class CheckPointDetailPage : ContentPage
 
     private void OnTouch(object sender, SKTouchEventArgs e)
     {
-        if (_isTextEditing && !InkToolConfig.IsFont(_currentTool.Type))
-            FinishTextEdit();
+        if (_cacheSemaphore.CurrentCount == 0)
+        {
+            e.Handled = true;
+            return;
+        }
 
-        _toolManager.HandleTouch(e, InkCanvasView, null, null);
+        if (_cacheSemaphore.Wait(0))
+        {
+            try
+            {
+                if (_isTextEditing && !InkToolConfig.IsFont(_currentTool.Type))
+                    FinishTextEdit();
+
+                _toolManager.HandleTouch(e, InkCanvasView, null, null);
+            }
+            finally
+            {
+                _cacheSemaphore.Release();
+            }
+        }
     }
 
     private void OnPhotoCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        var info = e.Info;
 
         canvas.Clear(SKColors.Transparent);
 
@@ -54,7 +69,6 @@ public partial class CheckPointDetailPage : ContentPage
     private void OnBlackboardCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        var info = e.Info;
 
         canvas.Clear(SKColors.Transparent);
 
@@ -69,20 +83,52 @@ public partial class CheckPointDetailPage : ContentPage
     private void OnInkCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        var info = e.Info;
-
-        UpdateBackgroundCache(info);
 
         canvas.Clear(SKColors.Transparent);
 
-        if (_vm.IsDarkenMode && _backgroundCache != null)
+        if (_toolManager.Status != InkStatusType.Drawing)
         {
-            canvas.DrawBitmap(_backgroundCache, 0, 0, null);
+            if (string.IsNullOrEmpty(_codeCache))
+            {
+                UpdateBitmapCache();
+            }
+
+            if (_toolManager.Status == InkStatusType.Idle)
+            {
+                Task.Run(async () =>
+                {
+                    await _cacheSemaphore.WaitAsync();
+                    try
+                    {
+                        UpdateBitmapCacheWithStroke();
+                    }
+                    finally
+                    {
+                        _cacheSemaphore.Release();
+                    }
+                });
+            }
+
+            canvas.DrawBitmap(_bitmapCache, 0, 0, null);
+        }
+        else
+        {
+            canvas.DrawBitmap(_bitmapCacheWithStroke, 0, 0, null);
         }
 
-        if (_currentImage != null && _vm.IsStrokesVisible)
+        if (_currentImage != null)
         {
-            _toolManager.HandleDrawing(canvas, null, null);
+            if (_vm.IsStrokesVisible)
+            {
+                if (_currentTool.GetCurrentTempStroke() != null)
+                {
+                    _toolManager.HandleCurrentDrawing(canvas, null, null);
+                }
+                else
+                {
+                    _toolManager.HandleCompletedDrawing(canvas, null, null);
+                }
+            }
         }
 
         // 绘制边框以区分画布边界
@@ -96,40 +142,89 @@ public partial class CheckPointDetailPage : ContentPage
         }
     }
 
-    private SKBitmap? _backgroundCache;
-    private bool _needsRedrawBackground = true;
-    private void UpdateBackgroundCache(SKImageInfo info)
+    private string? _codeCache;
+    private SKBitmap? _bitmapCache;
+    private SKBitmap? _bitmapCacheWithStroke;
+    private void UpdateBitmapCache()
     {
-        if (!_vm.IsDarkenMode) return;
-
-        if (_needsRedrawBackground || _backgroundCache == null || _backgroundCache.Width != info.Width || _backgroundCache.Height != info.Height)
+        _bitmapCache?.Dispose();
+        if (_currentImage != null)
         {
-            _backgroundCache?.Dispose();
-            _backgroundCache = new SKBitmap(info.Width, info.Height);
+            _bitmapCache = new SKBitmap((int)_currentImage.Width, (int)_currentImage.Height);
+        }
+        else
+        {
+            _bitmapCache = new SKBitmap();
+        }
 
-            using (var cacheCanvas = new SKCanvas(_backgroundCache))
+        using (var canvasCache = new SKCanvas(_bitmapCache))
+        {
+            canvasCache.Clear(SKColors.Transparent);
+
+            if (_currentImage != null)
             {
-                cacheCanvas.Clear(SKColors.Transparent);
-
-                if (_currentImage != null)
+                if (_vm.IsDarkenMode)
                 {
                     if (_currentImage.Bitmap != null)
                     {
-                        cacheCanvas.DrawBitmap(_currentImage.Bitmap, 0, 0);
+                        canvasCache.DrawBitmap(_currentImage.Bitmap, 0, 0);
                     }
                     else if (_currentImage.PhotoSvg != null)
                     {
-                        cacheCanvas.DrawPicture(_currentImage.PhotoSvg.Picture);
+                        canvasCache.DrawPicture(_currentImage.PhotoSvg.Picture);
                     }
 
-                    if (_vm.IsBlackboardVisible && _currentImage.BlackboardSvg != null)
+                    if (_currentImage.BlackboardSvg != null && _vm.IsBlackboardVisible)
                     {
-                        cacheCanvas.DrawPicture(_currentImage.BlackboardSvg.Picture);
+                        canvasCache.DrawPicture(_currentImage.BlackboardSvg.Picture);
                     }
                 }
-            }
 
-            _needsRedrawBackground = false;
+                _codeCache = _currentImage.Code;
+            }
+        }
+    }
+    private readonly SemaphoreSlim _cacheSemaphore = new SemaphoreSlim(1, 1);
+    private void UpdateBitmapCacheWithStroke()
+    {
+        _bitmapCacheWithStroke?.Dispose();
+        if (_currentImage != null)
+        {
+            _bitmapCacheWithStroke = new SKBitmap((int)_currentImage.Width, (int)_currentImage.Height);
+        }
+        else
+        {
+            _bitmapCacheWithStroke = new SKBitmap();
+        }
+
+        using (var canvasCache = new SKCanvas(_bitmapCacheWithStroke))
+        {
+            canvasCache.Clear(SKColors.Transparent);
+
+            if (_currentImage != null)
+            {
+                if (_vm.IsDarkenMode)
+                {
+                    if (_currentImage.Bitmap != null)
+                    {
+                        canvasCache.DrawBitmap(_currentImage.Bitmap, 0, 0);
+                    }
+                    else if (_currentImage.PhotoSvg != null)
+                    {
+                        canvasCache.DrawPicture(_currentImage.PhotoSvg.Picture);
+                    }
+
+                    if (_currentImage.BlackboardSvg != null && _vm.IsBlackboardVisible)
+                    {
+                        canvasCache.DrawPicture(_currentImage.BlackboardSvg.Picture);
+                    }
+                }
+
+                if (_vm.IsStrokesVisible)
+                {
+                    _toolManager.HandleCompletedDrawing(canvasCache, null, null);
+                }
+            }
         }
     }
 
@@ -163,7 +258,7 @@ public partial class CheckPointDetailPage : ContentPage
     {
         _vm.IsBlackboardVisible = !_vm.IsBlackboardVisible;
 
-        _needsRedrawBackground = true;
+        _codeCache = null;
         InkCanvasView.InvalidateSurface();
     }
     private void OnBtnInkClicked(object sender, EventArgs e)
@@ -584,7 +679,7 @@ public partial class CheckPointDetailPage : ContentPage
         _currentTextColor = color;
         _currentTextSize = size;
         _currentTextFont = font;
-        _currentBackgoundColor = bgColor;
+        _currentBackgroundColor = bgColor;
 
         TextEditor.Text = "";
         TextEditor.TextColor = color.ToMauiColor();
@@ -610,7 +705,7 @@ public partial class CheckPointDetailPage : ContentPage
             }
             else
             {
-                _toolManager.AddTextStroke(_currentTool.Type, text, _currentTextPosition, _currentBackgoundColor ?? SKColors.Transparent, _currentTextSize, _currentTextFont);
+                _toolManager.AddTextStroke(_currentTool.Type, text, _currentTextPosition, _currentBackgroundColor ?? SKColors.Transparent, _currentTextSize, _currentTextFont);
             }
 
             InkCanvasView.InvalidateSurface();

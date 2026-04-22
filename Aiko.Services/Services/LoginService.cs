@@ -20,6 +20,11 @@ public class LoginService :BaseService<LoginService>, ILoginService
 	/// </summary>
 	public AikoAppContext AppContext => AikoAppContext;
 
+	/// <summary>
+	/// 工事コードと工事名のマッピング
+	/// </summary>
+	private Dictionary<string, string> _projectsCache = new();
+
 	async public Task<(string companyName, string companyCode)> GetCompanyValue(string companyID)
     {
         try
@@ -48,7 +53,8 @@ public class LoginService :BaseService<LoginService>, ILoginService
         string userName = "";
         string userCode = "";
         ObservableCollection<ListItem> items = new();
-        HM02OPER hm02 = new();
+        _projectsCache = new();
+		HM02OPER hm02 = new();
         try
         {
             hm02.HM02004 = companyCode;
@@ -72,7 +78,8 @@ public class LoginService :BaseService<LoginService>, ILoginService
                         var hm03PROJs = await HkksDb.GetHM03PROJcodeListAsync(hm03);
                         foreach (var obj in hm03PROJs)
                         {
-                            items.Add(new ListItem(obj.HM03001 + "-" + obj.HM03002, obj.HM03001));
+                            items.Add(new ListItem(obj.HM03001 + "-" + obj.HM03002.Trim(), obj.HM03001));
+                            _projectsCache.Add(obj.HM03001, obj.HM03002.Trim());
                         }
                     }
                 }
@@ -105,6 +112,7 @@ public class LoginService :BaseService<LoginService>, ILoginService
                 AikoAppContext.Name = hm02OPERs[0].HM02002.Trim();
                 AikoAppContext.WorkCD = checkLoginDto.WorkCode.Trim();
                 AikoAppContext.WorkName = checkLoginDto.WorkName.Trim();
+                AikoAppContext.WorkNameExcludeCode = _projectsCache[AikoAppContext.WorkCD];
                 AikoAppContext.PowerLevel = hm02OPERs[0].HM02005.ToString();
                 AikoAppContext.OperatorID = hm02OPERs[0].HM02015.Trim();
 				AikoAppContext.CompanyID = hm02OPERs[0].HM02004.Trim();

@@ -34,6 +34,64 @@
             <Setter Property="Margin" Value="10" />
             <Setter Property="CornerRadius" Value="20" />
         </Style>
+
+        <ControlTemplate x:Key="RadioButtonTemplate">
+            <Grid
+                HorizontalOptions="Start"
+                InputTransparent="False"
+                VerticalOptions="Center">
+                <Grid ColumnDefinitions="auto, *">
+                    <Grid HorizontalOptions="End" VerticalOptions="Center">
+                        <Ellipse
+                            HeightRequest="18"
+                            HorizontalOptions="Center"
+                            Stroke="White"
+                            StrokeThickness="2"
+                            VerticalOptions="Center"
+                            WidthRequest="18" />
+                        <Ellipse
+                            x:Name="check"
+                            Fill="White"
+                            HeightRequest="10"
+                            HorizontalOptions="Center"
+                            Opacity="0"
+                            VerticalOptions="Center"
+                            WidthRequest="10">
+                            <Ellipse.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding IsChecked, Source={RelativeSource TemplatedParent}}"
+                                    TargetType="Ellipse"
+                                    Value="True">
+                                    <Setter Property="Opacity" Value="1" />
+                                </DataTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                    </Grid>
+                    <Label
+                        Grid.Column="1"
+                        Margin="5,0,0,0"
+                        FontAttributes="{TemplateBinding FontAttributes}"
+                        FontFamily="{TemplateBinding FontFamily}"
+                        FontSize="{TemplateBinding FontSize}"
+                        HorizontalOptions="Start"
+                        Text="{TemplateBinding Content}"
+                        TextColor="{TemplateBinding TextColor}"
+                        VerticalOptions="Center" />
+                </Grid>
+            </Grid>
+        </ControlTemplate>
+        <Style x:Key="IpadOptimizedRadio" TargetType="RadioButton">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Setter Property="TextColor" Value="{DynamicResource RadioButtonTextColor}" />
+            <Setter Property="ControlTemplate" Value="{StaticResource RadioButtonTemplate}" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="MinimumHeightRequest" Value="44" />
+            <Setter Property="MinimumWidthRequest" Value="44" />
+        </Style>
+
+        <x:String x:Key="describe">確認者</x:String>
+        <toolkit:IsEqualConverter x:Key="IsEqualConverter" />
     </ContentPage.Resources>
     <Grid RowDefinitions="8*,60">
         <Grid x:Name="gridRoot">
@@ -128,16 +186,43 @@
                     FontSize="18"
                     Text="撮影方向："
                     VerticalOptions="Center" />
-                <Picker
-                    x:Name="pik_ReinforcementType"
-                    ItemDisplayBinding="{Binding DisplyName}"
-                    ItemsSource="{Binding ReinforcementTypeList}"
-                    SelectedItem="{Binding ReinforcementTypeSelectedItem}"
-                    VerticalOptions="Center"
-                    WidthRequest="160" />
+
+                <Grid ColumnDefinitions="156,*" WidthRequest="200">
+                    <Picker
+                        x:Name="pik_ReinforcementType"
+                        Grid.ColumnSpan="2"
+                        IsVisible="True"
+                        ItemDisplayBinding="{Binding DisplyName}"
+                        ItemsSource="{Binding ReinforcementTypeList}"
+                        Opacity="0.01"
+                        SelectedItem="{Binding ReinforcementTypeSelectedItem}"
+                        VerticalOptions="Center"
+                        WidthRequest="200">
+                        <Picker.Behaviors>
+                            <toolkit:EventToCommandBehavior
+                                BindingContext="{Binding Path=BindingContext, Source={x:Reference pik_ReinforcementType}}"
+                                Command="{Binding ReinforcementTypeSelectedIndexChangedCommand}"
+                                EventName="SelectedIndexChanged" />
+                        </Picker.Behaviors>
+                    </Picker>
+                    <Entry
+                        x:Name="entry_ReinforcementType"
+                        Text="{Binding ReinforcementTypeText}"
+                        VerticalOptions="Center" />
+                    <ImageButton
+                        Grid.Column="1"
+                        Aspect="AspectFit"
+                        BackgroundColor="{DynamicResource EntryBackgroundColor}"
+                        BorderWidth="0.5"
+                        Command="{Binding ExpandReinforcementTypeListCommand}"
+                        CommandParameter="{x:Reference pik_ReinforcementType}"
+                        CornerRadius="6"
+                        Source="arrow.png"
+                        VerticalOptions="Center" />
+                </Grid>
 
                 <Label
-                    Margin="2,0,0,0"
+                    Margin="10,0,0,0"
                     FontSize="18"
                     Text="備考："
                     VerticalOptions="Center" />
@@ -157,7 +242,7 @@
                 <CheckBox
                     x:Name="chk_confirmer"
                     Margin="25,0,0,0"
-                    IsChecked="True"
+                    IsChecked="{Binding GreenBackgroundModel.Describe, Mode=OneWay, Converter={StaticResource IsEqualConverter}, ConverterParameter={StaticResource describe}}"
                     VerticalOptions="Center">
                     <CheckBox.Behaviors>
                         <toolkit:EventToCommandBehavior
@@ -175,8 +260,7 @@
 
                 <CheckBox
                     x:Name="chk_grid"
-                    Margin="25,0,0,0"
-                    IsChecked="False"
+                    Margin="15,0,0,0"
                     VerticalOptions="Center">
                     <CheckBox.Behaviors>
                         <toolkit:EventToCommandBehavior
@@ -274,12 +358,12 @@
                         VerticalOptions="Center" />
                     <RadioButton
                         x:Name="rdb_yes"
-                        Margin="20,10,0,0"
+                        Margin="20,0,0,0"
                         Content="あり"
                         HorizontalOptions="Center"
                         IsChecked="{Binding GreenBackgroundImageIsVisible}"
                         IsEnabled="{Binding BgRectTypeRadioButtonIsEnable}"
-                        TextColor="White">
+                        Style="{StaticResource IpadOptimizedRadio}">
                         <RadioButton.Behaviors>
                             <toolkit:EventToCommandBehavior
                                 x:TypeArguments="system:EventArgs"
@@ -291,11 +375,11 @@
 
                     <RadioButton
                         x:Name="rdb_nomarl"
-                        Margin="20,10,0,0"
+                        Margin="20,0,0,0"
                         Content="なし"
                         HeightRequest="30"
                         IsEnabled="{Binding BgRectTypeRadioButtonIsEnable}"
-                        TextColor="White" />
+                        Style="{StaticResource IpadOptimizedRadio}" />
 
                 </HorizontalStackLayout>
             </HorizontalStackLayout>
@@ -320,18 +404,21 @@
                         VerticalOptions="Center" />
                     <RadioButton
                         x:Name="rdb_Back"
-                        Margin="20,10,0,0"
+                        Margin="20,0,0,0"
                         Content="1"
                         GroupName="camera"
                         HeightRequest="30"
                         HorizontalOptions="Center"
                         IsChecked="{Binding IsRearCamera}"
-                        TextColor="White" />
+                        Style="{StaticResource IpadOptimizedRadio}"
+                        TextColor="White"
+                        VerticalOptions="Center" />
                     <RadioButton
-                        Margin="20,10,0,0"
+                        Margin="20,0,0,0"
                         Content="2"
                         GroupName="camera"
                         HorizontalOptions="Center"
+                        Style="{StaticResource IpadOptimizedRadio}"
                         TextColor="White">
                         <RadioButton.Triggers>
                             <DataTrigger

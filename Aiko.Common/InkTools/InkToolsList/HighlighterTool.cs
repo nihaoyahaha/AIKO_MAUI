@@ -18,6 +18,8 @@ namespace Aiko.Common.InkTools.InkToolsList
 
         public override void OnDown(SKPoint point, SKCanvasView canvasView)
         {
+            _manager.Status = InkStatusType.Drawing;
+
             currentStroke = new InkStroke
             {
                 Type = this.Type,
@@ -38,6 +40,8 @@ namespace Aiko.Common.InkTools.InkToolsList
         }
         public override void OnUp(SKPoint point, SKCanvasView canvasView)
         {
+            _manager.Status = InkStatusType.Idle;
+
             if (currentStroke == null) return;
 
             if (currentStroke.Points.Count >= 2)

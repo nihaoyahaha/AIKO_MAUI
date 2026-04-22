@@ -13,12 +13,22 @@ namespace Aiko.IServices.IServices;
 public interface ICameraService:IServiceBase
 {
 	/// <summary>
+	/// 工程コード
+	/// </summary>
+	public string ProjectCode { get; }
+
+	/// <summary>
 	/// 確認項目コード
 	/// </summary>
-	public string ProjectCode { get;}
+	public string InspectionItemCode { get;}
 
-	//確認項目コードの設定
-	public void SetHM13004(string hm13004);
+	/// <summary>
+	/// db内の撮影方向集合
+	/// </summary>
+	public List<HM16SHDIR> HM16List { get; }
+
+	//工程コードと確認項目コードの設定
+	public void SetProjectCodeAndInspectionItemCode(string projectCode, string hm13004);
 	public void SetHR01ITEM(HR01ITEM hr01);
 	public void SetGreenBackgroundModel(GreenBackgroundModel model);
 

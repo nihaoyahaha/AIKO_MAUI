@@ -30,9 +30,16 @@ public class CameraService : BaseService<CameraService>, ICameraService
 	private HR01ITEM _hr01;
 
 	/// <summary>
+	/// 工程コード
+	/// </summary>
+	private string _projectCode;
+
+	/// <summary>
 	/// 確認項目コード
 	/// </summary>
 	private string _hm13004;
+
+	private List<HM16SHDIR> _hm16List = new();
 
 	private GreenBackgroundModel _greenBackground;
 
@@ -44,19 +51,31 @@ public class CameraService : BaseService<CameraService>, ICameraService
 	private IImageViewService _imageViewService;
 
 	/// <summary>
+	/// 工程コード
+	/// </summary>
+	public string ProjectCode => _projectCode;
+
+	/// <summary>
 	/// /// <summary>
 	/// 確認項目コード
 	/// </summary>
 	/// </summary>
-	public string ProjectCode => _hm13004;
+	public string InspectionItemCode => _hm13004;
+
+	public List<HM16SHDIR> HM16List => _hm16List;
 
 	public void SetHR01ITEM(HR01ITEM hr01) => _hr01 = hr01;
 
 	/// <summary>
-	/// 確認項目コードの設定
+	/// 工程コードと確認項目コードの設定
 	/// </summary>
+	/// <param name="projectCode">工程コード</param>
 	/// <param name="hm13004">確認項目コード</param>
-	public void SetHM13004(string hm13004) => _hm13004 = hm13004;
+	public void SetProjectCodeAndInspectionItemCode(string projectCode, string hm13004) 
+	{
+		_projectCode = projectCode;
+		_hm13004 = hm13004; 
+	}
 
 	/// <summary>
 	/// 緑の背景版のデータソースを取得
@@ -79,12 +98,21 @@ public class CameraService : BaseService<CameraService>, ICameraService
 	{
 		HM16SHDIR hm16DC = new HM16SHDIR();
 		hm16DC.HM16001 = _hr01.HR01001;
-		List<HM16SHDIR> hm16List = await HkksDb.GetHM16ListAsync(hm16DC);
+		_hm16List = await HkksDb.GetHM16ListAsync(hm16DC);
 		ObservableCollection<ListItem> listItems = new();
-		foreach (var item in hm16List)
+		foreach (var item in _hm16List)
 		{
 			ListItem listItem = new ListItem(item.HM16003.Trim(), item.HM16002.ToString());
 			listItems.Add(listItem);
+		}
+		string prefDirsListStr = Preferences.Get("DirsList", "");
+		List<string> prefDirsList = prefDirsListStr.Split(',').ToList();
+		foreach (var item in prefDirsList)
+		{
+			if (!listItems.Any(dirs => dirs.DisplyName == item))
+			{
+				listItems.Add(new ListItem(item, item));
+			}
 		}
 		return listItems;
 	}
@@ -145,7 +173,7 @@ public class CameraService : BaseService<CameraService>, ICameraService
 		hr03DC.HR03016 = AppContext.Name;
 		hr03DC.HR03017 = photo.HR03017;
 		hr03DC.HR03018 = photo.HR03018;
-		hr03DC.HR03019 = photo.Direction == -1 ? photo.DirectionText : "";
+		hr03DC.HR03019 = photo.DirectionText;
 		hr03DC.HR03020 = GetFileLastWriteTime(photo.FilePath);
 		List<HR03SYAS> hr03List = new List<HR03SYAS>();
 		hr03List.Add(hr03DC);

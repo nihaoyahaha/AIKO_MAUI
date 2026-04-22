@@ -137,6 +137,12 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	/// </summary>
 	[ObservableProperty]
 	private bool _gridVisible =false;
+
+	/// <summary>
+	/// 撮影方向の文字
+	/// </summary>
+	[ObservableProperty]
+	private string _reinforcementTypeText = "";
 	#endregion
 
 	#region プライベートフィールド
@@ -205,7 +211,8 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	[RelayCommand]
 	async private Task PageLoaded()
 	{
-		if(_fromPage == "CheckPointPage") PhotoScreenshot = null;
+		Remark = "";
+		if (_fromPage == "CheckPointPage") PhotoScreenshot = null;
 		await RefreshCameras(CancellationToken.None);
 		GreenBackgroundModel = Service.GetGreenBackgroundModel();
 		//断面図の表示
@@ -342,6 +349,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	[RelayCommand]
 	private void RemarkTextChanged()
 	{
+		if (GreenBackgroundModel == null) return;
 		GreenBackgroundModel.Remark = Remark;
 		if (GreenBackgroundModel.Describe == "備考")
 		{
@@ -389,6 +397,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		{
 			if (e.Media == null) return;
 			if (!await ValidateBeforeSavingAsync()) return;
+			UpdateDirsListPreferences();
 			using MemoryStream stream = new();
 			await e.Media.CopyToAsync(stream);
 			stream.Position = 0;
@@ -406,7 +415,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 			}
 			InspectionRecordItem inspectionRecordItem = CreateInspectionRecordItem(photoType);
 			await Service.SavePhotoDataToSqliteDbAsync(inspectionRecordItem);
-			WeakReferenceMessenger.Default.Send($"{PhotoScreenshotPath}", "TakePhotosToken");
+			SendTakePhotoMessage();
 		}
 		catch (Exception ex)
 		{
@@ -424,6 +433,29 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		var value = ((CheckedChangedEventArgs)e).Value;
 		GridVisible = value;
 	}
+
+	/// <summary>
+	/// 撮影方向の選択変更イベント処理
+	/// </summary>
+	[RelayCommand]
+	private void ReinforcementTypeSelectedIndexChanged()
+	{
+		ReinforcementTypeText = ReinforcementTypeSelectedItem.DisplyName;
+	}
+
+	[RelayCommand]
+	private void ExpandReinforcementTypeList(Picker picker)
+	{
+		if (picker != null)
+		{
+			picker.Focus();
+#if WINDOWS
+			var nativePicker = (Microsoft.UI.Xaml.Controls.ComboBox)picker.Handler.PlatformView;
+			nativePicker.IsDropDownOpen = true;
+#endif
+		}
+	}
+
 	#endregion
 
 	#region 処理方法
@@ -796,7 +828,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	/// <returns></returns>
 	async Task<bool> ValidateBeforeSavingAsync()
 	{
-		if (ReinforcementTypeSelectedItem == null)
+		if (ReinforcementTypeSelectedItem == null || string.IsNullOrWhiteSpace(ReinforcementTypeText))
 		{
 			string ErrMsg = ErrorMessage.ERRORPOP("CM01037");
 			DialogHelper.MessageDialogClose(string.Format(ErrMsg, "撮影方向"));
@@ -826,8 +858,17 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		{
 			inspectionRecordItem.HR03018 = GreenBackgroundImageIsVisible ? 3 : 1;
 		}
-		inspectionRecordItem.Direction = int.Parse(ReinforcementTypeSelectedItem.Value);
-		inspectionRecordItem.DirectionText = ReinforcementTypeSelectedItem.DisplyName;
+
+		if (!Service.HM16List.Any(x => x.HM16003.Trim() == ReinforcementTypeText))
+		{
+			inspectionRecordItem.Direction = 0;
+			inspectionRecordItem.DirectionText = ReinforcementTypeText;
+		}
+		else
+		{
+			inspectionRecordItem.Direction = int.Parse(ReinforcementTypeSelectedItem.Value);
+			inspectionRecordItem.DirectionText = "";
+		}
 		return inspectionRecordItem;
 	}
 
@@ -851,6 +892,41 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		{
 			{ "json", jsonString }
 		};
+	}
+
+	/// <summary>
+	/// 写真撮影のメッセージを送る
+	/// </summary>
+	void SendTakePhotoMessage()
+	{
+		ProjectPhotoMessage message = new ProjectPhotoMessage
+		{
+			ProjectCode = Service.ProjectCode,
+			InspectionItemCode = Service.InspectionItemCode,
+			PhotoPath = PhotoScreenshotPath
+		};
+		WeakReferenceMessenger.Default.Send(message, "TakePhotosToken");
+	}
+
+	/// <summary>
+	/// 設定の撮影方向を更新
+	/// </summary>
+	void UpdateDirsListPreferences()
+	{
+		if (!ReinforcementTypeList.Any(x => x.DisplyName.Trim() == ReinforcementTypeText))
+		{
+			string prefDirsListStr = Preferences.Get("DirsList", "");
+			List<string> prefDirsList = prefDirsListStr
+				.Split(',')
+				.Where(s => !string.IsNullOrWhiteSpace(s))
+				.ToList();
+
+			prefDirsList.Add(ReinforcementTypeText);
+			Preferences.Set("DirsList", string.Join(",", prefDirsList));
+			var listItem = new ListItem(ReinforcementTypeText, ReinforcementTypeText);
+			ReinforcementTypeList.Add(listItem);
+			ReinforcementTypeSelectedItem = listItem;
+		}
 	}
 	#endregion
 }

@@ -3,6 +3,8 @@ using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
 
+public enum InkStatusType { Idle, Drawing, Moving }
+
 namespace Aiko.Common.InkTools
 {
     public class InkToolManager
@@ -22,6 +24,8 @@ namespace Aiko.Common.InkTools
         public IReadOnlyList<InkStroke> CompletedStrokes => _completedStrokes;
 
         private bool _cleared = false;
+
+        public InkStatusType Status = InkStatusType.Idle;
 
         public bool StrokesChanged => _historyStack.Count > 0 || _cleared;
 
@@ -96,26 +100,29 @@ namespace Aiko.Common.InkTools
         }
 
         // 分发绘制事件
-        public void HandleDrawing(SKCanvas canvas, string[]? allowedTypes, string[]? bannedTypes)
+        public void HandleCompletedDrawing(SKCanvas canvas, string[]? allowedTypes, string[]? bannedTypes)
         {
-            // 绘制所有已完成的笔迹
             foreach (var stroke in _completedStrokes)
             {
-                if (_tools.ContainsKey(stroke.Type) && (allowedTypes == null || allowedTypes.Contains(stroke.Type)) && (bannedTypes == null || !bannedTypes.Contains(stroke.Type)))
+                bool allow = _tools.ContainsKey(stroke.Type) && (allowedTypes == null || allowedTypes.Contains(stroke.Type)) && (bannedTypes == null || !bannedTypes.Contains(stroke.Type));
+                //bool selectedAllow = CurrentTool is not MoveTool moveTool || moveTool.GetSelectedStroke() == null || moveTool.GetSelectedStroke()?.Id != stroke.Id;
+
+                if (stroke != null && allow)
                 {
                     IInkTool renderer = _tools[stroke.Type];
                     renderer.Draw(canvas, stroke);
                 }
             }
+        }
+        public void HandleCurrentDrawing(SKCanvas canvas, string[]? allowedTypes, string[]? bannedTypes)
+        {
+            bool allow = (allowedTypes == null || allowedTypes.Contains(CurrentTool.Type)) && (bannedTypes == null || !bannedTypes.Contains(CurrentTool.Type));
 
-            // 绘制当前正在拖动的笔迹（临时）
-            if (CurrentTool != null)
+            var stroke = CurrentTool.GetCurrentTempStroke();
+            if (stroke != null && allow)
             {
-                var tempStroke = CurrentTool.GetCurrentTempStroke();
-                if (tempStroke != null && (allowedTypes == null || allowedTypes.Contains(CurrentTool.Type)) && (bannedTypes == null || !bannedTypes.Contains(CurrentTool.Type)))
-                {
-                    CurrentTool.Draw(canvas, tempStroke);
-                }
+                IInkTool renderer = _tools[stroke.Type];
+                renderer.Draw(canvas, stroke);
             }
         }
 

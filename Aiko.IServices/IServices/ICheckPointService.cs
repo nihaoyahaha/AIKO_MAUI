@@ -53,8 +53,8 @@ public interface ICheckPointService: IServiceBase
 	//緑色背景板実体類の設定
 	public Task SetGreenBackgroundModelAsync(GreenBackgroundModel model);
 
-	//確認項目コードの設定
-	public void SetHM13004ToCameraService(string projectCode);
+	//工程コードと確認項目コードの設定
+	public void SetProjectCodeAndInspectionItemCodeToCameraService(string projectCode,string hm13004);
 
 	// 現在の確認項目をcameraServiceに渡す 
 	public void SetInspectionItemToCameraService(InspectionItem inspectionItem);
@@ -63,7 +63,7 @@ public interface ICheckPointService: IServiceBase
 	public Task<string> GetHM11003sAsync();
 
 	//画像を破棄
-	public Task DiscardImageAsync(string projectCode, List<string> photoPathList);
+	public Task DiscardImageAsync(List<string> photoPathList);
 
 	//データの保存
 	public Task<bool> SaveAsync();
@@ -72,5 +72,5 @@ public interface ICheckPointService: IServiceBase
 	public Task<bool> SaveDirectlyAsync();
 
 	//データが変更されたかどうか
-	public bool IsDataChanged();
+	public bool IsDataChanged(bool isCompareNum = true);
 }

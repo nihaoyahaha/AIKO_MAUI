@@ -11,6 +11,7 @@
     <Shell.TitleView>
         <Grid>
             <Label
+                x:Name="lb_title"
                 FontAttributes="Bold"
                 FontSize="28"
                 HorizontalOptions="Center"

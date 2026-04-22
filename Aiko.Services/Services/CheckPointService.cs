@@ -460,12 +460,14 @@ namespace Aiko.Services.Services
 			//撮影日
 			model.ShootingDate = $"{strDateTime} ({dayOfWeekName})";
 			model.FontSize = double.Parse(Preferences.Default.Get("BlackFontSize", "14"));
+			//備考
+			model.Remark = "";
 			_cameraService.SetGreenBackgroundModel(model);
 		}
 
-		public void SetHM13004ToCameraService(string projectCode)
+		public void SetProjectCodeAndInspectionItemCodeToCameraService(string projectCode,string hm13004)
 		{
-			_cameraService.SetHM13004(projectCode);
+			_cameraService.SetProjectCodeAndInspectionItemCode(projectCode, hm13004);
 		}
 
 		/// <summary>
@@ -506,7 +508,7 @@ namespace Aiko.Services.Services
 		/// <param name="projectCode">確認項目コード</param>
 		/// <param name="collectionOfPhotosTaken">削除された画像</param>
 		/// <returns></returns>
-		public async Task DiscardImageAsync(string projectCode, List<string> photoPathList)
+		public async Task DiscardImageAsync(List<string> photoPathList)
 		{
 			List<HR03SYAS> hr03List = new List<HR03SYAS>();
 			foreach (var path in photoPathList)
@@ -557,13 +559,15 @@ namespace Aiko.Services.Services
 		}
 
 		/// <summary>
-		/// データが変更されたかどうか
+		/// データが変化したかどうかを比較する
 		/// </summary>
-		/// <returns></returns>
-		public bool IsDataChanged()
+		/// <param name="isCompareNum">数値の比較を行うかどうか</param>
+		/// <returns>true:データが変更されました、false:データは変更されていません</returns>
+		public bool IsDataChanged(bool isCompareNum = true)
 		{
-			return CompareData();
+			return CompareData(isCompareNum);
 		}
+
 		#endregion
 
 		#region プライベート処理方法
@@ -792,8 +796,9 @@ namespace Aiko.Services.Services
 		/// <summary>
 		/// データが変化したかどうかを比較する
 		/// </summary>
-		/// <returns></returns>
-		bool CompareData()
+		/// <param name="isCompareNum">数値の比較を行うかどうか</param>
+		/// <returns>true:データが変更されました、false:データは変更されていません</returns>
+		bool CompareData(bool isCompareNum =true)
 		{
 			foreach (var key in _inspectionGroups.Keys)
 			{
@@ -820,9 +825,13 @@ namespace Aiko.Services.Services
 					if (currentList[i].HR02011 != originalList[i].HR02011) return true;
 					if (currentList[i].HR02019 != originalList[i].HR02019) return true;
 					if (currentList[i].HM13009 != originalList[i].HM13009) return true;
-					if (currentList[i].Num != originalList[i].Num) return true;
-					if (currentList[i].LocalPicNum != originalList[i].LocalPicNum) return true;
-					if (currentList[i].UsedNum != originalList[i].UsedNum) return true;
+					
+					if (isCompareNum)
+					{   if (currentList[i].Num != originalList[i].Num) return true;
+						if (currentList[i].LocalPicNum != originalList[i].LocalPicNum) return true;
+						if (currentList[i].UsedNum != originalList[i].UsedNum) return true;
+					}
+					
 					if (currentList[i].HR02013 != originalList[i].HR02013) return true;
 					if (currentList[i].HR02014 != originalList[i].HR02014) return true;
 					if (currentList[i].HR02015 != originalList[i].HR02015) return true;

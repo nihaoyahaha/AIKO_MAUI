@@ -30,9 +30,6 @@ public partial class CheckPointDetailPage : ContentPage
         base.OnAppearing();
         Shell.SetTitleView(this, null);
 
-        _toolManager = new InkToolManager();
-        _toolManager.TextEditRequested += OnTextEditRequested;
-
         await LoadTypeface("ヒラギノ角ゴシック");
         await LoadTypeface("ヒラギノ明朝 ProN");
         await LoadTypeface("ヒラギノ丸ゴ ProN");
@@ -58,6 +55,9 @@ public partial class CheckPointDetailPage : ContentPage
 
         // 订阅 VM 的属性变更通知
         _vm.PropertyChanged += OnViewModelPropertyChanged;
+
+        _toolManager = new InkToolManager();
+        _toolManager.TextEditRequested += OnTextEditRequested;
 
         MainGridView.SizeChanged += (s, e) =>
         {

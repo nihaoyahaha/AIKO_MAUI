@@ -18,6 +18,8 @@ namespace Aiko.Common.InkTools.InkToolsList
 
         public override void OnDown(SKPoint point, SKCanvasView canvasView)
         {
+            _manager.Status = InkStatusType.Moving;
+
             _selectedStroke = HitTest(point);
             if (_selectedStroke == null) return;
 
@@ -40,15 +42,21 @@ namespace Aiko.Common.InkTools.InkToolsList
         }
         public override void OnUp(SKPoint point, SKCanvasView canvasView)
         {
+            _manager.Status = InkStatusType.Idle;
+
             if (_selectedStroke == null) return;
 
             _manager.CommitMove(_selectedStroke, _cumulativeOffset);
+            currentStroke = null;
             _selectedStroke = null;
 
             canvasView.InvalidateSurface();
         }
 
         public override void Draw(SKCanvas canvas, InkStroke stroke) { }
+
+        //public override InkStroke? GetCurrentTempStroke() => _selectedStroke;
+        public InkStroke? GetSelectedStroke() => _selectedStroke;
 
         public void TranslateStroke(InkStroke stroke, SKPoint offset)
         {

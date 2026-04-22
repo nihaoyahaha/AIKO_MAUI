@@ -31,9 +31,14 @@ public class AikoAppContext
 	public string WorkCD { get; set; }
 
 	/// <summary>
-	/// 工事名
+	/// 工事名(携帯工事コード)
 	/// </summary>
 	public string WorkName { get; set; }
+
+	/// <summary>
+	/// 工事名(工事コードを携帯しない)
+	/// </summary>
+	public string WorkNameExcludeCode { get; set; }
 
 	/// <summary>
 	/// オペレータID

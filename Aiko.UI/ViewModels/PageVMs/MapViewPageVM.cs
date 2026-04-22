@@ -123,13 +123,6 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// </summary>
     private Dictionary<string, int> dicHR02005 = new Dictionary<string, int>();
 
-    /// <summary>
-    /// 底图裁剪缓存。
-    /// Key 使用地图编码，Value 保存最近一次裁剪后的图片信息，
-    /// 这样在地图之间来回切换时可以直接复用结果，避免重复裁剪。
-    /// </summary>
-    private readonly Dictionary<string, CroppedMapImageCache> _croppedMapImageCache = new();
-
     // アイテムテーブルを取得する
     private List<ITEMMETA> hr01ItemList = new List<ITEMMETA>();
 
@@ -204,54 +197,6 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
     private List<HM14GUIDANDHM20> _guideRawX = new();
     private List<HM14GUIDANDHM20> _guideRawY = new();
-
-    /// <summary>
-    /// Guide 延迟加载版本号。
-    /// 每次切换地图时递增，用来丢弃已经过期的异步加载结果。
-    /// </summary>
-    private int _guideLoadVersion = 0;
-
-    /// <summary>
-    /// 裁剪后底图缓存实体。
-    /// </summary>
-    private sealed class CroppedMapImageCache
-    {
-        /// <summary>
-        /// 当前缓存对应的原始文件路径。
-        /// </summary>
-        public string FilePath { get; init; } = string.Empty;
-
-        /// <summary>
-        /// 当前缓存对应的文件最后写入时间，用于文件变更时自动失效。
-        /// </summary>
-        public DateTime LastWriteTimeUtc { get; init; }
-
-        /// <summary>
-        /// 当前缓存对应的裁剪区域 X。
-        /// </summary>
-        public int X { get; init; }
-
-        /// <summary>
-        /// 当前缓存对应的裁剪区域 Y。
-        /// </summary>
-        public int Y { get; init; }
-
-        /// <summary>
-        /// 当前缓存对应的裁剪宽度。
-        /// </summary>
-        public int Width { get; init; }
-
-        /// <summary>
-        /// 当前缓存对应的裁剪高度。
-        /// </summary>
-        public int Height { get; init; }
-
-        /// <summary>
-        /// 裁剪后的 PNG 字节数据。
-        /// 这里缓存字节而不是直接缓存 ImageSource，避免重复使用同一个流对象。
-        /// </summary>
-        public byte[] ImageBytes { get; init; } = Array.Empty<byte>();
-    }
 
 
 
@@ -686,18 +631,17 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task MapSelectedIndexChanged()
     {
-        int currentGuideLoadVersion = ++_guideLoadVersion;
-
         ProckSelectIndex = Procks.Count > 0 ? 0 : -1;
 
-        await InitCboHM07Async();
-
-        //部位
-        await InitCboHM06Async();
-
-        SetPickersEnable();
-
         string mapCode = Maps[MapSelectIndex].Value;
+
+        // 切图前先清空旧 Guide 和旧图元显示，避免新底图自适应时仍看到上一张地图的数据。
+        Guide = new ObservableCollection<ListItem>();
+        GuideSelectIndex = -1;
+        GuideXItems = new List<GuideDrawItem>();
+        GuideYItems = new List<GuideDrawItem>();
+        GuideY2Items = new List<GuideDrawItem>();
+        WeakReferenceMessenger.Default.Send("", "PrepareMapSwitchToken");
 
         if (mapCode != "")
         {
@@ -736,7 +680,37 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
             if (File.Exists(imagePath))
             {
-                ImageSource = await GetOrCreateCroppedMapImageAsync(mapCode, imagePath, drSelect);
+                int x = 0;
+                int y = 0;
+                // 表示範囲のwidth
+                int width = Convert.ToInt32(drSelect.HM04009);
+                // 表示範囲のheight
+                int height = Convert.ToInt32(drSelect.HM04010);
+
+                // 表示範囲のstart位置のX
+                if (drSelect.HM04007 < 0)
+                {
+                    x = 0;
+                    width = Convert.ToInt32(drSelect.HM04009 + drSelect.HM04007);
+                }
+                else
+                {
+                    x = Convert.ToInt32(drSelect.HM04007);
+                }
+                // 表示範囲のstart位置のY
+                if (drSelect.HM04008 < 0)
+                {
+                    y = 0;
+                    height = Convert.ToInt32(drSelect.HM04010 + drSelect.HM04008);
+                }
+                else
+                {
+                    y = Convert.ToInt32(drSelect.HM04008);
+                }
+
+                // 先切换底图，让页面优先完成一次自适应。
+                ImageSource = await CropImageAsync(imagePath, x, y, width, height);
+                WeakReferenceMessenger.Default.Send("", "RefreshMapToken");
 
                 // 「マップビュー」を表示する。
                 //imgMap.Visibility = Visibility.Visible;
@@ -744,22 +718,34 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             else
             {
                 ImageSource = "";
+                WeakReferenceMessenger.Default.Send("", "RefreshMapToken");
             }
         }
         else
         {
             ImageSource = "";
+            WeakReferenceMessenger.Default.Send("", "RefreshMapToken");
         }
 
-        // 先清空上一张地图残留的 Guide，让底图和点位优先显示。
-        ClearGuideDisplayState();
+        await InitCboHM07Async();
+
+        // 部位依赖工区，在底图切换完成后再初始化。
+        await InitCboHM06Async();
+
+        SetPickersEnable();
+
+        // マップガイドヘッダマスター
+        Guide = await Service.GetHM20GUIDHEADNUMList(mapCode);
+        GuideSelectIndex = 0;
+
 
         await GetdataSource();
+        // 图元数据准备完成后，仅刷新覆盖内容，不再重新触发底图自适应。
+        WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
 
-        WeakReferenceMessenger.Default.Send("", "RefreshMapToken");
+        await LoadGuideDataAsync();
 
-        // 首屏渲染完成后再异步加载 Guide，避免地图切换时首屏等待标尺数据。
-        _ = LoadGuideAfterMapRenderedAsync(mapCode, currentGuideLoadVersion);
+        WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
     }
 
     /// <summary>
@@ -836,151 +822,9 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     }
 
     /// <summary>
-    /// 根据地图信息获取裁剪后的底图，命中缓存时直接复用。
-    /// </summary>
-    /// <param name="mapCode">地图编码</param>
-    /// <param name="filePath">原始底图路径</param>
-    /// <param name="mapInfo">当前地图信息</param>
-    /// <returns></returns>
-    private async Task<ImageSource> GetOrCreateCroppedMapImageAsync(string mapCode, string filePath, HM04MAPM mapInfo)
-    {
-        (int x, int y, int width, int height) = GetMapCropArea(mapInfo);
-        DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filePath);
-
-        if (_croppedMapImageCache.TryGetValue(mapCode, out CroppedMapImageCache cache)
-            && string.Equals(cache.FilePath, filePath, StringComparison.OrdinalIgnoreCase)
-            && cache.LastWriteTimeUtc == lastWriteTimeUtc
-            && cache.X == x
-            && cache.Y == y
-            && cache.Width == width
-            && cache.Height == height
-            && cache.ImageBytes.Length > 0)
-        {
-            return CreateImageSourceFromBytes(cache.ImageBytes);
-        }
-
-        byte[] imageBytes = await CropImageToBytesAsync(filePath, x, y, width, height);
-
-        _croppedMapImageCache[mapCode] = new CroppedMapImageCache
-        {
-            FilePath = filePath,
-            LastWriteTimeUtc = lastWriteTimeUtc,
-            X = x,
-            Y = y,
-            Width = width,
-            Height = height,
-            ImageBytes = imageBytes
-        };
-
-        return CreateImageSourceFromBytes(imageBytes);
-    }
-
-    /// <summary>
-    /// 根据地图显示范围计算裁剪区域。
-    /// </summary>
-    /// <param name="mapInfo">当前地图信息</param>
-    /// <returns></returns>
-    private static (int X, int Y, int Width, int Height) GetMapCropArea(HM04MAPM mapInfo)
-    {
-        int x = 0;
-        int y = 0;
-
-        // 表示範囲のwidth
-        int width = Convert.ToInt32(mapInfo.HM04009);
-        // 表示範囲のheight
-        int height = Convert.ToInt32(mapInfo.HM04010);
-
-        // 表示範囲のstart位置のX
-        if (mapInfo.HM04007 < 0)
-        {
-            x = 0;
-            width = Convert.ToInt32(mapInfo.HM04009 + mapInfo.HM04007);
-        }
-        else
-        {
-            x = Convert.ToInt32(mapInfo.HM04007);
-        }
-
-        // 表示範囲のstart位置のY
-        if (mapInfo.HM04008 < 0)
-        {
-            y = 0;
-            height = Convert.ToInt32(mapInfo.HM04010 + mapInfo.HM04008);
-        }
-        else
-        {
-            y = Convert.ToInt32(mapInfo.HM04008);
-        }
-
-        return (x, y, width, height);
-    }
-
-    /// <summary>
-    /// 根据缓存的字节数据创建可重复使用的 ImageSource。
-    /// </summary>
-    /// <param name="imageBytes">图片字节</param>
-    /// <returns></returns>
-    private static ImageSource CreateImageSourceFromBytes(byte[] imageBytes)
-    {
-        return ImageSource.FromStream(() => new MemoryStream(imageBytes, writable: false));
-    }
-
-    /// <summary>
-    /// 清空当前 Guide 的显示状态，避免切图过程中继续显示上一张地图的标尺。
-    /// </summary>
-    private void ClearGuideDisplayState()
-    {
-        Guide = new ObservableCollection<ListItem>();
-        GuideSelectIndex = -1;
-        GuideXItems = new List<GuideDrawItem>();
-        GuideYItems = new List<GuideDrawItem>();
-        GuideY2Items = new List<GuideDrawItem>();
-        _guideRawX.Clear();
-        _guideRawY.Clear();
-
-        WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
-    }
-
-    /// <summary>
-    /// 在地图首屏渲染后异步加载 Guide 数据。
-    /// </summary>
-    /// <param name="mapCode">当前地图编码</param>
-    /// <param name="guideLoadVersion">本次加载版本号</param>
-    /// <returns></returns>
-    private async Task LoadGuideAfterMapRenderedAsync(string mapCode, int guideLoadVersion)
-    {
-        // 先让出当前消息循环，优先把底图和图元刷新到界面上。
-        await Task.Yield();
-
-        if (guideLoadVersion != _guideLoadVersion)
-            return;
-
-        var guideHeaders = await Service.GetHM20GUIDHEADNUMList(mapCode);
-
-        if (guideLoadVersion != _guideLoadVersion)
-            return;
-
-        Guide = guideHeaders;
-        GuideSelectIndex = guideHeaders.Count > 0 ? 0 : -1;
-
-        await LoadGuideDataAsync(guideLoadVersion);
-
-        if (guideLoadVersion != _guideLoadVersion)
-            return;
-
-        WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
-    }
-
-    /// <summary>
     /// 使用 SkiaSharp 裁剪图片
     /// </summary>
-    /// <param name="filePath">原始图片路径</param>
-    /// <param name="x">裁剪起点 X</param>
-    /// <param name="y">裁剪起点 Y</param>
-    /// <param name="width">裁剪宽度</param>
-    /// <param name="height">裁剪高度</param>
-    /// <returns></returns>
-    private async Task<byte[]> CropImageToBytesAsync(string filePath, int x, int y, int width, int height)
+    private async Task<ImageSource> CropImageAsync(string filePath, int x, int y, int width, int height)
     {
         return await Task.Run(() =>
         {
@@ -1012,7 +856,9 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
             var memoryStream = new MemoryStream();
             data.SaveTo(memoryStream);
-            return memoryStream.ToArray();
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            return ImageSource.FromStream(() => memoryStream);
         });
     }
 
@@ -1042,19 +888,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         //マップコード
         hr01DC.HR01002 = mapCode;
 
-        // 这四组数据彼此独立，改为并行查询以缩短地图切换等待时间。
-        var hr02005Task = Service.GetHR02005(hr01DC, procksCode.Trim());
-        var hr01ItemListTask = Service.GetHR01ITEMcodeList(hr01DC);
-        var picCountTask = Service.GetPicCount(procksCode.Trim());
-        var polygonListTask = Service.GetHR05KOKUMINFOListByMap(mapCode);
-
-        await Task.WhenAll(hr02005Task, hr01ItemListTask, picCountTask, polygonListTask);
-
         // 获取每个确认点的图标颜色状态
-        dicHR02005 = await hr02005Task;
+        dicHR02005 = await Service.GetHR02005(hr01DC, procksCode.Trim());
 
         // アイテムテーブルを取得する
-        hr01ItemList = await hr01ItemListTask;
+        hr01ItemList = await Service.GetHR01ITEMcodeList(hr01DC);
 
         List<ITEMMETA> dataList = hr01ItemList.ToList();
 
@@ -1071,12 +909,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         }
 
         // 採用写真枚数/写真枚数
-        dicPicCount = await picCountTask;
-
-        // 预先把当前地图的工区多边形按确认点编码分组，避免 foreach 内部反复查库。
-        Dictionary<string, List<HR05KOKUMINFO>> polygonDictionary = (await polygonListTask)
-            .GroupBy(p => p.HR05002?.Trim() ?? string.Empty)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        dicPicCount = await Service.GetPicCount(procksCode.Trim());
 
         Assembly assembly = GetType().GetTypeInfo().Assembly;
 
@@ -1175,10 +1008,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
                 dictionaryKoKu.Add(item.HR01003.TrimEnd(), strName);
 
-                // 直接从当前地图的多边形缓存中取值，不再逐个工区查询数据库。
-                string polygonKey = item.HR01003.TrimEnd();
-                polygonDictionary.TryGetValue(polygonKey, out List<HR05KOKUMINFO> datalist05);
-                datalist05 ??= new List<HR05KOKUMINFO>();
+                //List<int> lst = numberToArgb(item.HR01021);
+
+                HR05KOKUMINFO hr05DC = new HR05KOKUMINFO();
+                hr05DC.HR05001 = item.HR01001.Trim();
+                hr05DC.HR05002 = item.HR01003.Trim();
+                List<HR05KOKUMINFO> datalist05 =await Service.GetHR05KOKUMINFOList(hr05DC);
 
                 //itemDictionary.Add(item.HR01003.TrimEnd(), new ControlObject(strName, null, 0, datalist05));
 
@@ -1422,7 +1257,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task GuideSelectedIndexChanged()
     {
-        await LoadGuideDataAsync(_guideLoadVersion);
+        await LoadGuideDataAsync();
         WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
     }
 
@@ -1433,28 +1268,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// <returns></returns>
     public async Task LoadGuideDataAsync()
     {
-        await LoadGuideDataAsync(_guideLoadVersion);
-    }
-
-    /// <summary>
-    /// 读取并生成当前地图的全部标尺绘制数据。
-    /// 带版本号校验，避免旧地图的异步结果覆盖当前界面。
-    /// </summary>
-    /// <param name="guideLoadVersion">本次加载版本号</param>
-    /// <returns></returns>
-    private async Task LoadGuideDataAsync(int guideLoadVersion)
-    {
-        List<GuideDrawItem> guideXItems = new();
-        List<GuideDrawItem> guideYItems = new();
-        List<GuideDrawItem> guideY2Items = new();
+        GuideXItems.Clear();
+        GuideYItems.Clear();
+        GuideY2Items.Clear();
 
         if (CurrentMap == null || MapSelectIndex < 0 || GuideSelectIndex < 0 || Maps.Count == 0 || Guide.Count == 0)
-        {
-            GuideXItems = guideXItems;
-            GuideYItems = guideYItems;
-            GuideY2Items = guideY2Items;
             return;
-        }
 
         string mapCode = Maps[MapSelectIndex].Value;
         int guideNo = int.Parse(Guide[GuideSelectIndex].Value);
@@ -1472,13 +1291,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
             _guideRawX = await Service.GetHM14GUIDCODEList(hm14X);
 
-            if (guideLoadVersion != _guideLoadVersion)
-                return;
-
             var xStyle = await GetGuideStyleAsync(mapCode, 0, guideNo);
-
-            if (guideLoadVersion != _guideLoadVersion)
-                return;
 
             double picScaleX = GetPicScaleX(_guideRawX);
             picScaleX = double.IsInfinity(picScaleX) ? 0 : picScaleX;
@@ -1496,7 +1309,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     ? CalcXGuidePositionWhenAngleZero(item, CurrentMap)
                     : CalcXGuidePositionWhenAngleNotZero(item, CurrentMap, picScaleX);
 
-                guideXItems.Add(new GuideDrawItem
+                GuideXItems.Add(new GuideDrawItem
                 {
                     Text = item.HM14006?.Trim() ?? "",
                     LogicalValue = intEX,
@@ -1524,13 +1337,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
             _guideRawY = await Service.GetHM14GUIDCODEList(hm14Y);
 
-            if (guideLoadVersion != _guideLoadVersion)
-                return;
-
             var yStyle = await GetGuideStyleAsync(mapCode, 1, guideNo);
-
-            if (guideLoadVersion != _guideLoadVersion)
-                return;
 
             double picScaleY = GetPicScaleY(_guideRawY);
             picScaleY = double.IsInfinity(picScaleY) ? 0 : picScaleY;
@@ -1549,7 +1356,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     : CalcYGuidePositionWhenAngleNotZero(item, CurrentMap, picScaleY);
 
                 // Y方向也先不过滤，交给页面判断显示位置
-                guideYItems.Add(new GuideDrawItem
+                GuideYItems.Add(new GuideDrawItem
                 {
                     Text = item.HM14006?.Trim() ?? "",
                     LogicalValue = intEY,
@@ -1563,13 +1370,6 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                 });
             }
         }
-
-        if (guideLoadVersion != _guideLoadVersion)
-            return;
-
-        GuideXItems = guideXItems;
-        GuideYItems = guideYItems;
-        GuideY2Items = guideY2Items;
     }
 
     /// <summary>

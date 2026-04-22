@@ -1,4 +1,5 @@
 ﻿using Aiko.Common;
+using Aiko.UI.ViewModels.PageVMs;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace Aiko.UI;
@@ -6,6 +7,7 @@ namespace Aiko.UI;
 public partial class AppShell : Shell
 {
 	readonly AikoAppContext _appContext;
+	readonly string _title = "配筋検査システム";
 	public AppShell(AikoAppContext aikoApp)
 	{
 		_appContext = aikoApp;
@@ -30,6 +32,12 @@ public partial class AppShell : Shell
 				CurrentItem = flyout_login;
 				flyout_logout.IsVisible = false;
 			}
+		});
+
+		WeakReferenceMessenger.Default.Register<string, string>(this, "LoginOrLogoutToken", (_, message) =>
+		{
+			var isLogin = message == "login";
+			lb_title.Text = isLogin ? _appContext.WorkNameExcludeCode : _title;
 		});
 	}
 }

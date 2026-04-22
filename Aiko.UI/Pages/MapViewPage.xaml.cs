@@ -21,10 +21,20 @@ public partial class MapViewPage : ContentPage
 
     // 动态图层是否已初始化
     private bool _isShapesInitialized = false;
+    // 首屏优先图元（IMG）是否已初始化
+    private bool _isPriorityShapesInitialized = false;
+    // 次级图元（RECT/POLY/LBL）是否已初始化
+    private bool _isDeferredShapesInitialized = false;
     // 需要动态更新位置/尺寸的图元集合（来自 VM）
     private readonly List<MapShape> _dynamicShapes = new();
     // 由图元数据创建出的可交互控件缓存，避免重复创建图片/Windows 控件。
     private readonly Dictionary<MapShape, VisualElement> _shapeElements = new();
+    // 常用地图图标缓存，避免相同文件名反复创建 ImageSource。
+    private static readonly Dictionary<string, ImageSource> _mapIconSourceCache = new(StringComparer.OrdinalIgnoreCase);
+    // 延迟补绘次级图元时使用的取消令牌，避免快速切图时旧任务回写。
+    private CancellationTokenSource? _deferredShapeRenderCts;
+    // 首帧图元延迟显示取消令牌。
+    private CancellationTokenSource? _initialShapeDisplayCts;
 
     // 标尺标签对象池（减少频繁创建 Label 带来的抖动）
     private readonly List<Label> _guideXPool = new();
@@ -40,11 +50,19 @@ public partial class MapViewPage : ContentPage
     private long _lastGuideTick = 0;
     private const int GuideThrottleMs = 16;
 
+    // 是否已经完成当前底图的首次尺寸计算与首帧显示。
     private bool _isInitialImageReady = false;
+    // 地图切换时，先让底图单独显示一小段时间，再显示图元，避免视觉上出现“工区先于底图”。
+    private bool _deferDynamicShapeDisplay = false;
+    // Skia 绘制日文字体缓存，避免重复从资源加载。
     private static SKTypeface? _jpTypeface;
 
+    // 获取底图原始尺寸时的重试次数。
     private const int ImageSizeRetryCount = 10;
+    // 每次重试之间的等待毫秒数。
     private const int ImageSizeRetryDelayMs = 50;
+    // 底图先显示后，图元再延迟出现的毫秒数。
+    private const int InitialShapeDisplayDelayMs = 80;
 
     /// <summary>
     /// 需要跟随主题刷新的 Picker 集合
@@ -228,6 +246,9 @@ public partial class MapViewPage : ContentPage
 
     }
 
+    /// <summary>
+    /// 异步加载日文字体，并在加载完成后刷新 Skia 叠加层。
+    /// </summary>
     private async Task LoadTypefaceAsync()
     {
         if (_jpTypeface != null)
@@ -249,15 +270,27 @@ public partial class MapViewPage : ContentPage
         // 修改底图后：清空旧图元并重新触发底图加载流程
         WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshMapToken", (_, _) =>
         {
+            BeginMapVisualRefresh();
             _isShapesInitialized = false;
+            _isPriorityShapesInitialized = false;
+            _isDeferredShapesInitialized = false;
             ClearDynamicElements();
-            OnContainerImgLoaded(null, EventArgs.Empty);
+
+            // 等到底图绑定值写入到 Image 控件后，再主动启动一次尺寸探测，
+            // 避免切图瞬间直接拿到旧底图尺寸。
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                await Task.Yield();
+                OnContainerImgLoaded(ContainerImg, EventArgs.Empty);
+            });
         });
 
         // 修改配筋点和工区后：清空并按当前尺寸重绘图元
         WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshMapContentToken", (_, _) =>
         {
             _isShapesInitialized = false;
+            _isPriorityShapesInitialized = false;
+            _isDeferredShapesInitialized = false;
             ClearDynamicElements();
             UpdateShapes(showW, showH);
         });
@@ -283,10 +316,38 @@ public partial class MapViewPage : ContentPage
     }
 
     /// <summary>
+    /// 开始一次地图切换的视觉刷新。
+    /// 先整体隐藏缩放容器，等待新底图尺寸与图元都准备好后再一起显示，
+    /// 避免出现“工区先显示、底图后显示”的顺序问题。
+    /// </summary>
+    private void BeginMapVisualRefresh()
+    {
+        _initialShapeDisplayCts?.Cancel();
+        _initialShapeDisplayCts?.Dispose();
+        _initialShapeDisplayCts = null;
+
+        _isInitialImageReady = false;
+        _deferDynamicShapeDisplay = true;
+
+        // 这里不再把整个底图层隐藏，避免尺寸探测失败时页面只剩 Guide。
+        // 图元是否显示仍由 _deferDynamicShapeDisplay 控制。
+        ContainerImg.Opacity = 1;
+        pinchToZoom.Opacity = 1;
+    }
+
+    /// <summary>
     /// 清理动态添加到 ZoomLayer 的元素（保留 XAML 中定义的底图控件）
     /// </summary>
     private void ClearDynamicElements()
     {
+        _initialShapeDisplayCts?.Cancel();
+        _initialShapeDisplayCts?.Dispose();
+        _initialShapeDisplayCts = null;
+
+        _deferredShapeRenderCts?.Cancel();
+        _deferredShapeRenderCts?.Dispose();
+        _deferredShapeRenderCts = null;
+
         var itemsToRemove = ZoomLayer.Children
             .Where(c => c != ContainerImg)
             .ToList();
@@ -324,6 +385,25 @@ public partial class MapViewPage : ContentPage
     }
 
     /// <summary>
+    /// 获取可复用的地图图标 ImageSource。
+    /// 常用确认点和工区图标文件名固定且重复率高，适合直接缓存。
+    /// </summary>
+    /// <param name="imageSource"></param>
+    /// <returns></returns>
+    private static ImageSource GetOrCreateMapIconSource(string imageSource)
+    {
+        if (string.IsNullOrWhiteSpace(imageSource))
+            return string.Empty;
+
+        if (_mapIconSourceCache.TryGetValue(imageSource, out var cachedSource))
+            return cachedSource;
+
+        ImageSource createdSource = ImageSource.FromFile(imageSource);
+        _mapIconSourceCache[imageSource] = createdSource;
+        return createdSource;
+    }
+
+    /// <summary>
     /// 根据图元数据创建图片控件。
     /// </summary>
     /// <param name="shape"></param>
@@ -332,7 +412,7 @@ public partial class MapViewPage : ContentPage
     {
         var image = new Image
         {
-            Source = shape.ImageSource,
+            Source = GetOrCreateMapIconSource(shape.ImageSource),
             HorizontalOptions = LayoutOptions.Start,
             VerticalOptions = LayoutOptions.Start,
             Aspect = Aspect.AspectFill,
@@ -427,7 +507,8 @@ public partial class MapViewPage : ContentPage
     }
 
     /// <summary>
-    /// 图片加载
+    /// 底图控件加载后，读取原始像素尺寸并驱动页面进入实际布局流程。
+    /// 这里会重试几次，兼容 WinUI 下图片异步解码较慢的情况。
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
@@ -455,6 +536,9 @@ public partial class MapViewPage : ContentPage
         }
     }
 
+    /// <summary>
+    /// 根据底图原始尺寸和当前容器大小，计算页面实际显示尺寸并更新图层布局。
+    /// </summary>
     private void UpdateImageDimensions()
     {
         if (originalWidth <= 0 || originalHeight <= 0)
@@ -487,8 +571,41 @@ public partial class MapViewPage : ContentPage
             _isInitialImageReady = true;
             ContainerImg.Opacity = 1;
             pinchToZoom.Opacity = 1;
+            ScheduleInitialShapeDisplay();
         }
 
+    }
+
+    /// <summary>
+    /// 底图首帧显示后，稍微延迟再显示图元，避免图元比底图更早被用户感知。
+    /// </summary>
+    private void ScheduleInitialShapeDisplay()
+    {
+        if (!_deferDynamicShapeDisplay)
+            return;
+
+        _initialShapeDisplayCts?.Cancel();
+        _initialShapeDisplayCts?.Dispose();
+        _initialShapeDisplayCts = new CancellationTokenSource();
+        var token = _initialShapeDisplayCts.Token;
+
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            try
+            {
+                await Task.Delay(InitialShapeDisplayDelayMs, token);
+
+                if (token.IsCancellationRequested)
+                    return;
+
+                _deferDynamicShapeDisplay = false;
+                UpdateShapes(showW, showH);
+            }
+            catch (OperationCanceledException)
+            {
+                // 页面切换过快时直接忽略。
+            }
+        });
     }
 
     /// <summary>
@@ -520,33 +637,96 @@ public partial class MapViewPage : ContentPage
         return Size.Zero;
     }
 
-    // 1. 初始化形状（仅在图片首次加载成功后执行一次）
-    private void InitializeShapesOnce()
+    /// <summary>
+    /// 初始化首屏优先图元。
+    /// 当前仅包含图片类图元，优先保证确认点和工区图标尽快显示。
+    /// </summary>
+    private void InitializePriorityShapes()
     {
-        if (_isShapesInitialized) return;
+        if (_isPriorityShapesInitialized) return;
 
         foreach (var shape in _dynamicShapes)
         {
-#if WINDOWS
-            ZoomLayer.Children.Add(GetOrCreateElement(shape));
-#else
-            // iOS/Mac：仅图片元素放入 ZoomLayer，其它由 SKCanvasView 绘制
             if (shape.Type == MapShapeType.Image)
             {
                 ZoomLayer.Children.Add(GetOrCreateElement(shape));
             }
-#endif
         }
 
-        _isShapesInitialized = true;
+        _isPriorityShapesInitialized = true;
     }
 
+    /// <summary>
+    /// 初始化次级图元（RECT/POLY/LBL）。
+    /// 这部分不阻塞首屏，等底图和确认点先显示后再补上。
+    /// </summary>
+    private void InitializeDeferredShapes()
+    {
+        if (_isDeferredShapesInitialized) return;
 
+#if WINDOWS
+        foreach (var shape in _dynamicShapes)
+        {
+            if (shape.Type != MapShapeType.Image)
+            {
+                ZoomLayer.Children.Add(GetOrCreateElement(shape));
+            }
+        }
+#endif
 
-    // 2. 更新尺寸与重绘（在 UpdateImageDimensions 中调用）
+        _isDeferredShapesInitialized = true;
+        _isShapesInitialized = _isPriorityShapesInitialized && _isDeferredShapesInitialized;
+    }
+
+    /// <summary>
+    /// 延迟补绘次级图元，优先让首屏显示底图和确认点。
+    /// </summary>
+    private void ScheduleDeferredShapeInitialization()
+    {
+#if WINDOWS
+        if (_isDeferredShapesInitialized)
+            return;
+
+        _deferredShapeRenderCts?.Cancel();
+        _deferredShapeRenderCts?.Dispose();
+
+        _deferredShapeRenderCts = new CancellationTokenSource();
+        var token = _deferredShapeRenderCts.Token;
+
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            try
+            {
+                await Task.Yield();
+
+                if (token.IsCancellationRequested)
+                    return;
+
+                InitializeDeferredShapes();
+                UpdateShapes(showW, showH);
+            }
+            catch (OperationCanceledException)
+            {
+                // 页面已切换时忽略即可。
+            }
+        });
+#else
+        _isDeferredShapesInitialized = true;
+        _isShapesInitialized = _isPriorityShapesInitialized && _isDeferredShapesInitialized;
+#endif
+    }
+    /// <summary>
+    /// 按当前底图尺寸与缩放比例更新所有图元的位置、大小和显示状态。
+    /// </summary>
+    /// <param name="layerWidth"></param>
+    /// <param name="layerHeight"></param>
     private void UpdateShapes(double layerWidth, double layerHeight)
     {
-        if (!_isShapesInitialized) InitializeShapesOnce();
+        if (!_isPriorityShapesInitialized)
+        {
+            InitializePriorityShapes();
+        }
+
         if (originalWidth <= 0 || originalHeight <= 0) return;
 
         double sx = layerWidth / originalWidth;
@@ -558,8 +738,13 @@ public partial class MapViewPage : ContentPage
         foreach (var shape in _dynamicShapes)
         {
 #if WINDOWS
+            if (!_isDeferredShapesInitialized && shape.Type != MapShapeType.Image)
+            {
+                continue;
+            }
+
             var element = GetOrCreateElement(shape);
-            element.IsVisible = shape.IsVisible;
+            element.IsVisible = !_deferDynamicShapeDisplay && shape.IsVisible;
 
             if (shape.Type == MapShapeType.Image)
             {
@@ -612,7 +797,7 @@ public partial class MapViewPage : ContentPage
             if (shape.Type == MapShapeType.Image)
             {
                 var element = GetOrCreateElement(shape);
-                element.IsVisible = shape.IsVisible;
+                element.IsVisible = !_deferDynamicShapeDisplay && shape.IsVisible;
 
                 element.AnchorX = 0;
                 element.AnchorY = 0;
@@ -630,10 +815,15 @@ public partial class MapViewPage : ContentPage
 
         ZoomLayer.BatchCommit();
 
+        ScheduleDeferredShapeInitialization();
+
 #if !WINDOWS
         OverlayCanvas?.InvalidateSurface();
 #endif
     }
+    /// <summary>
+    /// 标尺标签所在的图层类型。
+    /// </summary>
     private enum GuideLayerKind
     {
         X,
@@ -777,6 +967,14 @@ public partial class MapViewPage : ContentPage
 
     /// <summary>
     /// 设置标尺标签在绝对布局中的位置和尺寸。
+    /// </summary>
+    /// <param name="lbl"></param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
+    /// <summary>
+    /// 设置标尺标签在 AbsoluteLayout 中的位置与尺寸。
     /// </summary>
     /// <param name="lbl"></param>
     /// <param name="x"></param>

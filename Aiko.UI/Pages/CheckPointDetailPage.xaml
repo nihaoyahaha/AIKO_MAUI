@@ -168,7 +168,7 @@
                                                  InputTransparent="False"
                                                  Source="arrowleft.png"
                                                  Command="{Binding PreviousImageCommand}"
-                                                 IsVisible="{Binding IsSwitchable}"
+                                                 IsVisible="{Binding IsPreviousSwitchable}"
                                                  BackgroundColor="#66ffffff"
                                                  CornerRadius="24"
                                                  WidthRequest="48"
@@ -180,7 +180,7 @@
                                                  Source="arrowleft.png"
                                                  Rotation="180"
                                                  Command="{Binding NextImageCommand}"
-                                                 IsVisible="{Binding IsSwitchable}"
+                                                 IsVisible="{Binding IsNextSwitchable}"
                                                  BackgroundColor="#66ffffff"
                                                  CornerRadius="24"
                                                  WidthRequest="48"
@@ -1147,7 +1147,7 @@
                 <StackLayout Spacing="15">
                     <!-- 颜色选择区域 -->
                     <StackLayout x:Name="ColorSection" Spacing="5">
-                        <Label Text="颜色" FontSize="12" Margin="0,0,0,5" VerticalTextAlignment="Center"/>
+                        <Label Text="色" FontSize="12" Margin="0,0,0,5" VerticalTextAlignment="Center"/>
 
                         <FlexLayout x:Name="ColorFlexLayout"
                                     BindableLayout.ItemsSource="{Binding ColorPalette}"
@@ -1196,7 +1196,7 @@
 
                     <!-- 笔画预览和大小设置区域 -->
                     <StackLayout x:Name="StrokePreviewSection" Spacing="10">
-                        <Label Text="预览" FontSize="12" VerticalTextAlignment="Center"/>
+                        <Label Text="サイズ" FontSize="12" VerticalTextAlignment="Center"/>
 
                         <Grid x:Name="StrokePreviewGrid" HeightRequest="80" BackgroundColor="Transparent" Margin="0,5">
                             <skia:SKCanvasView x:Name="StrokePreview"
@@ -1207,12 +1207,12 @@
                         </Grid>
 
                         <StackLayout x:Name="SizeSliderSection" IsVisible="False" Spacing="15">
-                            <Grid ColumnDefinitions="40,*,40" Margin="5,0,5,0">
-                                <Label Text="大小" 
+                            <Grid ColumnDefinitions="70,*,40" Margin="5,0,5,0">
+                                <Label Text="円形-半径" 
                                        Grid.Column="0"
                                        VerticalOptions="Center" 
                                        FontSize="14" 
-                                       WidthRequest="50"
+                                       WidthRequest="70"
                                        VerticalTextAlignment="Center"/>
                                 <Slider x:Name="SizeSlider" 
                                         Grid.Column="1"
@@ -1235,12 +1235,12 @@
                         <!-- 矩形大小设置区域 -->
                         <StackLayout x:Name="FixedRectSettingsSection" IsVisible="False" Spacing="15">
                             <StackLayout Spacing="10">
-                                <Grid ColumnDefinitions="40,*,40" Margin="5,0,5,0">
-                                    <Label Text="宽度" 
+                                <Grid ColumnDefinitions="70,*,40" Margin="5,0,5,0">
+                                    <Label Text="四角形-幅" 
                                            Grid.Column="0"
                                            VerticalOptions="Center" 
                                            FontSize="14" 
-                                           WidthRequest="50"
+                                           WidthRequest="70"
                                            VerticalTextAlignment="Center"/>
                                     <Slider x:Name="FixedRectWidthSlider" 
                                             Grid.Column="1"
@@ -1262,12 +1262,12 @@
                             </StackLayout>
 
                             <StackLayout Spacing="10">
-                                <Grid ColumnDefinitions="40,*,40" Margin="5,0,5,0">
-                                    <Label Text="高度" 
+                                <Grid ColumnDefinitions="70,*,40" Margin="5,0,5,0">
+                                    <Label Text="四角形-長" 
                                            Grid.Column="0"
                                            VerticalOptions="Center" 
                                            FontSize="14" 
-                                           WidthRequest="50"
+                                           WidthRequest="70"
                                            VerticalTextAlignment="Center"/>
                                     <Slider x:Name="FixedRectHeightSlider" 
                                             Grid.Column="1"
@@ -1293,7 +1293,7 @@
                     <!-- 字体预览和设置区域 -->
                     <StackLayout x:Name="FontPreviewSection" IsVisible="False" Spacing="15">
                         <StackLayout Spacing="5">
-                            <Label Text="预览" FontSize="12" VerticalTextAlignment="Center"/>
+                            <Label Text="サイズ" FontSize="12" VerticalTextAlignment="Center"/>
                             <Grid HeightRequest="60" BackgroundColor="Transparent">
                                 <skia:SKCanvasView x:Name="FontPreview"
                                                    HeightRequest="60"
@@ -1303,11 +1303,11 @@
                         </StackLayout>
 
                         <Grid ColumnDefinitions="Auto, *" Margin="0,10,0,0">
-                            <Label Text="字体" 
+                            <Label Text="フォント" 
                                    Grid.Column="0"
                                    VerticalOptions="Center" 
                                    FontSize="14" 
-                                   WidthRequest="50"
+                                   WidthRequest="75"
                                    VerticalTextAlignment="Center"/>
                             <Border Grid.Column="1" 
                                     Stroke="#D0D0D0" 
@@ -1332,11 +1332,11 @@
                         </Grid>
 
                         <Grid ColumnDefinitions="Auto, *" Margin="0,10,0,0">
-                            <Label Text="字号" 
+                            <Label Text="フォントサイズ" 
                                    Grid.Column="0"
                                    VerticalOptions="Center" 
-                                   FontSize="14" 
-                                   WidthRequest="50"
+                                   FontSize="10" 
+                                   WidthRequest="75"
                                    VerticalTextAlignment="Center"/>
                             <Border Grid.Column="1" 
                                     Stroke="#D0D0D0" 

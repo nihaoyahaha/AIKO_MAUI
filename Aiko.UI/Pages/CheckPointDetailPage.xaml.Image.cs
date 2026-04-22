@@ -126,7 +126,7 @@ public partial class CheckPointDetailPage : ContentPage
             PhotoCanvasView.InvalidateSurface();
             BlackboardCanvasView.InvalidateSurface();
 
-            _needsRedrawBackground = true;
+            _codeCache = null;
             InkCanvasView.InvalidateSurface();
 
             return;
@@ -155,7 +155,7 @@ public partial class CheckPointDetailPage : ContentPage
         PhotoCanvasView.InvalidateSurface();
         BlackboardCanvasView.InvalidateSurface();
 
-        _needsRedrawBackground = true;
+        _codeCache = null;
         InkCanvasView.InvalidateSurface();
     }
 

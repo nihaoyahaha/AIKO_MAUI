@@ -18,7 +18,6 @@ using System.Text.Json;
 using Windows.Devices.Enumeration;
 using Windows.Security.Authorization.AppCapabilityAccess;
 using static Microsoft.Maui.ApplicationModel.Permissions;
-
 #endif
 
 namespace Aiko.UI.ViewModels.PageVMs;
@@ -29,7 +28,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	public CheckPointPageVM(ICheckPointService service, ILogger<CheckPointPageVM> logger, IPopupService popupService) : base(logger, service)
 	{
 		_popupService = popupService;
-		WeakReferenceMessenger.Default.Register<string, string>(this, "TakePhotosToken", (page, message) => TakePhotos(message));
+		WeakReferenceMessenger.Default.Register<ProjectPhotoMessage, string>(this, "TakePhotosToken", (page, message) => TakePhotos(message));
 		WeakReferenceMessenger.Default.Register<string, string>(this, "DeletePhotosToken", (page, message) => DeletePhotos(message));
 	}
 
@@ -350,7 +349,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// <summary>
 	/// 撮影された写真コレクション
 	/// </summary>
-	private List<string> _photoPathList = new();
+	private List<ProjectPhotoMessage> _photoPathList = new();
 
 	/// <summary>
 	/// 前のページの名前
@@ -395,6 +394,10 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			{
 				_applyQuery_InspectionItemCode = _navigationParameter["InspectionItemCode"].ToString();
 			}
+			if(_navigationParameter.ContainsKey("ProjectPhotoList"))
+			{
+				_photoPathList = JsonSerializer.Deserialize<List<ProjectPhotoMessage>>(_navigationParameter["ProjectPhotoList"]?.ToString());
+			}
 		}
 	}
 
@@ -404,7 +407,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// 撮影した写真を追加する
 	/// </summary>
 	/// <param name="message"></param>
-	void TakePhotos(string message)
+	void TakePhotos(ProjectPhotoMessage message)
 	{
 		_photoPathList.Add(message);
 	}
@@ -415,7 +418,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// <param name="message"></param>
 	void DeletePhotos(string message)
 	{
-		_photoPathList.Remove(message);
+		_photoPathList.RemoveAll(x=>x.PhotoPath == message);
 	}
 
 	async Task InitializeRowLayoutAsync()
@@ -911,7 +914,8 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		string ErrMsg = ErrorMessage.ERRORPOP("CM01031");
 		var result = await DialogHelper.MessageDialogButton2(ErrMsg);
 		if (result == NCDialogResult.No) return false;
-		await Service.DiscardImageAsync(InspectionItemSelectedItem.HM13004, _photoPathList);
+		await Service.DiscardImageAsync( _photoPathList.Select(x=>x.PhotoPath).ToList());
+		_photoPathList.Clear();
 		return true;
 	}
 
@@ -943,7 +947,8 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			HR01001 = Service.AppContext.WorkCD,
 			HR01003 = Service.GetDanmTitle(),
 			Proc = Projects[ProjectSelectedIndex].Value,
-			Proj = InspectionItemSelectedItem.HM13004
+			Proj = InspectionItemSelectedItem.HM13004,
+			ProjectPhotoList = _photoPathList
 		};
 		var options = new JsonSerializerOptions
 		{
@@ -1089,7 +1094,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 			Confirmer = Service.AppContext.Name,
 		};
 		await Service.SetGreenBackgroundModelAsync(model);
-		Service.SetHM13004ToCameraService(InspectionItemSelectedItem.HM13004);
+		Service.SetProjectCodeAndInspectionItemCodeToCameraService(Projects[ProjectSelectedIndex].Value, InspectionItemSelectedItem.HM13004);
 		Service.SetInspectionItemToCameraService(InspectionItemSelectedItem);
 		await Service.GotoCameraPageAsync();
 	}
@@ -1326,7 +1331,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		try
 		{
 			if (!ValidateBeforeNavigateToDetails()) return;
-			if (Service.IsDataChanged())
+			if (Service.IsDataChanged(false))
 			{
 				var result = await DialogHelper.MessageDialogButton2("確認検査結果に変更があり、データを保存しますか？");
 				if (result == NCDialogResult.Yes)
@@ -1335,7 +1340,6 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 				}
 			}
 			var parameters = CreateNavigationParameterForCheckPointDetail();
-			_photoPathList.Clear();
 			Service.InitializeInspectionItem();
 			ProjectSelectedIndex = -1;
 			InspectionItems.Clear();
