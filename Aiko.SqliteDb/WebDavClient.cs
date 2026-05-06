@@ -11,9 +11,9 @@ namespace Aiko.SqliteDb;
 
 public class WebDavClient
 {
-	WebDavOptions _options;
-	string _authValue;
-	readonly IHttpClientFactory _httpClientFactory;
+	WebDavOptions _options = new();
+    string _authValue = string.Empty;
+    readonly IHttpClientFactory _httpClientFactory;
 	readonly ILogger<WebDavClient> _logger;
 	public WebDavClient(IHttpClientFactory httpClientFactory,
 		ILogger<WebDavClient> logger)
@@ -43,7 +43,8 @@ public class WebDavClient
 		try
 		{
 			var client = _httpClientFactory.CreateClient("WebDavClient");
-			client.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+			//デフォルトのタイムアウト制限をオフにする
+			client.Timeout = Timeout.InfiniteTimeSpan;
 
 			string url = BuildUrl(remotePath);
 			var request = new HttpRequestMessage(HttpMethod.Head, url);
@@ -78,9 +79,11 @@ public class WebDavClient
 	/// <returns>true：ダウンロード成功、false：ダウンロード失敗</returns>
 	public async Task<bool> DownloadAsync(string remotePath, string localFilePath)
 	{
+		//非アクティブタイムアウト時間
+		TimeSpan inactivityTimeout = TimeSpan.FromMinutes(2);
 		try
 		{
-			string directory = Path.GetDirectoryName(localFilePath);
+			string? directory = Path.GetDirectoryName(localFilePath);
 			if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
 			{
 				Directory.CreateDirectory(directory);
@@ -102,16 +105,31 @@ public class WebDavClient
 			}
 			response.EnsureSuccessStatusCode();
 
-			using var stream = await response.Content.ReadAsStreamAsync();
-			using var fileStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, useAsync: true);
-			await stream.CopyToAsync(fileStream, 8192);
+			using var remoteStream = await response.Content.ReadAsStreamAsync();
+			using var localStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, useAsync: true);
+
+			byte[] buffer = new byte[8192];
+			int bytesRead;
+
+			while (true)
+			{
+				using var cts = new CancellationTokenSource(inactivityTimeout);
+				try
+				{
+					bytesRead = await remoteStream.ReadAsync(buffer, 0, buffer.Length, cts.Token);
+				}
+				catch (OperationCanceledException)
+				{
+					_logger.LogError($"webdav-ダウンロード中にネットワークが長時間無応答でした: {remotePath}");
+					return false;
+				}
+
+				if (bytesRead == 0) break;
+
+				await localStream.WriteAsync(buffer, 0, bytesRead);
+			}
 
 			return true;
-		}
-		catch (OperationCanceledException)
-		{ 
-			_logger.LogError($"webdav-ネットワークが長時間応答しないため、ダウンロードが中断されました,ファイル{remotePath}");
-			return false;
 		}
 		catch (Exception ex)
 		{
@@ -144,12 +162,19 @@ public class WebDavClient
 			string url = BuildUrl(remoteFilePath);
 
 			var client = _httpClientFactory.CreateClient("WebDavClient");
-			client.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+			//デフォルトのタイムアウト制限をオフにする
+			client.Timeout = Timeout.InfiniteTimeSpan;
+
 			using var fileStream = new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, useAsync: true);
+			
 			var content = new StreamContent(fileStream);
-			var request = new HttpRequestMessage(HttpMethod.Put, url);
+			var request = new HttpRequestMessage(HttpMethod.Put, url)
+			{
+				Content = content,
+				Version = HttpVersion.Version11
+			};
+
 			request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", _authValue);
-			request.Content = content;
 
 			_logger.LogInformation($"アップロード中 {fileName} へ {remoteDirectory}...");
 			using var response = await client.SendAsync(request, ct);
@@ -188,7 +213,8 @@ public class WebDavClient
 			string url = BuildUrl(remoteFilePath);
 
 			var client = _httpClientFactory.CreateClient("WebDavClient");
-			client.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+			//デフォルトのタイムアウト制限をオフにする
+			client.Timeout = Timeout.InfiniteTimeSpan;
 
 			if (contentStream.CanSeek)
 			{
@@ -196,9 +222,12 @@ public class WebDavClient
 			}
 
 			using var content = new StreamContent(contentStream);
-			var request = new HttpRequestMessage(HttpMethod.Put, url);
+			var request = new HttpRequestMessage(HttpMethod.Put, url)
+			{
+				Content = content,
+				Version = HttpVersion.Version11
+			};
 			request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", _authValue);
-			request.Content = content;
 
 			_logger.LogInformation($"ストリームをアップロード中: {remoteFileName} へ {remoteDirectory}...");
 
@@ -226,7 +255,8 @@ public class WebDavClient
 		try
 		{
 			var client = _httpClientFactory.CreateClient("WebDavClient");
-			client.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+			//デフォルトのタイムアウト制限をオフにする
+			client.Timeout = Timeout.InfiniteTimeSpan;
 			string url = BuildUrl(remotePath);
 			var request = new HttpRequestMessage(HttpMethod.Delete, url);
 			request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", _authValue);

@@ -18,7 +18,7 @@ public partial class PunchListPopupVM : ObservableObject, IQueryAttributable
 	/// 指摘事項リスト
 	/// </summary>
 	[ObservableProperty]
-	private ObservableCollection<PunchListModel> _punchList = new();
+	public partial ObservableCollection<PunchListModel> PunchList { get; set; } = new();
 
 	public PunchListPopupVM(IPopupService popupService)
 	{

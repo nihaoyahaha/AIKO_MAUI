@@ -6,7 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace Aiko.UI.ViewModels.PageVMs;
 
@@ -20,61 +19,85 @@ public partial class LoginPageVM :Observablebase<LoginPageVM, ILoginService>
     /// 会社ID
     /// </summary>
     [ObservableProperty]
-    private string companyID ;
+    public partial string CompanyID { get; set; } = string.Empty;
 
     /// <summary>
     /// 会社名
     /// </summary>
     [ObservableProperty]
-    private string companyName;
-
-    /// <summary>
-    /// 会社code
-    /// </summary>
-    private string companyCode;
+    public partial string CompanyName { get;set; } = string.Empty;
 
     /// <summary>
     /// 用户ID
     /// </summary>
     [ObservableProperty]
-    private string userID;
+    public partial string UserID { get; set; } = string.Empty;
 
-    /// <summary>
-    /// 用户名
-    /// </summary>
-    [ObservableProperty]
-    private string userName;
-
-    /// <summary>
-    /// 用户code
-    /// </summary>
-    private string userCode;
+	/// <summary>
+	/// 用户名
+	/// </summary>
+	[ObservableProperty]
+    public partial string UserName { get; set; } = string.Empty;
 
     /// <summary>
     /// 现场集合
     /// </summary>
     [ObservableProperty]
-    ObservableCollection<ListItem> projects = new();
+    public partial ObservableCollection<ListItem> Projects { get; set; } = new();
 
     /// <summary>
     /// 选择的现场索引
     /// </summary>
     [ObservableProperty]
-    [CustomValidation(typeof(LoginPageVM), nameof(ValidateProjectSelectedIndex))]
-    private int projectSelectedIndex = -1;
+    public partial int ProjectSelectedIndex { get; set; } = -1;
 
     /// <summary>
     /// 密码
     /// </summary>
     [ObservableProperty]
-    [Required]
-    private string pwd ="";
+    public partial string Pwd { get; set; } = "";
 
 	/// <summary>
 	/// 是否记录会社ID、用户名ID
 	/// </summary>
 	[ObservableProperty]
-    private bool isSaveLoginInfo = true;
+    public partial bool IsSaveLoginInfo { get; set; } = true;
+
+	/// <summary>
+	/// 会社code
+	/// </summary>
+	private string companyCode;
+
+	/// <summary>
+	/// 用户code
+	/// </summary>
+	private string userCode;
+
+	/// <summary>
+	/// 页面加载
+	/// </summary>
+	/// <returns></returns>
+	[RelayCommand]
+	private async Task PageLoadedAsync()
+	{
+		try
+		{
+			Pwd = "";
+			IsSaveLoginInfo = Preferences.Default.Get("SaveLoginFlag", false);
+			if (IsSaveLoginInfo)
+			{
+				CompanyID = Preferences.Default.Get("CompanyID", "");
+				await CompanyIDUnfocused();
+				UserID = Preferences.Default.Get("UserID", "");
+				await UserIDUnfocused();
+			}
+			Logger.LogInformation("appが正常に起動しました");
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex.ToString());
+		}
+	}
 
 	/// <summary>
 	/// 会社IDがフォーカスを失う
@@ -109,11 +132,8 @@ public partial class LoginPageVM :Observablebase<LoginPageVM, ILoginService>
 	[RelayCommand]
     private async Task LoginAsync()
     {
-        ValidateAllProperties();
-        if (HasErrors)
-        {
-            return;
-        }
+        if (ProjectSelectedIndex < 0) return;
+
         CheckLoginDto checkLoginDto = new(
             UserCode: userCode,
             UserID:UserID,
@@ -145,56 +165,12 @@ public partial class LoginPageVM :Observablebase<LoginPageVM, ILoginService>
     }
 
     /// <summary>
-    /// 页面加载
-    /// </summary>
-    /// <returns></returns>
-    [RelayCommand]
-    private async Task PageLoadedAsync()
-    {
-        try
-        {
-            Pwd = "";
-
-			IsSaveLoginInfo = Preferences.Default.Get("SaveLoginFlag", false);
-            if (IsSaveLoginInfo)
-            {
-                CompanyID = Preferences.Default.Get("CompanyID", "");
-                await CompanyIDUnfocused();
-                UserID = Preferences.Default.Get("UserID", "");
-                await UserIDUnfocused();
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex.ToString());
-        }
-    }
-
-    /// <summary>
     /// 退出应用
     /// </summary>
     [RelayCommand]
     private void CloseApp()
     {
         Application.Current.Quit();
-    }
-
-    /// <summary>
-    /// 校验是否选择现场
-    /// </summary>
-    /// <param name="index">被验证的字段(ProjectSelectedIndex)</param>
-    /// <param name="context">验证上下文</param>
-    /// <returns></returns>
-    public static ValidationResult ValidateProjectSelectedIndex(int index, ValidationContext context)
-    {
-        if (index != -1)
-        {
-            return ValidationResult.Success;
-        }
-        else
-        {
-            return new("未选择现场");
-        }
     }
 
 }

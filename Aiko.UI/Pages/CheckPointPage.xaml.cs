@@ -112,20 +112,3 @@ public partial class CheckPointPage : ContentPage
 	}
 
 }
-
-public class MyDataTemplateSelector : DataTemplateSelector
-{
-	public DataTemplate? DataTemplateDark { get; set; }
-	public DataTemplate? DataTemplateLight { get; set; }
-
-	protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
-	{
-		var app = Application.Current;
-		if (app?.RequestedTheme == AppTheme.Dark)
-		{
-			return DataTemplateDark!;
-		}
-
-		return DataTemplateLight!;
-	}
-}

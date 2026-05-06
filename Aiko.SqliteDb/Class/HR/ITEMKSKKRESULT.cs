@@ -5,12 +5,12 @@ public class ITEMKSKKRESULT
     /// <summary>
     /// アイテムコード
     /// </summary>
-    public string HR01003 { get; set; }
+    public string HR01003 { get; set; } = string.Empty;
 
     /// <summary>
     /// 部位コード
     /// </summary>
-    public string HR01019 { get; set; }
+    public string HR01019 { get; set; } = string.Empty;
 
     /// <summary>
     /// 确认点检查结果值种类数量

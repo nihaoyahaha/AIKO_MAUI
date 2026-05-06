@@ -55,7 +55,6 @@ namespace Aiko.Common.InkTools.InkToolsList
 
         public override void Draw(SKCanvas canvas, InkStroke stroke) { }
 
-        //public override InkStroke? GetCurrentTempStroke() => _selectedStroke;
         public InkStroke? GetSelectedStroke() => _selectedStroke;
 
         public void TranslateStroke(InkStroke stroke, SKPoint offset)

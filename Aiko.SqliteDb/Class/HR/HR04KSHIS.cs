@@ -8,21 +8,21 @@ public class HR04KSHIS
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HR04001 { get; set; }
+	public string HR04001 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// アイテムコード
 	/// </summary>
-	public string HR04002 { get; set; }
+	public string HR04002 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// 確認項目コード
 	/// </summary>
-	public string HR04003 { get; set; }
+	public string HR04003 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	///  履歴No
 	/// </summary>
@@ -31,7 +31,7 @@ public class HR04KSHIS
     /// <summary>
     ///  値
     /// </summary>
-    public string HR04005 { get; set; }
+    public string HR04005 { get; set; } = string.Empty;
 
     /// <summary>
     /// 判定
@@ -46,7 +46,7 @@ public class HR04KSHIS
     /// <summary>
     /// 確認オペレータ
     /// </summary>
-    public string HR04008 { get; set; }
+    public string HR04008 { get; set; } = string.Empty;
 
     /// <summary>
     /// 指摘日
@@ -56,17 +56,17 @@ public class HR04KSHIS
     /// <summary>
     /// 指摘オペレータ
     /// </summary>
-    public string HR04010 { get; set; }
+    public string HR04010 { get; set; } = string.Empty;
 
     /// <summary>
     /// メモ
     /// </summary>
-    public string HR04011 { get; set; }
+    public string HR04011 { get; set; } = string.Empty;
 
     /// <summary>
     /// 処理方法
     /// </summary>
-    public string HR04012 { get; set; }
+    public string HR04012 { get; set; } = string.Empty;
 
     /// <summary>
     /// 写真枚数
@@ -81,11 +81,11 @@ public class HR04KSHIS
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HR04015 { get; set; }
+    public string HR04015 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HR04016 { get; set; }
+    public string HR04016 { get; set; } = string.Empty;
 }
 

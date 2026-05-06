@@ -20,52 +20,52 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 	}
 
 	[ObservableProperty]
-	private bool isEnableFlag = true;
+	public partial bool IsEnableFlag { get; set; } = true;
 
 	[ObservableProperty]
-	private bool _downLoadButtonIsEnabled = true;
+	public partial bool DownLoadButtonIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 进度值 (0.0 - 1.0)
 	/// </summary>
 	[ObservableProperty]
-	private double progress;
+	public partial double Progress { get; set; }
 
 	[ObservableProperty]
-	private string progressMessage;
+	public partial string ProgressMessage { get; set; }
 
 	[ObservableProperty]
-	private string percentText = "0%";
+	public partial string PercentText { get; set; } = "0%";
 
 	[ObservableProperty]
-	private bool isShowProgressGridFlag = false;
+	public partial bool IsShowProgressGridFlag { get; set; } = false;
 
 	[ObservableProperty]
-	private ObservableCollection<ListItem> _constructions = new();
+	public partial ObservableCollection<ListItem> Constructions { get; set; } = new();
 
 	[ObservableProperty]
-	private ListItem _selectedConstruction;
+	public partial ListItem SelectedConstruction { get; set; }
 
 	[ObservableProperty]
-	private bool _downLoadFrameIsVisible = false;
+	public partial bool DownLoadFrameIsVisible { get; set; } = false;
 
 	/// <summary>
 	/// 図面ファイルを含む
 	/// </summary>
 	[ObservableProperty]
-	private bool _isIncludeDrawingFile = false;
+	public partial bool IsIncludeDrawingFile { get; set; } = false;
 
 	/// <summary>
 	/// 写真ファイルを含む
 	/// </summary>
 	[ObservableProperty]
-	private bool _isIncludePhotoFile = false;
+	public partial bool IsIncludePhotoFile { get; set; } = false;
 
 	/// <summary>
 	/// 指定した時間内の写真をダウンロードするためのヒント
 	/// </summary>
 	[ObservableProperty]
-	private string _saveDaysMessageInfo = "";
+	public partial string SaveDaysMessageInfo { get; set; } = "";
 
 	// 总步骤数
 	private const int TotalSteps = 8;
@@ -156,7 +156,7 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 				ioExp = true;
 			}
 
-			Logger.LogError(ex, "DownloadPageVM");
+			Logger.LogError(ex.ToString(), "DownloadPageVM");
 		}
 		finally
 		{

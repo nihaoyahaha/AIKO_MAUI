@@ -17,17 +17,17 @@ public partial class PhotoLayer :ObservableObject
 	public ImageSource? PhotoBmp { get; set; }
 
 	[ObservableProperty]
-	private bool _greenBackgroundIsVisible;
+	public partial bool GreenBackgroundIsVisible { get; set; }
 
 	[ObservableProperty]
-	private bool _greenBackgroundIsChecked = false;
+	public partial bool GreenBackgroundIsChecked { get; set; } = false;
 
 	[ObservableProperty]
-	private bool _photoIsChecked = false;
+	public partial bool PhotoIsChecked { get; set; } = false;
 
-	public Thickness? Margin { get; set; }
-	public string? GreenWidth { get; set; }
-	public string? GreenHeight { get; set; }
-	public string? PhotoWidth { get; set; }
-	public string? PhotoHeight { get; set; }
+	public Thickness Margin { get; set; }
+	public string GreenWidth { get; set; } = string.Empty;
+	public string GreenHeight { get; set; } = string.Empty;
+	public string PhotoWidth { get; set; } = string.Empty;
+	public string PhotoHeight { get; set; } = string.Empty;
 }

@@ -3,86 +3,81 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using FFImageLoading.Maui;
 using SkiaSharp;
 using Svg;
-using Svg.Skia;
 
 namespace Aiko.Common.Models;
 
 public partial class InkImage : ObservableObject, IDisposable
 {
     [ObservableProperty]
-    private string _name;
+    public partial string Name { get; set; }
     [ObservableProperty]
-    private string _fullName;
+    public partial string FullName { get; set; }
     public string Code => Path.GetFileNameWithoutExtension(Name);
     public string Extension => Path.GetExtension(Name).ToLower();
     [ObservableProperty]
-    private DateTime _creationTime;
+    public partial DateTime CreationTime { get; set; }
     [ObservableProperty]
-    private DateTime _lastWriteTime;
+    public partial DateTime LastWriteTime { get; set; }
 
     [ObservableProperty]
-    private string _dirs;
+    public partial string Dirs { get; set; }
     [ObservableProperty]
-    private string _dirsDisplyName;
+    public partial string DirsDisplyName { get; set; }
     [ObservableProperty]
-    private string _comment;
+    public partial string Comment { get; set; }
     [ObservableProperty]
-    private string _date;
+    public partial string Date { get; set; }
     [ObservableProperty]
-    private string _creationDate;
+    public partial string CreationDate { get; set; }
     [ObservableProperty]
-    private string _author;
+    public partial string Author { get; set; }
+    [ObservableProperty]
+    public partial string SyncDate { get; set; }
+    [ObservableProperty]
+    public partial string SyncAuthor { get; set; }
 
     [ObservableProperty]
-    private string _syncDate;
-    [ObservableProperty]
-    private string _syncAuthor;
-
-    [ObservableProperty]
-    private string _sort;
+    public partial string Sort { get; set; }
 
     // 笔迹数据
     [ObservableProperty]
-    private List<InkStroke> _strokes;
-
-    public double Width => Bitmap?.Width ?? PhotoSvg?.Picture.CullRect.Width ?? 0;
-    public double Height => Bitmap?.Height ?? PhotoSvg?.Picture.CullRect.Height ?? 0;
+    public partial List<InkStroke> Strokes { get; set; }
+    [ObservableProperty]
+    public partial double Width { get; set; } = 0;
+    [ObservableProperty]
+    public partial double Height { get; set; } = 0;
 
     // 运行时渲染资源
     [ObservableProperty]
-    private SKBitmap _bitmap;
+    public partial SKBitmap? Bitmap { get; set; }
     [ObservableProperty]
-    private SKSvg _photoSvg;
+    public partial SKBitmap? PhotoBitmap { get; set; }
     [ObservableProperty]
-    private SKSvg _blackboardSvg;
-
+    public partial SKBitmap? BlackboardBitmap { get; set; }
     [ObservableProperty]
-    private bool _isBlackboardVisible = true;
+    public partial (float X, float Y, float Width, float Height) BlackboardBitmapRect { get; set; }
     [ObservableProperty]
-    private bool _isStrokesVisible = true;
-
+    public partial bool IsBlackboardVisible { get; set; } = true;
+    [ObservableProperty]
+    public partial bool IsStrokesVisible { get; set; } = true;
     public bool IsSvg => Extension == ".svg";
 
     [ObservableProperty]
-    private int _sign = 1;
+    public partial int Sign { get; set; } = 1;
+    [ObservableProperty]
+    public partial bool IsSelected { get; set; } = false;
 
     [ObservableProperty]
-    private bool _isSelected = false;
+    public partial bool IsDeleted { get; set; } = false;
 
     [ObservableProperty]
-    private bool _isDeleted = false;
-
-    [ObservableProperty]
-    private bool _isVisualized = false;
+    public partial bool IsVisualized { get; set; } = false;
 
     // 缓存刷新机制
     [ObservableProperty]
-    private string _cacheBuster = Guid.NewGuid().ToString();
+    public partial string CacheBuster { get; set; } = Guid.NewGuid().ToString();
     [ObservableProperty]
-    private bool _cacheUpdater = true;
-
-    [ObservableProperty]
-    private FFImageLoading.Work.LoadingPriority _priority = FFImageLoading.Work.LoadingPriority.Normal;
+    public partial bool CacheUpdater { get; set; } = true;
 
     // UI 绑定的图片源
     public ImageSource InkImageSource
@@ -93,7 +88,7 @@ public partial class InkImage : ObservableObject, IDisposable
 
             try
             {
-                string saltedKey = $"{FullName}?v={_cacheBuster}";
+                string saltedKey = $"{FullName}?v={CacheBuster}";
 
                 if (Extension == ".svg")
                 {
@@ -109,7 +104,7 @@ public partial class InkImage : ObservableObject, IDisposable
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Source生成失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Source generation failed: {ex.Message}");
                 return null;
             }
         }
@@ -131,40 +126,74 @@ public partial class InkImage : ObservableObject, IDisposable
     public async Task SetBitmap()
     {
         ClearBitmap();
-        await Task.Run(() =>
+
+        Width = 0;
+        Height = 0;
+
+        if (Extension == ".svg")
         {
-            if (Extension == ".svg")
+            byte[] svgBytes = await File.ReadAllBytesAsync(FullName);
+            var svgDoc = SvgDocument.Open<SvgDocument>(new MemoryStream(svgBytes));
+
+            if (svgDoc == null) return;
+
+            var photoElement = svgDoc.GetElementById("photo") as SvgImage;
+            if (photoElement != null)
             {
-                byte[] svgBytes = File.ReadAllBytes(FullName);
-
-                var photoSvgDoc = SvgDocument.Open<SvgDocument>(new MemoryStream(svgBytes));
-                var blackboardSvgDoc = SvgDocument.Open<SvgDocument>(new MemoryStream(svgBytes));
-
-                FilterElements(photoSvgDoc, ["photo"]);
-                SetElementVisible(photoSvgDoc, "photo");
-                PhotoSvg = new SKSvg();
-                PhotoSvg.FromSvgDocument(photoSvgDoc);
-
-                FilterElements(blackboardSvgDoc, ["blackboard"]);
-                SetElementVisible(blackboardSvgDoc, "blackboard");
-                BlackboardSvg = new SKSvg();
-                BlackboardSvg.FromSvgDocument(blackboardSvgDoc);
+                PhotoBitmap = GetBitmapFromSvgImage(photoElement);
             }
-            else
+
+            var blackboardElement = svgDoc.GetElementById("blackboard") as SvgImage;
+            if (blackboardElement != null)
             {
-                Bitmap = SKBitmap.Decode(FullName);
+                BlackboardBitmap = GetBitmapFromSvgImage(blackboardElement);
+                BlackboardBitmapRect = (
+                    blackboardElement.X.Value,
+                    blackboardElement.Y.Value,
+                    blackboardElement.Width.Value,
+                    blackboardElement.Height.Value
+                );
             }
-        });
+
+            if (photoElement != null)
+            {
+                Width = photoElement.Width.Value;
+                Height = photoElement.Height.Value;
+            }
+        }
+        else
+        {
+            Bitmap = SKBitmap.Decode(FullName);
+
+            Width = Bitmap.Width;
+            Height = Bitmap.Height;
+        }
+
+        if (Width == 0 || Height == 0)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to retrieve image dimensions (Image Path: {FullName})");
+        }
     }
 
-    private void SetElementVisible(SvgDocument doc, string id)
+    private SKBitmap? GetBitmapFromSvgImage(SvgImage svgImage)
     {
-        foreach (var child in doc.Children)
+        try
         {
-            if (child is SvgImage img && img.ID?.ToLower() == id.ToLower())
+            string href = svgImage.Href.ToString();
+
+            if (href.Contains(","))
             {
-                img.Display = "inline"; // 强制设为可见，以便 Skia 能够绘制它
+                string base64Data = href.Split(',')[1];
+                byte[] imageBytes = Convert.FromBase64String(base64Data);
+                return SKBitmap.Decode(imageBytes);
             }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error decoding SvgImage: {ex.Message}");
+            return null;
         }
     }
 
@@ -172,32 +201,11 @@ public partial class InkImage : ObservableObject, IDisposable
     {
         Bitmap?.Dispose();
         Bitmap = null;
-        PhotoSvg?.Dispose();
-        PhotoSvg = null;
-        BlackboardSvg?.Dispose();
-        BlackboardSvg = null;
-    }
-
-    private void FilterElements(SvgElement element, string[] ids)
-    {
-        if (ids == null || ids.Length == 0) return;
-
-        ids = ids.Select(id => id.ToLower()).ToArray();
-
-        for (int i = element.Children.Count - 1; i >= 0; i--)
-        {
-            if (element.Children[i] is SvgImage img)
-            {
-                if (img.ID == null || !ids.Contains(img.ID.ToLower()))
-                {
-                    element.Children.RemoveAt(i);
-                }
-            }
-            else
-            {
-                element.Children.RemoveAt(i);
-            }
-        }
+        PhotoBitmap?.Dispose();
+        PhotoBitmap = null;
+        BlackboardBitmap?.Dispose();
+        BlackboardBitmap = null;
+        BlackboardBitmapRect = (0, 0, 0, 0);
     }
 
     public InkImage Clone()
@@ -217,9 +225,9 @@ public partial class InkImage : ObservableObject, IDisposable
             SyncDate = this.SyncDate,
             SyncAuthor = this.SyncAuthor,
             Sort = this.Sort,
-            Sign = this.Sign,
             IsBlackboardVisible = this.IsBlackboardVisible,
             IsStrokesVisible = this.IsStrokesVisible,
+            Sign = this.Sign,
             IsSelected = this.IsSelected,
             IsDeleted = this.IsDeleted,
             CacheBuster = Guid.NewGuid().ToString(),
@@ -228,7 +236,7 @@ public partial class InkImage : ObservableObject, IDisposable
             Strokes = this.Strokes?.Select(stroke => stroke.Clone()).ToList()
         };
 
-        if (this.Bitmap != null && this.PhotoSvg != null)
+        if (this.Bitmap != null || this.PhotoBitmap != null)
         {
             _ = clone.SetBitmap();
         }

@@ -5,22 +5,22 @@ public class HM06BUIM
     /// <summary>
     /// 工事コード
     /// </summary>
-    public string HM06001 { get; set; }
+    public string HM06001 { get; set; } = string.Empty;
 
     /// <summary>
     /// 部位コード
     /// </summary>
-    public string HM06002 { get; set; }
+    public string HM06002 { get; set; } = string.Empty;
 
     /// <summary>
     /// 部位名
     /// </summary>
-    public string HM06003 { get; set; }
+    public string HM06003 { get; set; } = string.Empty;
 
     /// <summary>
     /// 記号
     /// </summary>
-    public string HM06004 { get; set; }
+    public string HM06004 { get; set; } = string.Empty;
 
     /// <summary>
     /// 階指定
@@ -30,17 +30,17 @@ public class HM06BUIM
     /// <summary>
     /// 並び順
     /// </summary>
-    public string HM06006 { get; set; }
+    public string HM06006 { get; set; } = string.Empty;
 
     /// <summary>
     /// 共通事項断面コード
     /// </summary>
-    public string HM06007 { get; set; }
+    public string HM06007 { get; set; } = string.Empty;
 
     /// <summary>
     /// タイトル断面コード
     /// </summary>
-    public string HM06008 { get; set; }
+    public string HM06008 { get; set; } = string.Empty;
 
     /// <summary>
     /// 非表示フラグ
@@ -50,37 +50,37 @@ public class HM06BUIM
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HM06010 { get; set; }
+    public string HM06010 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HM06011 { get; set; }
+    public string HM06011 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HM06012 { get; set; }
+    public string HM06012 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HM06013 { get; set; }
+    public string HM06013 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HM06014 { get; set; }
+    public string HM06014 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HM06015 { get; set; }
+    public string HM06015 { get; set; } = string.Empty;
 
     /// <summary>
     /// アイコンリソースファイル
     /// </summary>
-    public string HM06016 { get; set; }
+    public string HM06016 { get; set; } = string.Empty;
 
     /// <summary>
     /// 参照

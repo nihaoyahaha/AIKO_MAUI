@@ -8,19 +8,11 @@ namespace DI.DiNetWinServiceObject
     /// </summary>
     public class HM06BUIMLISTDC : CMObjectDC
     {
-        // 部位マスタリスト
-        private ArrayList _HM06BUIM = new ArrayList();
 
         /// <summary>
         /// 部位マスタリスト
         /// </summary>
-        public ArrayList HM06BUIM
-        {
-            get { return _HM06BUIM; }
-            set { _HM06BUIM = value; }
-        }
+        public ArrayList HM06BUIM { get; set; } = new ArrayList();
 
-       
     }
 }
-

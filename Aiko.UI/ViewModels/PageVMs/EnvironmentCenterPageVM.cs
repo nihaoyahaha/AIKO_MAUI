@@ -11,7 +11,7 @@ public partial class EnvironmentCenterPageVM : ObservableObject
     readonly SegmentedTabItem _ftpTabItem;
 
     [ObservableProperty]
-    private EnvironmentCenterTab selectedTab = EnvironmentCenterTab.RemotingServer;
+    public partial EnvironmentCenterTab SelectedTab { get; set; } = EnvironmentCenterTab.RemotingServer;
 
     public IReadOnlyList<SegmentedTabItem> Tabs { get; }
 

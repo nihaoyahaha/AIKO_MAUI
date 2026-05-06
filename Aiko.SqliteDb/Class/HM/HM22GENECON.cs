@@ -5,51 +5,51 @@ public class HM22GENECON
     /// <summary>
     /// 会社コード
     /// </summary>
-    public string HM22001 { get; set; }
+    public string HM22001 { get; set; } = string.Empty;
 
     /// <summary>
     /// ゼネコンコード
     /// </summary>
-    public string HM22002 { get; set; }
+    public string HM22002 { get; set; } = string.Empty;
 
     /// <summary>
     /// ゼネコン名
     /// </summary>
-    public string HM22003 { get; set; }
+    public string HM22003 { get; set; } = string.Empty;
 
     /// <summary>
     /// 並び順
     /// </summary>
-    public string HM22004 { get; set; }
+    public string HM22004 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HM22005 { get; set; }
+    public string HM22005 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HM22006 { get; set; }
+    public string HM22006 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HM22007 { get; set; }
+    public string HM22007 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HM22008 { get; set; }
+    public string HM22008 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HM22009 { get; set; }
+    public string HM22009 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HM22010 { get; set; }
+    public string HM22010 { get; set; } = string.Empty;
 }
 

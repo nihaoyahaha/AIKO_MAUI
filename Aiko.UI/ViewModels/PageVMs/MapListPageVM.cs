@@ -16,24 +16,24 @@ namespace Aiko.UI.ViewModels.PageVMs
         }
 
         [ObservableProperty]
-        private string? classCode;
+        public partial string? ClassCode { get; set; } = string.Empty;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CanGoPrevious))]
         [NotifyPropertyChangedFor(nameof(CanGoNext))]
         [NotifyPropertyChangedFor(nameof(PageInfo))]
-        private ObservableCollection<string> mapList = new();
+        public partial ObservableCollection<string> MapList { get; set; } = new();
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CanGoPrevious))]
         [NotifyPropertyChangedFor(nameof(CanGoNext))]
         [NotifyPropertyChangedFor(nameof(PageInfo))]
-        private int currentPosition;
+        public partial int CurrentPosition { get; set; }
 
         [ObservableProperty]
-        private string? currentImage;
+        public partial string? CurrentImage { get; set; } = string.Empty;
 
-        public bool CanGoPrevious => MapList.Count > 0 && CurrentPosition > 0;
+		public bool CanGoPrevious => MapList.Count > 0 && CurrentPosition > 0;
 
         public bool CanGoNext => MapList.Count > 0 && CurrentPosition < MapList.Count - 1;
 

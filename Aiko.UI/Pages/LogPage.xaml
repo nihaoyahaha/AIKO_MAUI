@@ -11,7 +11,13 @@
     x:DataType="vm:LogPageVM">
     <ContentView.Resources>
         <ResourceDictionary>
-            <local:SelectedToStrokeThicknessConverter x:Key="SelectedToStrokeThicknessConverter" />
+            <SolidColorBrush x:Key="CheckedColorBrush">#512BD4</SolidColorBrush>
+            <SolidColorBrush x:Key="UnCheckedColorBrush">Transparent</SolidColorBrush>
+
+            <toolkit:BoolToObjectConverter
+                x:Key="IsSelectedConverter"
+                FalseObject="{StaticResource UnCheckedColorBrush}"
+                TrueObject="{StaticResource CheckedColorBrush}" />
         </ResourceDictionary>
     </ContentView.Resources>
     <ContentView.Behaviors>
@@ -31,9 +37,9 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="common:LogItem">
                     <Border
-                        Stroke="#512BD4"
+                        Stroke="{Binding IsSelected, Converter={StaticResource IsSelectedConverter}}"
                         StrokeShape="RoundRectangle 15"
-                        StrokeThickness="{Binding IsSelected, Converter={StaticResource SelectedToStrokeThicknessConverter}}">
+                        StrokeThickness="2">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LogPageVM}}, Path=ToggleSelectionCommand}" CommandParameter="{Binding .}" />
                         </Border.GestureRecognizers>

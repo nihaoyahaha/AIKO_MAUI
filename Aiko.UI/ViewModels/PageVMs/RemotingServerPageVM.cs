@@ -15,13 +15,13 @@ public partial class RemotingServerPageVM : Observablebase<RemotingServerPageVM,
     }
 
     [ObservableProperty]
-    private string server;
+    public partial string Server { get; set; }
 
     [ObservableProperty]
-    private string serverPort;
+    public partial string ServerPort { get; set; }
 
     [ObservableProperty]
-    private string serverTimeOut;
+    public partial string ServerTimeOut { get; set; }
 
     [RelayCommand]
     private void PageLoad()

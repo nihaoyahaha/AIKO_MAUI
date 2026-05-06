@@ -112,6 +112,9 @@
                         CommandParameter="{Binding Source={x:Reference camera}}"
                         EventName="SizeChanged" />
                 </toolkit:CameraView.Behaviors>
+                <toolkit:CameraView.GestureRecognizers>
+                    <PinchGestureRecognizer PinchUpdated="PinchGestureRecognizer_PinchUpdated" />
+                </toolkit:CameraView.GestureRecognizers>
             </toolkit:CameraView>
 
             <Grid
@@ -353,6 +356,7 @@
                     </CheckBox>
                     <Label
                         Margin="-10,0,0,0"
+                        FontSize="Body"
                         Text="黑板"
                         TextColor="White"
                         VerticalOptions="Center" />
@@ -360,10 +364,12 @@
                         x:Name="rdb_yes"
                         Margin="20,0,0,0"
                         Content="あり"
+                        FontSize="Body"
                         HorizontalOptions="Center"
                         IsChecked="{Binding GreenBackgroundImageIsVisible}"
                         IsEnabled="{Binding BgRectTypeRadioButtonIsEnable}"
-                        Style="{StaticResource IpadOptimizedRadio}">
+                        Style="{StaticResource IpadOptimizedRadio}"
+                        TextColor="White">
                         <RadioButton.Behaviors>
                             <toolkit:EventToCommandBehavior
                                 x:TypeArguments="system:EventArgs"
@@ -377,9 +383,11 @@
                         x:Name="rdb_nomarl"
                         Margin="20,0,0,0"
                         Content="なし"
+                        FontSize="Body"
                         HeightRequest="30"
                         IsEnabled="{Binding BgRectTypeRadioButtonIsEnable}"
-                        Style="{StaticResource IpadOptimizedRadio}" />
+                        Style="{StaticResource IpadOptimizedRadio}"
+                        TextColor="White" />
 
                 </HorizontalStackLayout>
             </HorizontalStackLayout>
@@ -399,6 +407,7 @@
                     WidthRequest="300">
                     <Label
                         Grid.Column="3"
+                        FontSize="Body"
                         Text="カメラ"
                         TextColor="White"
                         VerticalOptions="Center" />
@@ -406,6 +415,7 @@
                         x:Name="rdb_Back"
                         Margin="20,0,0,0"
                         Content="1"
+                        FontSize="Body"
                         GroupName="camera"
                         HeightRequest="30"
                         HorizontalOptions="Center"
@@ -416,6 +426,7 @@
                     <RadioButton
                         Margin="20,0,0,0"
                         Content="2"
+                        FontSize="Body"
                         GroupName="camera"
                         HorizontalOptions="Center"
                         Style="{StaticResource IpadOptimizedRadio}"
@@ -437,7 +448,7 @@
             x:Name="slider"
             Margin="-105,0,0,150"
             HorizontalOptions="Start"
-            Maximum="{Binding SelectedCamera.MaximumZoomFactor, FallbackValue=1}"
+            Maximum="{Binding DisplayMaxZoom}"
             Minimum="{Binding SelectedCamera.MinimumZoomFactor, FallbackValue=1}"
             Rotation="-90"
             VerticalOptions="End"

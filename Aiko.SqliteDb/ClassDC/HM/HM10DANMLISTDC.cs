@@ -9,36 +9,17 @@ namespace DI.DiNetWinServiceObject
     /// </summary>
     public class HM10DANMLISTDC : CMObjectDC
     {
-        // 断面マスター
-        private DataTable _HM10DANM ;
 
         /// <summary>
         /// 断面マスター
         /// </summary>
-        public DataTable HM10DANM
-        {
-            get { return _HM10DANM; }
-            set { _HM10DANM = value; }
-        }
-
-        // 断面マスターリスト
-        private ArrayList _HM10DANMLIST = new ArrayList();
+        public DataTable HM10DANM { get; set; } = new DataTable();
 
         /// <summary>
         /// 断面マスターリスト
         /// </summary>
-        public ArrayList HM10DANMLIST
-        {
-            get { return _HM10DANMLIST; }
-            set { _HM10DANMLIST = value; }
-        }
-        private int _Num;
+        public ArrayList HM10DANMLIST { get; set; } = new ArrayList();
 
-        public int Num
-        {
-            get { return _Num; }
-            set { _Num = value; }
-        }
+        public int Num { get; set; }
     }
 }
-

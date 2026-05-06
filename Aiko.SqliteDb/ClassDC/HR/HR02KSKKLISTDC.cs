@@ -8,19 +8,12 @@ namespace DI.DiNetWinServiceObject
     /// </summary>
     public class HR02KSKKLISTDC : CMObjectDC
     {
-        // 検査結果テーブルリスト
-        private ArrayList _HR02KSKK = new ArrayList();
 
         /// <summary>
         /// 検査結果テーブルタリスト
         /// </summary>
-        public ArrayList HR02KSKK
-        {
-            get { return _HR02KSKK; }
-            set { _HR02KSKK = value; }
-        }
+        public ArrayList HR02KSKK { get; set; } = new ArrayList();
 
-        
     }
 
 }

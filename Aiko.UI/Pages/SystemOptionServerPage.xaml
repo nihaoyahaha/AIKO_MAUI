@@ -17,7 +17,6 @@
     </ContentView.Behaviors>
 
     <ContentView.Resources>
-        <local:ComparisonConverter x:Key="ComparisonConverter" />
         <ControlTemplate x:Key="RadioButtonTemplate">
             <Grid
                 HorizontalOptions="Start"
@@ -86,17 +85,25 @@
                         <RadioButton
                             x:Name="rdbtn_jpeg"
                             Content="JPEG"
-                            FontSize="Body"
                             GroupName="imgType"
-                            IsChecked="{Binding PhotoType, Converter={StaticResource ComparisonConverter}, ConverterParameter='JPEG'}"
+                            IsChecked="{Binding IsJepg}"
                             Style="{StaticResource IpadOptimizedRadio}" />
+
+                        <!--  SVG 按钮  -->
                         <RadioButton
                             x:Name="rdbtn_svg"
                             Content="SVG"
-                            FontSize="Body"
                             GroupName="imgType"
-                            IsChecked="{Binding PhotoType, Converter={StaticResource ComparisonConverter}, ConverterParameter='SVG'}"
-                            Style="{StaticResource IpadOptimizedRadio}" />
+                            Style="{StaticResource IpadOptimizedRadio}">
+                            <RadioButton.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding IsJepg}"
+                                    TargetType="RadioButton"
+                                    Value="False">
+                                    <Setter Property="IsChecked" Value="True" />
+                                </DataTrigger>
+                            </RadioButton.Triggers>
+                        </RadioButton>
                     </HorizontalStackLayout>
                 </Border>
                 <Label

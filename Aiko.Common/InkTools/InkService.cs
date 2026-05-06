@@ -44,7 +44,7 @@ namespace Aiko.Common.InkTools
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"初始化工具失败: {type.Name}: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Initialization tool failed: {type.Name}: {ex.Message}");
                 }
             }
         }
@@ -111,7 +111,7 @@ namespace Aiko.Common.InkTools
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"解析Json失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"JSON parsing failed: {ex.Message}");
             }
 
             return null;

@@ -8,55 +8,55 @@ public class HM12FILE
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HM12001 { get; set; }
+	public string HM12001 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// ファイルコード
 	/// </summary>
-	public string HM12002 { get; set; }
+	public string HM12002 { get; set; } = string.Empty;
 
     /// <summary>
     /// ファイル名
     /// </summary>
-    public string HM12003 { get; set; }
+    public string HM12003 { get; set; } = string.Empty;
 
     /// <summary>
     /// ファイルパス
     /// </summary>
-    public string HM12004 { get; set; }
+    public string HM12004 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HM12005 { get; set; }
+    public string HM12005 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HM12006 { get; set; }
+    public string HM12006 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HM12007 { get; set; }
+    public string HM12007 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HM12008 { get; set; }
+    public string HM12008 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HM12009 { get; set; }
+    public string HM12009 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HM12010 { get; set; }
+    public string HM12010 { get; set; } = string.Empty;
 
-    public string HM12011 { get; set; }
+    public string HM12011 { get; set; } = string.Empty;
 
     public int HM12012 { get; set; }
 
@@ -73,6 +73,6 @@ public class HM12FILE
     /// <summary>
     /// 分類コード
     /// </summary>
-    public string HM12015 { get; set; }
+    public string HM12015 { get; set; } = string.Empty;
 }
 

@@ -31,118 +31,118 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	/// ありボタンの有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _bgRectTypeRadioButtonIsEnable = true;
+	public partial bool BgRectTypeRadioButtonIsEnable { get; set; } = true;
 
 	/// <summary>
 	/// 緑の背景版の注釈テキスト
 	/// </summary>
 	[ObservableProperty]
-	private string _remark;
+	public partial string Remark { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 緑の背景版のデータソース
 	/// </summary>
 	[ObservableProperty]
-	private GreenBackgroundModel _greenBackgroundModel;
+	public partial GreenBackgroundModel GreenBackgroundModel { get; set; }
 
 	/// <summary>
 	/// 緑の背景版の表示隠し
 	/// </summary>
 	[ObservableProperty]
-	private bool _blackboardDisplay = true;
+	public partial bool BlackboardDisplay { get; set; } = true;
 
 	/// <summary>
 	/// カメラのズーム率
 	/// </summary>
 	[ObservableProperty]
-	private float _currentZoom;
+	public partial float CurrentZoom { get; set; }
 
 	/// <summary>
 	/// 写真のスクリーンショット
 	/// </summary>
 	[ObservableProperty]
-	private ImageSource _photoScreenshot;
+	public partial ImageSource PhotoScreenshot { get; set; }
 
 	/// <summary>
 	/// UIの緑の背景版
 	/// </summary>
 	[ObservableProperty]
-	private Grid _rectGrid;
+	public partial Grid RectGrid { get; set; }
 
 	/// <summary>
 	/// グリッド
 	/// </summary>
 	[ObservableProperty]
-	private Grid _gridLayer;
+	public partial Grid GridLayer { get; set; }
 
 	/// <summary>
 	/// 撮影されたフォトパス
 	/// </summary>
 	[ObservableProperty]
-	private string _photoScreenshotPath;
+	public partial string PhotoScreenshotPath { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 緑の背景版の容器の表示状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _backgroundRectHsStackIsVisible = false;
+	public partial bool BackgroundRectHsStackIsVisible { get; set; } = false;
 
 	/// <summary>
 	/// 解像度の容器の表示状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _resolutionHsStackIsVisible = false;
+	public partial bool ResolutionHsStackIsVisible { get; set; } = false;
 
 	/// <summary>
 	/// カメラ切り替えの容器の表示状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _cameraPositionHsStackIsVisible = false;
+	public partial bool CameraPositionHsStackIsVisible { get; set; } = false;
 
 	/// <summary>
 	/// 緑の背景版の断面図の表示非表示
 	/// </summary>
 	[ObservableProperty]
-	private bool _greenBackgroundImageIsVisible = true;
+	public partial bool GreenBackgroundImageIsVisible { get; set; } = true;
 
 	/// <summary>
 	/// 撮影方向
 	/// </summary>
 	[ObservableProperty]
-	private ObservableCollection<ListItem> _reinforcementTypeList = new();
+	public partial ObservableCollection<ListItem> ReinforcementTypeList { get; set; } = new();
 
 	/// <summary>
 	/// 撮影方向の選択項目
 	/// </summary>
 	[ObservableProperty]
-	private ListItem _reinforcementTypeSelectedItem = null;
+	public partial ListItem ReinforcementTypeSelectedItem { get; set; } = null;
 
 	/// <summary>
 	/// カメラ機器に関する情報を示します。
 	/// </summary>
 	[ObservableProperty]
-	private CameraInfo? _selectedCamera;
+	public partial CameraInfo? SelectedCamera { get; set; }
 
 	/// <summary>
 	/// 現在選択されているカメラの解像度
 	/// </summary>
 	[ObservableProperty]
-	private Size _selectedResolution;
+	public partial Size SelectedResolution { get; set; }
 
 	[ObservableProperty]
-	private bool isRearCamera;
+	public partial bool IsRearCamera { get; set; }
 
 	/// <summary>
 	/// グリッドの表示
 	/// </summary>
 	[ObservableProperty]
-	private bool _gridVisible =false;
+	public partial bool GridVisible { get; set; } = false;
 
 	/// <summary>
 	/// 撮影方向の文字
 	/// </summary>
 	[ObservableProperty]
-	private string _reinforcementTypeText = "";
+	public partial string ReinforcementTypeText { get; set; } = "";
 	#endregion
 
 	#region プライベートフィールド
@@ -172,6 +172,20 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 
 	public CancellationToken Token => CancellationToken.None;
 
+	/// <summary>
+	/// カメラの最大ズーム倍率
+	/// </summary>
+	public float DisplayMaxZoom
+	{
+		get
+		{
+#if WINDOWS
+          return Math.Min(50.0f, SelectedCamera?.MaximumZoomFactor ?? 50.0f);
+#else
+          return Math.Min(5.0f, SelectedCamera?.MaximumZoomFactor ?? 5.0f);
+#endif
+		}
+	}
 	#endregion
 
 	/// <summary>
@@ -621,7 +635,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	{
 		try
 		{
-			IScreenshotResult screen = await _rectGrid.CaptureAsync();
+			IScreenshotResult? screen = await RectGrid.CaptureAsync();
 			using Stream rectGridStream = await screen.OpenReadAsync();
 			return SKBitmap.Decode(rectGridStream);
 		}
@@ -640,14 +654,14 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	/// <returns></returns>
 	Rect CalculateRedBoxInPhoto(int photoWidth, int photoHeight)
 	{
-		double relativeX = _rectGrid.TranslationX - CameraViewActualVideoRect.X;
-		double relativeY = _rectGrid.TranslationY - CameraViewActualVideoRect.Y;
+		double relativeX = RectGrid.TranslationX - CameraViewActualVideoRect.X;
+		double relativeY = RectGrid.TranslationY - CameraViewActualVideoRect.Y;
 		double scaleX = photoWidth / CameraViewActualVideoRect.Width;
 		double scaleY = photoHeight / CameraViewActualVideoRect.Height;
 		double photoX = Math.Max(0, relativeX * scaleX);
 		double photoY = Math.Max(0, relativeY * scaleY);
-		double photoW = _rectGrid.Width * scaleX;
-		double photoH = _rectGrid.Height * scaleY;
+		double photoW = RectGrid.Width * scaleX;
+		double photoH = RectGrid.Height * scaleY;
 		photoX = Math.Min(photoX, photoWidth - photoW);
 		photoY = Math.Min(photoY, photoHeight - photoH);
 		return new Rect(photoX, photoY, photoW, photoH);
@@ -738,19 +752,19 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 
 		CameraViewActualVideoRect = new Rect(offsetX, offsetY, previewWidth, previewHeight);
 
-		if (CameraViewActualVideoRect.Width <= _rectGrid.WidthRequest)
+		if (CameraViewActualVideoRect.Width <= RectGrid.WidthRequest)
 		{
 			return;
 		}
-		if (CameraViewActualVideoRect.Height <= _rectGrid.HeightRequest)
+		if (CameraViewActualVideoRect.Height <= RectGrid.HeightRequest)
 		{
 			return;
 		}
 
-		_rectGrid.TranslationX = offsetX;
-		_rectGrid.TranslationY = previewHeight - _rectGrid.DesiredSize.Height + offsetY;
-		panX = _rectGrid.TranslationX;
-		panY = _rectGrid.TranslationY;
+		RectGrid.TranslationX = offsetX;
+		RectGrid.TranslationY = previewHeight - RectGrid.DesiredSize.Height + offsetY;
+		panX = RectGrid.TranslationX;
+		panY = RectGrid.TranslationY;
 
 		GridLayer.WidthRequest = CameraViewActualVideoRect.Width;
 		GridLayer.HeightRequest = CameraViewActualVideoRect.Height;
@@ -762,10 +776,10 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	void UpdateVideoDisplayLayoutForIOS()
 	{
 		if (CameraViewActualVideoRect.Height <= 0) return;
-		_rectGrid.TranslationX = 0;
-		_rectGrid.TranslationY = CameraViewActualVideoRect.Height - _rectGrid.DesiredSize.Height;
-		panX = _rectGrid.TranslationX;
-		panY = _rectGrid.TranslationY;
+		RectGrid.TranslationX = 0;
+		RectGrid.TranslationY = CameraViewActualVideoRect.Height - RectGrid.DesiredSize.Height;
+		panX = RectGrid.TranslationX;
+		panY = RectGrid.TranslationY;
 
 		GridLayer.WidthRequest = CameraViewActualVideoRect.Width;
 		GridLayer.HeightRequest = CameraViewActualVideoRect.Height;
@@ -786,7 +800,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 			string selectedValue = Preferences.Default.Get($"{key}_Selected", "");
 			if (!string.IsNullOrEmpty(selectedValue))
 			{
-				string [] arry = selectedValue.Split('×');
+				string[] arry = selectedValue.Split('×');
 				SelectedResolution = new Size(int.Parse(arry[0]), int.Parse(arry[1]));
 			}
 		}
@@ -809,34 +823,6 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		if (SelectedCamera.Position == CameraPosition.Unknown) return;
 		IsRearCamera = SelectedCamera.Position == CameraPosition.Rear ? true : false;
 	}
-	
-	void LoadSelectedCameraResolution()
-	{
-		if (SelectedCamera == null) return;
-		if (SelectedCamera.Position == CameraPosition.Unknown) return;
-
-		string frontSelected = Preferences.Default.Get("CameraResolution_Front_Selected", "");
-		string rearSelected = Preferences.Default.Get("CameraResolution_Rear_Selected", "");
-		string selectedValue = SelectedCamera.Position == CameraPosition.Front ? frontSelected : rearSelected;
-
-
-	}
-
-	/// <summary>
-	/// 写真撮影前のデータ検証
-	/// </summary>
-	/// <returns></returns>
-	async Task<bool> ValidateBeforeSavingAsync()
-	{
-		if (ReinforcementTypeSelectedItem == null || string.IsNullOrWhiteSpace(ReinforcementTypeText))
-		{
-			string ErrMsg = ErrorMessage.ERRORPOP("CM01037");
-			DialogHelper.MessageDialogClose(string.Format(ErrMsg, "撮影方向"));
-
-			return false;
-		}
-		return true;
-	}
 
 	/// <summary>
 	/// 検査記録を作成
@@ -858,17 +844,8 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		{
 			inspectionRecordItem.HR03018 = GreenBackgroundImageIsVisible ? 3 : 1;
 		}
-
-		if (!Service.HM16List.Any(x => x.HM16003.Trim() == ReinforcementTypeText))
-		{
-			inspectionRecordItem.Direction = 0;
-			inspectionRecordItem.DirectionText = ReinforcementTypeText;
-		}
-		else
-		{
-			inspectionRecordItem.Direction = int.Parse(ReinforcementTypeSelectedItem.Value);
-			inspectionRecordItem.DirectionText = "";
-		}
+		inspectionRecordItem.Direction = int.Parse(ReinforcementTypeSelectedItem.Value);
+		inspectionRecordItem.DirectionText = ReinforcementTypeSelectedItem.DisplyName;
 		return inspectionRecordItem;
 	}
 
@@ -909,23 +886,42 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	}
 
 	/// <summary>
+	/// 写真撮影前のデータ検証
+	/// </summary>
+	/// <returns></returns>
+	async Task<bool> ValidateBeforeSavingAsync()
+	{
+		if (ReinforcementTypeList.Count == 0 && string.IsNullOrWhiteSpace(ReinforcementTypeText))
+		{
+			string ErrMsg = ErrorMessage.ERRORPOP("CM01037");
+			DialogHelper.MessageDialogClose(string.Format(ErrMsg, "撮影方向"));
+
+			return false;
+		}
+		return true;
+	}
+
+	/// <summary>
 	/// 設定の撮影方向を更新
 	/// </summary>
 	void UpdateDirsListPreferences()
 	{
-		if (!ReinforcementTypeList.Any(x => x.DisplyName.Trim() == ReinforcementTypeText))
+		if (string.IsNullOrWhiteSpace(ReinforcementTypeText) && ReinforcementTypeSelectedItem != null)
 		{
-			string prefDirsListStr = Preferences.Get("DirsList", "");
-			List<string> prefDirsList = prefDirsListStr
-				.Split(',')
-				.Where(s => !string.IsNullOrWhiteSpace(s))
-				.ToList();
+			ReinforcementTypeText = ReinforcementTypeSelectedItem.DisplyName;
+			return;
+		}
 
-			prefDirsList.Add(ReinforcementTypeText);
-			Preferences.Set("DirsList", string.Join(",", prefDirsList));
-			var listItem = new ListItem(ReinforcementTypeText, ReinforcementTypeText);
+		if (!ReinforcementTypeList.Any(x => x.DisplyName.Trim() == ReinforcementTypeText.Trim()))
+		{
+			Service.AppContext.AddPreferencesDirection(ReinforcementTypeText);
+			var listItem = new ListItem(ReinforcementTypeText, "-1");
 			ReinforcementTypeList.Add(listItem);
 			ReinforcementTypeSelectedItem = listItem;
+		}
+		else
+		{
+			ReinforcementTypeSelectedItem = ReinforcementTypeList.FirstOrDefault(x => x.DisplyName.Trim() == ReinforcementTypeText.Trim());
 		}
 	}
 	#endregion

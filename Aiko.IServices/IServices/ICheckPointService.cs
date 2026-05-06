@@ -1,5 +1,4 @@
-﻿using Aiko.Common.Models.CheckPoint;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;

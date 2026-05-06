@@ -15,13 +15,13 @@ public partial class SyncCenterPageVM : ObservableObject
     readonly SegmentedTabItem _deleteTabItem;
 
     [ObservableProperty]
-    private bool isUploadTabVisible = false;
+    public partial bool IsUploadTabVisible { get; set; } = false;
 
     [ObservableProperty]
-    private bool isDeleteTabVisible = false;
+    public partial bool IsDeleteTabVisible { get; set; } = false;
 
     [ObservableProperty]
-    private SyncCenterTab selectedTab = SyncCenterTab.Download;
+    public partial SyncCenterTab SelectedTab { get; set; } = SyncCenterTab.Download;
 
     public IReadOnlyList<SegmentedTabItem> Tabs { get; }
 
@@ -33,8 +33,8 @@ public partial class SyncCenterPageVM : ObservableObject
     public SyncCenterPageVM(AikoAppContext appContext)
     {
         _appContext = appContext;
-        isUploadTabVisible = _appContext.IsLogin;
-        isDeleteTabVisible = _appContext.IsLogin;
+        IsUploadTabVisible = _appContext.IsLogin;
+        IsDeleteTabVisible = _appContext.IsLogin;
 
         _downloadTabItem = new SegmentedTabItem
         {
@@ -46,7 +46,7 @@ public partial class SyncCenterPageVM : ObservableObject
         {
             Text = "同　期",
             Command = SelectUploadCommand,
-            IsVisible = isUploadTabVisible
+            IsVisible = IsUploadTabVisible
         };
         _logTabItem = new SegmentedTabItem
         {
@@ -57,7 +57,7 @@ public partial class SyncCenterPageVM : ObservableObject
         {
             Text = "削　除",
             Command = SelectDeleteCommand,
-            IsVisible = isDeleteTabVisible
+            IsVisible = IsDeleteTabVisible
         };
 
         Tabs = new[] { _downloadTabItem, _uploadTabItem, _logTabItem, _deleteTabItem };

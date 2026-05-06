@@ -104,25 +104,78 @@ namespace Aiko.Common.InkTools
         {
             foreach (var stroke in _completedStrokes)
             {
-                bool allow = _tools.ContainsKey(stroke.Type) && (allowedTypes == null || allowedTypes.Contains(stroke.Type)) && (bannedTypes == null || !bannedTypes.Contains(stroke.Type));
-                //bool selectedAllow = CurrentTool is not MoveTool moveTool || moveTool.GetSelectedStroke() == null || moveTool.GetSelectedStroke()?.Id != stroke.Id;
-
-                if (stroke != null && allow)
+                if (stroke != null)
                 {
-                    IInkTool renderer = _tools[stroke.Type];
-                    renderer.Draw(canvas, stroke);
+                    HandleDrawing(canvas, stroke, allowedTypes, bannedTypes);
+                }
+            }
+        }
+        public void HandleBehindSelectedDrawing(SKCanvas canvas, string[]? allowedTypes, string[]? bannedTypes)
+        {
+            if (CurrentTool is not MoveTool moveTool) return;
+
+            var selectedStroke = moveTool.GetSelectedStroke();
+
+            if (selectedStroke == null) return;
+
+            foreach (var stroke in _completedStrokes)
+            {
+                if (stroke == selectedStroke)
+                {
+                    break;
+                }
+
+                if (stroke != null)
+                {
+                    HandleDrawing(canvas, stroke, allowedTypes, bannedTypes);
+                }
+            }
+        }
+        public void HandleFrontSelectedDrawing(SKCanvas canvas, string[]? allowedTypes, string[]? bannedTypes)
+        {
+            if (CurrentTool is not MoveTool moveTool) return;
+
+            var selectedStroke = moveTool.GetSelectedStroke();
+
+            if (selectedStroke == null) return;
+
+            bool front = false;
+            foreach (var stroke in _completedStrokes)
+            {
+                if (!front)
+                {
+                    if (stroke == selectedStroke)
+                    {
+                        front = true;
+                    }
+
+                    continue;
+                }
+
+                if (stroke != null)
+                {
+                    HandleDrawing(canvas, stroke, allowedTypes, bannedTypes);
                 }
             }
         }
         public void HandleCurrentDrawing(SKCanvas canvas, string[]? allowedTypes, string[]? bannedTypes)
         {
-            bool allow = (allowedTypes == null || allowedTypes.Contains(CurrentTool.Type)) && (bannedTypes == null || !bannedTypes.Contains(CurrentTool.Type));
-
             var stroke = CurrentTool.GetCurrentTempStroke();
-            if (stroke != null && allow)
+
+            if (stroke != null)
             {
-                IInkTool renderer = _tools[stroke.Type];
-                renderer.Draw(canvas, stroke);
+                HandleDrawing(canvas, stroke, allowedTypes, bannedTypes);
+            }
+
+        }
+
+        public void HandleDrawing(SKCanvas canvas, InkStroke stroke, string[]? allowedTypes, string[]? bannedTypes)
+        {
+            if (stroke == null) return;
+
+            if ((allowedTypes == null || allowedTypes.Contains(stroke.Type)) && (bannedTypes == null || !bannedTypes.Contains(stroke.Type)))
+            {
+                _tools[stroke.Type].Draw(canvas, stroke);
             }
         }
 

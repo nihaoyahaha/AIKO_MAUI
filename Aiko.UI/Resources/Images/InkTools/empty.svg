@@ -1,1 +1,9 @@
-<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg t="1768899319388" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3704" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200"><path d="M146.928 122.768l327.52 764 140.848-294.816 295.504-141.824L146.928 122.768z m408.32 409.264L478.4 692.912 299.28 275.088l418.048 179.168-162.08 77.76z" fill="#3D424D" p-id="3705"></path></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <title>icon_07.svg</title>
+  <path d="M 17.62 9.09 L 19.25 9.91 L 19.25 13.97 L 20.06 14.78 L 23.31 14.78 L 26.56 16.41 L 25.75 22.09 L 23.31 24.53 L 20.06 24.53 L 13.56 18.84 L 16.81 18.03 L 16.81 9.91 Z
+    M 3.81 9.09 L 4.62 8.28 L 11.94 15.59 L 11.12 16.41 L 6.25 16.41 L 4.62 18.84 L 3.81 18.03 Z
+    M 3.00 5.03 L 3.00 22.09 L 4.62 22.09 L 8.69 17.22 L 10.31 20.47 L 12.75 20.47 L 15.19 22.09 L 18.44 26.16 L 24.94 26.16 L 26.56 24.53 L 28.19 20.47 L 28.19 15.59 L 26.56 13.97 L 20.88 13.16 L 20.06 12.34 L 20.06 7.47 L 16.00 7.47 L 16.00 14.78 L 15.19 15.59 L 4.62 5.03 Z"
+        fill="#202020"
+        fill-rule="evenodd"/>
+</svg>

@@ -8,24 +8,24 @@ public class HR02KSKK
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HR02001 { get; set; }
+	public string HR02001 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// アイテムコード
 	/// </summary>
-	public string HR02002 { get; set; }
+	public string HR02002 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// 確認項目コード
 	/// </summary>
-	public string HR02003 { get; set; }
+	public string HR02003 { get; set; } = string.Empty;
 
     /// <summary>
     /// 値
     /// </summary>
-    public string HR02004 { get; set; }
+    public string HR02004 { get; set; } = string.Empty;
 
     /// <summary>
     /// 判定
@@ -40,7 +40,7 @@ public class HR02KSKK
     /// <summary>
     /// 確認オペレータ
     /// </summary>
-    public string HR02007 { get; set; }
+    public string HR02007 { get; set; } = string.Empty;
 
     /// <summary>
     /// 指摘日
@@ -50,17 +50,17 @@ public class HR02KSKK
     /// <summary>
     /// 指摘オペレータ
     /// </summary>
-    public string HR02009 { get; set; }
+    public string HR02009 { get; set; } = string.Empty;
 
     /// <summary>
     /// メモ
     /// </summary>
-    public string HR02010 { get; set; }
+    public string HR02010 { get; set; } = string.Empty;
 
     /// <summary>
     /// 備考
     /// </summary>
-    public string HR02011 { get; set; }
+    public string HR02011 { get; set; } = string.Empty;
 
     /// <summary>
     /// 写真枚数
@@ -70,32 +70,32 @@ public class HR02KSKK
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HR02013 { get; set; }
+    public string HR02013 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HR02014 { get; set; }
+    public string HR02014 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HR02015 { get; set; }
+    public string HR02015 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HR02016 { get; set; }
+    public string HR02016 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HR02017 { get; set; }
+    public string HR02017 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HR02018 { get; set; }
+    public string HR02018 { get; set; } = string.Empty;
 
     /// <summary>
     /// 確認方法

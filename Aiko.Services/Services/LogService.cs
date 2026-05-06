@@ -63,7 +63,7 @@ public class LogService : BaseService<LogService>, ILogService
 
 			var fileStream = await GetMemoryStreamAsync(logItems);
 
-			using CancellationTokenSource cts = new CancellationTokenSource(15000);
+			using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 			bool result;
 			if (AikoAppContext.FileServerType == 2)
 			{

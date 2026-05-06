@@ -8,15 +8,15 @@ public class HM19GUIDCOLOR
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HM19001 { get; set; }
-	
+	public string HM19001 { get; set; } = string.Empty;
+
     [PrimaryKey]
 	/// <summary>
 	/// マップコード
 	/// </summary>
-	public string HM19002 { get; set; }
+	public string HM19002 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// ガイドタイプ
 	/// </summary>
@@ -41,7 +41,7 @@ public class HM19GUIDCOLOR
     /// <summary>
     /// フォント
     /// </summary>
-    public string HM19007 { get; set; }
+    public string HM19007 { get; set; } = string.Empty;
 
     /// <summary>
     /// フォントサイズ
@@ -51,31 +51,31 @@ public class HM19GUIDCOLOR
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HM19009 { get; set; }
+    public string HM19009 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HM19010 { get; set; }
+    public string HM19010 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HM19011 { get; set; }
+    public string HM19011 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HM19012 { get; set; }
+    public string HM19012 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HM19013 { get; set; }
+    public string HM19013 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HM19014 { get; set; }
+    public string HM19014 { get; set; } = string.Empty;
 }
 

@@ -13,43 +13,43 @@ public partial class AppInfoPageVM:ObservableValidator
 	/// app名
 	/// </summary>
 	[ObservableProperty]
-	private string _appName;
+	public partial string AppName { get; set; } = string.Empty;
 
 	/// <summary>
 	/// appバージョン
 	/// </summary>
 	[ObservableProperty]
-	private string _appVersion;
+	public partial string AppVersion { get; set; } = string.Empty;
 
 	/// <summary>
 	/// app著作権表示
 	/// </summary>
 	[ObservableProperty]
-	private string _appCopyright;
+	public partial string AppCopyright { get; set; } = string.Empty;
 
 	/// <summary>
 	/// app会社
 	/// </summary>
 	[ObservableProperty]
-	private string _appCompany;
+	public partial string AppCompany { get; set; } = string.Empty;
 
 	/// <summary>
 	/// app記述
 	/// </summary>
 	[ObservableProperty]
-	private string _appDescription;
+	public partial string AppDescription { get; set; } = string.Empty;
 
 	/// <summary>
 	/// app商標
 	/// </summary>
 	[ObservableProperty]
-	private string _appTrademark;
+	public partial string AppTrademark { get; set; } = string.Empty;
 
 	/// <summary>
 	/// バージョン更新情報
 	/// </summary>
 	[ObservableProperty]
-	private string _releaseNotes;
+	public partial string ReleaseNotes { get; set; } = string.Empty;
 
 	public AppInfoPageVM(AikoAppContext appContext)
 	{

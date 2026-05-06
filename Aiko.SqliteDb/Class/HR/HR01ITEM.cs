@@ -8,18 +8,18 @@ public class HR01ITEM
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HR01001 { get; set; }
+	public string HR01001 { get; set; } = string.Empty;
 
     /// <summary>
     /// マップコード
     /// </summary>
-    public string HR01002 { get; set; }
+    public string HR01002 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// アイテムコード
 	/// </summary>
-	public string HR01003 { get; set; }
+	public string HR01003 { get; set; } = string.Empty;
 
     /// <summary>
     /// アイテムタイプ
@@ -29,17 +29,17 @@ public class HR01ITEM
     /// <summary>
     /// 配筋表断面コード
     /// </summary>
-    public string HR01005 { get; set; }
+    public string HR01005 { get; set; } = string.Empty;
 
     /// <summary>
     /// 位置
     /// </summary>
-    public string HR01006 { get; set; }
+    public string HR01006 { get; set; } = string.Empty;
 
     /// <summary>
     /// 工区コード
     /// </summary>
-    public string HR01007 { get; set; }
+    public string HR01007 { get; set; } = string.Empty;
 
     /// <summary>
     /// マップに表示位置X
@@ -69,42 +69,42 @@ public class HR01ITEM
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HR01013 { get; set; }
+    public string HR01013 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HR01014 { get; set; }
+    public string HR01014 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HR01015 { get; set; }
+    public string HR01015 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HR01016 { get; set; }
+    public string HR01016 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HR01017 { get; set; }
+    public string HR01017 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HR01018 { get; set; }
+    public string HR01018 { get; set; } = string.Empty;
 
     /// <summary>
     /// 部位コード
     /// </summary>
-    public string HR01019 { get; set; }
+    public string HR01019 { get; set; } = string.Empty;
 
     /// <summary>
     /// 断面コード
     /// </summary>
-    public string HR01020 { get; set; }
+    public string HR01020 { get; set; } = string.Empty;
 
     /// <summary>
     /// 表示色
@@ -114,5 +114,5 @@ public class HR01ITEM
     /// <summary>
     /// 断面特記
     /// </summary>
-    public string HR01022 { get; set; }
+    public string HR01022 { get; set; } = string.Empty;
 }

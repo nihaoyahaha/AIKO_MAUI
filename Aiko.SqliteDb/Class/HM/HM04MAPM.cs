@@ -5,32 +5,32 @@ public class HM04MAPM
     /// <summary>
     /// 工事コード
     /// </summary>
-    public string HM04001 { get; set; }
+    public string HM04001 { get; set; } = string.Empty;
 
     /// <summary>
     /// マップコード
     /// </summary>
-    public string HM04002 { get; set; }
+    public string HM04002 { get; set; } = string.Empty;
 
     /// <summary>
     /// マップ名
     /// </summary>
-    public string HM04003 { get; set; }
+    public string HM04003 { get; set; } = string.Empty;
 
     /// <summary>
     /// マップグループコード
     /// </summary>
-    public string HM04004 { get; set; }
+    public string HM04004 { get; set; } = string.Empty;
 
     /// <summary>
     /// ファイルコード
     /// </summary>
-    public string HM04005 { get; set; }
+    public string HM04005 { get; set; } = string.Empty;
 
     /// <summary>
     /// 並び順
     /// </summary>
-    public string HM04006 { get; set; }
+    public string HM04006 { get; set; } = string.Empty;
 
     /// <summary>
     /// 表示範囲X
@@ -145,32 +145,32 @@ public class HM04MAPM
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HM04029 { get; set; }
+    public string HM04029 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HM04030 { get; set; }
+    public string HM04030 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HM04031 { get; set; }
+    public string HM04031 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HM04032 { get; set; }
+    public string HM04032 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HM04033 { get; set; }
+    public string HM04033 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HM04034 { get; set; }
+    public string HM04034 { get; set; } = string.Empty;
 
     /// <summary>
     /// 制御点1論理座標X
@@ -195,7 +195,7 @@ public class HM04MAPM
     /// <summary>
     /// 階コード
     /// </summary>
-    public string HM04039 { get; set; }
+    public string HM04039 { get; set; } = string.Empty;
 
     /// <summary>
     /// 落書きの表示範囲X
@@ -210,6 +210,6 @@ public class HM04MAPM
     /// <summary>
     /// 落書きのマップコード
     /// </summary>
-    public string HM04042 { get; set; }
+    public string HM04042 { get; set; } = string.Empty;
 }
 

@@ -8,15 +8,15 @@ public class HM20GUIDHEAD
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HM20001 { get; set; }
+	public string HM20001 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	///  マップコード
 	/// </summary>
-	public string HM20002 { get; set; }
+	public string HM20002 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// ガイド番号
 	/// </summary>
@@ -25,7 +25,7 @@ public class HM20GUIDHEAD
     /// <summary>
     /// ガイド名
     /// </summary>
-    public string HM20004 { get; set; }
+    public string HM20004 { get; set; } = string.Empty;
 
     /// <summary>
     /// 角度
@@ -75,31 +75,31 @@ public class HM20GUIDHEAD
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HM20014 { get; set; }
+    public string HM20014 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HM20015 { get; set; }
+    public string HM20015 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HM20016 { get; set; }
+    public string HM20016 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HM20017 { get; set; }
+    public string HM20017 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HM20018 { get; set; }
+    public string HM20018 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HM20019 { get; set; }
+    public string HM20019 { get; set; } = string.Empty;
 }
 

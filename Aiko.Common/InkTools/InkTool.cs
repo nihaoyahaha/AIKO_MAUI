@@ -22,7 +22,7 @@ namespace Aiko.Common.InkTools
 
         public abstract void Draw(SKCanvas canvas, InkStroke stroke);
 
-        public virtual InkStroke? GetCurrentTempStroke() => currentStroke;
+        public InkStroke? GetCurrentTempStroke() => currentStroke;
 
         public virtual InkStroke Rebuild(InkStrokeDTO json)
         {

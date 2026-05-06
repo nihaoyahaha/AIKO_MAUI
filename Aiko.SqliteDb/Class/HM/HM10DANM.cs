@@ -8,33 +8,33 @@ public class HM10DANM
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HM10001 { get; set; }
+	public string HM10001 { get; set; } = string.Empty;
 
     /// <summary>
     ///  グループコード
     /// </summary>
-    public string HM10002 { get; set; }
+    public string HM10002 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	///  断面コード
 	/// </summary>
-	public string HM10003 { get; set; }
+	public string HM10003 { get; set; } = string.Empty;
 
     /// <summary>
     ///  キャプション
     /// </summary>
-    public string HM10004 { get; set; }
+    public string HM10004 { get; set; } = string.Empty;
 
     /// <summary>
     ///  並び順
     /// </summary>
-    public string HM10005 { get; set; }
+    public string HM10005 { get; set; } = string.Empty;
 
     /// <summary>
     ///  ファイルコード
     /// </summary>
-    public string HM10006 { get; set; }
+    public string HM10006 { get; set; } = string.Empty;
 
     /// <summary>
     ///  表示範囲座標X
@@ -64,37 +64,37 @@ public class HM10DANM
     /// <summary>
     ///  説明
     /// </summary>
-    public string HM10012 { get; set; }
+    public string HM10012 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HM10013 { get; set; }
+    public string HM10013 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HM10014 { get; set; }
+    public string HM10014 { get; set; } = string.Empty;
 
     /// <summary>
     ///  更新日時
     /// </summary>
-    public string HM10015 { get; set; }
+    public string HM10015 { get; set; } = string.Empty;
 
     /// <summary>
     ///  更新オペレータ
     /// </summary>
-    public string HM10016 { get; set; }
+    public string HM10016 { get; set; } = string.Empty;
 
     /// <summary>
     ///  同期日時
     /// </summary>
-    public string HM10017 { get; set; }
+    public string HM10017 { get; set; } = string.Empty;
 
     /// <summary>
     ///  同期オペレータ
     /// </summary>
-    public string HM10018 { get; set; }
+    public string HM10018 { get; set; } = string.Empty;
 
     public int HM10019 { get; set; }
 
@@ -104,11 +104,11 @@ public class HM10DANM
 
     public int HM10022 { get; set; }
     
-    public string HM10023 { get; set; }
+    public string HM10023 { get; set; } = string.Empty;
 
     public int HM10024 { get; set; }
 
-    public string HM10025 { get; set; }
+    public string HM10025 { get; set; } = string.Empty;
 }
 
 

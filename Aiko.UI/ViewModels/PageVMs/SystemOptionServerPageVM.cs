@@ -12,46 +12,46 @@ namespace Aiko.UI.ViewModels.PageVMs;
 public partial class SystemOptionServerPageVM : ObservableValidator
 {
 	[ObservableProperty]
-	private string photoType;
+	public partial bool IsJepg { get; set; }
 
 	[ObservableProperty]
-	private string imageQuality;
+	public partial string ImageQuality { get; set; }
 
 	[ObservableProperty]
-	private string blackFontSize;
+	public partial string BlackFontSize { get; set; }
 
 	[ObservableProperty]
-	private string saveDays;
+	public partial string SaveDays { get; set; }
 
 	[ObservableProperty]
-	private ObservableCollection<string> frontResolutions = new();
+	public partial ObservableCollection<string> FrontResolutions { get; set; } = new();
 
 	[ObservableProperty]
-	private int selectedFrontResolutionIndex = -1;
+	public partial int SelectedFrontResolutionIndex { get; set; } = -1;
 
 	[ObservableProperty]
-	private ObservableCollection<string> rearResolutions = new();
+	public partial ObservableCollection<string> RearResolutions { get; set; } = new();
 
 	[ObservableProperty]
-	private int selectedRearResolutionIndex = -1;
+	public partial int SelectedRearResolutionIndex { get; set; } = -1;
 
-	partial void OnPhotoTypeChanged(string value)
+	partial void OnIsJepgChanged(bool value)
 	{
-		if (value == "SVG")
-		{
-			ImageQuality = Preferences.Default.Get("ImageQuality_SVG", "80");
-		}
-		else if (value == "JPEG")
+		if (value)
 		{
 			ImageQuality = Preferences.Default.Get("ImageQuality_JPEG", "100");
+		}
+		else
+		{
+			ImageQuality = Preferences.Default.Get("ImageQuality_SVG", "80");
 		}
 	}
 
 	[RelayCommand]
 	private void PageLoad()
 	{
-		PhotoType = Preferences.Default.Get("PhotoType", "JPEG");
-		if (PhotoType == "JPEG")
+		IsJepg = Preferences.Default.Get("PhotoType", "JPEG") == "JPEG" ? true : false;
+		if (IsJepg)
 		{
 			ImageQuality = Preferences.Default.Get("ImageQuality_JPEG", "100");
 		}
@@ -70,8 +70,8 @@ public partial class SystemOptionServerPageVM : ObservableValidator
 	private async Task Save()
 	{
 		if (!await ValidateBeforeSave()) return;
-		Preferences.Default.Set("PhotoType", PhotoType);
-		if (PhotoType == "JPEG")
+		Preferences.Default.Set("PhotoType", IsJepg ? "JPEG" : "SVG");
+		if (IsJepg)
 		{
 			Preferences.Default.Set("ImageQuality_JPEG", ImageQuality);
 		}

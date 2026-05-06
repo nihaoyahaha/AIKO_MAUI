@@ -1,7 +1,7 @@
 ﻿using Aiko.Common;
 using Aiko.IServices.IServices;
 using Aiko.SqliteDb;
-using Aiko.UI;
+using Aiko.UI.Themes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -25,6 +25,8 @@ namespace Aiko.UI.ViewModels.PageVMs;
 public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewService>
 {
     private readonly ICheckPointService _checkPointService;
+    private MapViewportState? _pendingViewportState;
+    private string _pendingViewportMapCode = "";
 
     /// <summary>
     /// 地图页面视图模型构造函数。
@@ -42,33 +44,32 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// <summary>
     /// 階マスタ
     /// </summary>
+    [ObservableProperty]
+    public partial int FloorSelectIndex { get; set; } = -1;
 
     [ObservableProperty]
-    private int floorSelectIndex = -1;
-
-    [ObservableProperty]
-    private ObservableCollection<ListItem> floors = new();
+    public partial ObservableCollection<ListItem> Floors { get; set; } = new();
 
     /// <summary>
     /// マップ
     /// </summary>
     [ObservableProperty]
-    private int mapSelectIndex = -1;
+    public partial int MapSelectIndex { get; set; } = -1;
 
     [ObservableProperty]
-    private ObservableCollection<ListItem> maps = new();
+    public partial ObservableCollection<ListItem> Maps { get; set; } = new();
 
     /// <summary>
     /// 工区リスト
     /// </summary>
     [ObservableProperty]
-    private int areaSelectIndex = -1;
+    public partial int AreaSelectIndex { get; set; } = -1;
 
     [ObservableProperty]
-    private bool areaEnable = true;
+    public partial bool AreaEnable { get; set; } = true;
 
     [ObservableProperty]
-    private ObservableCollection<ListItem> areas = new();
+    public partial ObservableCollection<ListItem> Areas { get; set; } = new();
 
     // 在 ViewModel 顶部定义
     private bool _isInitialingAreas = false;
@@ -77,13 +78,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// 部位リスト
     /// </summary>
     [ObservableProperty]
-    private int positionSelectIndex = -1;
+    public partial int PositionSelectIndex { get; set; } = -1;
 
     [ObservableProperty]
-    private bool positionEnable = true;
+    public partial bool PositionEnable { get; set; } = true;
 
     [ObservableProperty]
-    private ObservableCollection<ListItem> positions = new();
+    public partial ObservableCollection<ListItem> Positions { get; set; } = new();
 
     // 在 ViewModel 顶部定义
     private bool _isInitialingPositions = false;
@@ -92,13 +93,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// 工程リスト
     /// </summary>
     [ObservableProperty]
-    private int prockSelectIndex = -1;
+    public partial int ProckSelectIndex { get; set; } = -1;
 
     [ObservableProperty]
-    private bool prockEnable = true;
+    public partial bool ProckEnable { get; set; } = true;
 
     [ObservableProperty]
-    private ObservableCollection<ListItem> procks = new();
+    public partial ObservableCollection<ListItem> Procks { get; set; } = new();
 
     // 在 ViewModel 顶部定义
     private bool _isInitialingProcks = false;
@@ -107,16 +108,16 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// 构造图
     /// </summary>
     [ObservableProperty]
-    private int classSelectIndex = -1;
+    public partial int ClassSelectIndex { get; set; } = -1;
 
     [ObservableProperty]
-    private ObservableCollection<ListItem> classs = new();
+    public partial ObservableCollection<ListItem> Classs { get; set; } = new();
 
     /// <summary>
     /// 底图数据源
     /// </summary>
     [ObservableProperty]
-    private ImageSource imageSource = "";
+    public partial ImageSource ImageSource { get; set; } = "";
 
     /// <summary>
     /// 每个确认点的图标颜色状态
@@ -129,7 +130,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     // 採用写真枚数/写真枚数
     private Dictionary<string, string> dicPicCount = new Dictionary<string, string>();
 
-
+    // 底图裁剪结果的小型 LRU 缓存。
+    // 这里缓存的是最终字节数组，不直接缓存 ImageSource，目的是避免流对象生命周期不好控。
+    private readonly object _croppedImageCacheLock = new();
+    private readonly Dictionary<string, byte[]> _croppedImageCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly LinkedList<string> _croppedImageCacheKeys = new();
+    private const int CroppedImageCacheLimit = 3;
 
     // 存储地图上的动态图元数据
     public List<MapShape> dynamicShapes = new();
@@ -142,38 +148,38 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// 控制弹窗显示隐藏
     /// </summary>
     [ObservableProperty]
-    private bool isSettingVisible = false;
+    public partial bool IsSettingVisible { get; set; } = false;
 
     // テーマ
     [ObservableProperty]
-    private bool themeFlag = false;
+    public partial bool ThemeFlag { get; set; } = false;
 
     // アイテムNo
     [ObservableProperty]
-    private bool hr01003Flag = false;
+    public partial bool Hr01003Flag { get; set; } = false;
 
     // 断面符号
     [ObservableProperty]
-    private bool hr01020Flag = true;
+    public partial bool Hr01020Flag { get; set; } = true;
 
     // 工区名
     [ObservableProperty]
-    private bool hr01007Flag = false;
+    public partial bool Hr01007Flag { get; set; } = false;
 
     // サイズ拡大
     [ObservableProperty]
-    private bool sizeFlag = false;
+    public partial bool SizeFlag { get; set; } = false;
 
     // 採用枚数/枚数
     [ObservableProperty]
-    private bool photoCountFlag = false;
+    public partial bool PhotoCountFlag { get; set; } = false;
 
     // ガイド
     [ObservableProperty]
-    private int guideSelectIndex = -1;
+    public partial int GuideSelectIndex { get; set; } = -1;
 
     [ObservableProperty]
-    private ObservableCollection<ListItem> guide = new();
+    public partial ObservableCollection<ListItem> Guide { get; set; } = new();
 
     /// <summary>
     /// 
@@ -181,22 +187,26 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     private List<HM04MAPM> hm04List = new List<HM04MAPM>();
 
 
+    [ObservableProperty]
+    public partial List<GuideDrawItem> GuideXItems { get; set; } = new();
+    [ObservableProperty]
+    public partial List<GuideDrawItem> GuideYItems { get; set; } = new();
+    [ObservableProperty]
+    public partial List<GuideDrawItem> GuideY2Items { get; set; } = new();
+    [ObservableProperty]
+    public partial HM04MAPM? CurrentMap { get; set; }
 
-
-
-    [ObservableProperty]
-    private List<GuideDrawItem> guideXItems = new();
-    [ObservableProperty]
-    private List<GuideDrawItem> guideYItems  = new();
-    [ObservableProperty]
-    private List<GuideDrawItem> guideY2Items  = new();
-    [ObservableProperty]
-    private HM04MAPM? currentMap;
+    private sealed class GuideLoadResult
+    {
+        public List<GuideDrawItem> XItems { get; init; } = new();
+        public List<GuideDrawItem> YItems { get; init; } = new();
+    }
 
 
 
     private List<HM14GUIDANDHM20> _guideRawX = new();
     private List<HM14GUIDANDHM20> _guideRawY = new();
+    private bool _suppressGuideSelectionChanged;
 
 
 
@@ -225,6 +235,9 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     {
         try
         {
+            // テーマ
+            ThemeFlag = ThemeManager.GetSavedThemeFlag();
+
             if (fromPage == "LoginPage")
             {
                 //层
@@ -236,8 +249,6 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                 //构造图
                 await InitCboHM12Async();
 
-                // テーマ
-                ThemeFlag = Preferences.Default.Get("ThemeFlag", false);
                 // アイテムNo显示隐藏
                 Hr01003Flag = Preferences.Default.Get("Hr01003Flag", false);
                 // 断面符号显示隐藏
@@ -396,7 +407,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// </summary>
     partial void OnThemeFlagChanged(bool value)
     {
-        Preferences.Default.Set("ThemeFlag", ThemeFlag);
+        Preferences.Default.Set("ThemeFlag", value);
+        ThemeManager.ApplyThemeByFlag(value);
     }
 
     /// <summary>
@@ -566,6 +578,39 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     }
 
     /// <summary>
+    /// 保存当前地图页的视口状态，供从确认点页返回时恢复。
+    /// 只在地图代码一致时才允许恢复，避免把旧地图的缩放/平移误套到新地图上。
+    /// </summary>
+    /// <param name="state"></param>
+    public void SavePendingViewportState(MapViewportState? state)
+    {
+        _pendingViewportState = state;
+        _pendingViewportMapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
+    }
+
+    public bool TryGetPendingViewportState(out MapViewportState? state)
+    {
+        string currentMapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
+
+        if (_pendingViewportState != null &&
+            !string.IsNullOrWhiteSpace(_pendingViewportMapCode) &&
+            string.Equals(_pendingViewportMapCode, currentMapCode, StringComparison.OrdinalIgnoreCase))
+        {
+            state = _pendingViewportState;
+            return true;
+        }
+
+        state = null;
+        return false;
+    }
+
+    public void ClearPendingViewportState()
+    {
+        _pendingViewportState = null;
+        _pendingViewportMapCode = "";
+    }
+
+    /// <summary>
     /// 跳转到确认点页面。
     /// </summary>
     /// <param name="item"></param>
@@ -573,8 +618,10 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task GoToCheckPointPage(HR01ITEM item)
     {
+        // 跳转前先让页面记录当前缩放和平移视口，返回时再恢复。
+        WeakReferenceMessenger.Default.Send("", "CaptureMapViewportStateToken");
         _checkPointService.SetHR01ITEM(item);
-        string projectSelectedItemCode = prockSelectIndex > -1 ? Procks[prockSelectIndex].Value : "";
+        string projectSelectedItemCode = ProckSelectIndex > -1 ? Procks[ProckSelectIndex].Value : "";
         await Shell.Current.GoToAsync("CheckPoint", CreateNavigationParameterForCheckPoint(projectSelectedItemCode));
     }
 
@@ -619,6 +666,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task FloorSelectedIndexChanged()
     {
+        ClearPendingViewportState();
         string floorCode = Floors[FloorSelectIndex].Value;
         (Maps, hm04List) = await Service.GetHM04DataSource(floorCode);
         MapSelectIndex = 0;
@@ -631,9 +679,10 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task MapSelectedIndexChanged()
     {
+        ClearPendingViewportState();
         ProckSelectIndex = Procks.Count > 0 ? 0 : -1;
 
-        string mapCode = Maps[MapSelectIndex].Value;
+        string mapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
 
         // 切图前先清空旧 Guide 和旧图元显示，避免新底图自适应时仍看到上一张地图的数据。
         Guide = new ObservableCollection<ListItem>();
@@ -641,7 +690,31 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         GuideXItems = new List<GuideDrawItem>();
         GuideYItems = new List<GuideDrawItem>();
         GuideY2Items = new List<GuideDrawItem>();
-        WeakReferenceMessenger.Default.Send("", "PrepareMapSwitchToken");
+
+        if (string.IsNullOrWhiteSpace(mapCode))
+        {
+            // 空地图只做界面清空，不再继续查工区、部位、Guide 和图元数据，
+            // 避免页面首次进入时白跑一轮完整刷新。
+            CurrentMap = null;
+            ImageSource = "";
+            WeakReferenceMessenger.Default.Send("", "RefreshMapToken");
+
+            Areas = new ObservableCollection<ListItem> { new("工区", " ") };
+            AreaSelectIndex = 0;
+            Positions = new ObservableCollection<ListItem> { new("部　位", "") };
+            PositionSelectIndex = 0;
+
+            dynamicShapes.Clear();
+            dictionaryHR01003.Clear();
+            dictionaryHM10004.Clear();
+            dictionaryKoKu.Clear();
+            dicHR02005.Clear();
+            hr01ItemList.Clear();
+            dicPicCount.Clear();
+
+            SetPickersEnable();
+            return;
+        }
 
         if (mapCode != "")
         {
@@ -736,16 +809,27 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
         // マップガイドヘッダマスター
         Guide = await Service.GetHM20GUIDHEADNUMList(mapCode);
-        GuideSelectIndex = 0;
+        _suppressGuideSelectionChanged = true;
+        try
+        {
+            GuideSelectIndex = Guide.Count > 0 ? 0 : -1;
+            await GetdataSource();
+            // 图元数据准备完成后，仅刷新覆盖内容，不再重新触发底图自适应。
+            WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
 
+            _suppressGuideSelectionChanged = false;
 
-        await GetdataSource();
-        // 图元数据准备完成后，仅刷新覆盖内容，不再重新触发底图自适应。
-        WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
+            if (GuideSelectIndex >= 0 && Guide.Count > 0)
+            {
+                await LoadGuideDataAsync();
 
-        await LoadGuideDataAsync();
-
-        WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
+                WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
+            }
+        }
+        finally
+        {
+            _suppressGuideSelectionChanged = false;
+        }
     }
 
     /// <summary>
@@ -821,11 +905,21 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         }
     }
 
+    #region 底图裁剪处理
     /// <summary>
     /// 使用 SkiaSharp 裁剪图片
     /// </summary>
     private async Task<ImageSource> CropImageAsync(string filePath, int x, int y, int width, int height)
     {
+        // 缓存键格式：文件路径 + 裁剪参数，确保同一张图不同裁剪结果也能分开缓存。
+        string cacheKey = BuildCropCacheKey(filePath, x, y, width, height);
+        // 先尝试从缓存拿裁剪结果，命中后直接返回构造好的 ImageSource，避免重复裁剪和磁盘 IO。
+        if (TryGetCroppedImageCache(cacheKey, out var cachedBytes))
+        {
+            // 命中后重新构造一个 ImageSource，避免复用同一个流对象。
+            return CreateImageSourceFromBytes(cachedBytes);
+        }
+
         return await Task.Run(() =>
         {
             // 加载原始图片
@@ -838,9 +932,6 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             width = Math.Min(width, original.Width - x);
             height = Math.Min(height, original.Height - y);
 
-            // 创建裁剪区域
-            var cropRect = new SKRectI(x, y, x + width, y + height);
-
             // 提取裁剪部分
             using var croppedBitmap = new SKBitmap(width, height);
             using var canvas = new SKCanvas(croppedBitmap);
@@ -851,16 +942,99 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             canvas.DrawBitmap(original, sourceRect, destRect);
 
             // 转换为 ImageSource
+            string extension = Path.GetExtension(filePath);
+            bool useJpeg = extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase)
+                || extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase);
+            SKEncodedImageFormat encodedFormat = useJpeg ? SKEncodedImageFormat.Jpeg : SKEncodedImageFormat.Png;
+            int encodedQuality = useJpeg ? 90 : 100;
             using var image = SKImage.FromBitmap(croppedBitmap);
-            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            using var data = image.Encode(encodedFormat, encodedQuality);
 
             var memoryStream = new MemoryStream();
             data.SaveTo(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
-
-            return ImageSource.FromStream(() => memoryStream);
+            byte[] imageBytes = memoryStream.ToArray();
+            // 把裁剪结果存到缓存，供下一次快速访问。
+            SetCroppedImageCache(cacheKey, imageBytes);
+            // 返回新的 ImageSource，供当前使用。
+            return CreateImageSourceFromBytes(imageBytes);
         });
     }
+
+    /// <summary>
+    /// 生成底图裁剪缓存键。
+    /// 把文件路径、最后修改时间和裁剪区域一起作为键，避免图片被替换后仍命中旧缓存。
+    /// </summary>
+    private static string BuildCropCacheKey(string filePath, int x, int y, int width, int height)
+    {
+        long fileStamp = File.GetLastWriteTimeUtc(filePath).Ticks;
+        return $"{filePath}|{fileStamp}|{x}|{y}|{width}|{height}";
+    }
+
+    /// <summary>
+    ///  从缓存拿裁剪结果，命中后直接返回构造好的 ImageSource，避免重复裁剪和磁盘 IO。
+    /// </summary>
+    /// <param name="cacheKey"></param>
+    /// <param name="imageBytes"></param>
+    /// <returns></returns>
+    private bool TryGetCroppedImageCache(string cacheKey, out byte[] imageBytes)
+    {
+        lock (_croppedImageCacheLock)
+        {
+            if (_croppedImageCache.TryGetValue(cacheKey, out imageBytes!))
+            {
+                // 命中后把键移到链表尾部，维持一个简单的 LRU 顺序。
+                _croppedImageCacheKeys.Remove(cacheKey);
+                _croppedImageCacheKeys.AddLast(cacheKey);
+                return true;
+            }
+        }
+
+        imageBytes = Array.Empty<byte>();
+        return false;
+    }
+
+    /// <summary>
+    /// 把裁剪结果存到缓存，供下一次快速访问。
+    /// </summary>
+    /// <param name="cacheKey"></param>
+    /// <param name="imageBytes"></param>
+    private void SetCroppedImageCache(string cacheKey, byte[] imageBytes)
+    {
+        lock (_croppedImageCacheLock)
+        {
+            if (_croppedImageCache.ContainsKey(cacheKey))
+            {
+                // 已存在时只更新内容并刷新最近使用顺序。
+                _croppedImageCache[cacheKey] = imageBytes;
+                _croppedImageCacheKeys.Remove(cacheKey);
+                _croppedImageCacheKeys.AddLast(cacheKey);
+                return;
+            }
+
+            _croppedImageCache[cacheKey] = imageBytes;
+            _croppedImageCacheKeys.AddLast(cacheKey);
+
+            while (_croppedImageCacheKeys.Count > CroppedImageCacheLimit)
+            {
+                // 超出上限就淘汰最久未使用的裁剪结果，避免图片字节长期占内存。
+                string oldestKey = _croppedImageCacheKeys.First!.Value;
+                _croppedImageCacheKeys.RemoveFirst();
+                _croppedImageCache.Remove(oldestKey);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 返回新的 ImageSource，供当前使用。
+    /// </summary>
+    /// <param name="imageBytes"></param>
+    /// <returns></returns>
+    private static ImageSource CreateImageSourceFromBytes(byte[] imageBytes)
+    {
+        return ImageSource.FromStream(() => new MemoryStream(imageBytes, writable: false));
+    }
+
+    #endregion
 
     /// <summary>
     /// 
@@ -868,6 +1042,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// <returns></returns>
     private async Task GetdataSource()
     {
+        // 每次重建地图前先清空运行时图元和辅助字典。
         dynamicShapes.Clear();
 
         dictionaryHR01003.Clear();
@@ -879,6 +1054,14 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
         // 工程Code
         string procksCode = Procks.Count > 0 ? Procks[ProckSelectIndex].Value : "";
+
+        if (string.IsNullOrWhiteSpace(mapCode))
+        {
+            dicHR02005.Clear();
+            hr01ItemList.Clear();
+            dicPicCount.Clear();
+            return;
+        }
 
         HR01ITEM hr01DC = new HR01ITEM();
 
@@ -911,7 +1094,17 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         // 採用写真枚数/写真枚数
         dicPicCount = await Service.GetPicCount(procksCode.Trim());
 
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        Dictionary<string, List<HR05KOKUMINFO>> polygonLookup = new(StringComparer.OrdinalIgnoreCase);
+
+        if (dataList.Any(p => p.HR01004 != 0))
+        {
+            List<HR05KOKUMINFO> polygonList = await Service.GetHR05KOKUMINFOListByMap(mapCode);
+
+            polygonLookup = polygonList
+                .Where(p => !string.IsNullOrWhiteSpace(p.HR05002))
+                .GroupBy(p => p.HR05002.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+        }
 
         foreach (var item in dataList)
         {
@@ -1009,11 +1202,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                 dictionaryKoKu.Add(item.HR01003.TrimEnd(), strName);
 
                 //List<int> lst = numberToArgb(item.HR01021);
-
-                HR05KOKUMINFO hr05DC = new HR05KOKUMINFO();
-                hr05DC.HR05001 = item.HR01001.Trim();
-                hr05DC.HR05002 = item.HR01003.Trim();
-                List<HR05KOKUMINFO> datalist05 =await Service.GetHR05KOKUMINFOList(hr05DC);
+                string polygonKey = item.HR01003.TrimEnd();
+                bool hasPolygon = polygonLookup.TryGetValue(polygonKey, out List<HR05KOKUMINFO>? datalist05);
 
                 //itemDictionary.Add(item.HR01003.TrimEnd(), new ControlObject(strName, null, 0, datalist05));
 
@@ -1024,7 +1214,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     //    strName = "";
                     //}
 
-                    if (datalist05.Count > 0)
+                    if (hasPolygon && datalist05!.Count > 0)
                     {
                         AddPolygon(item.HR01003.TrimEnd(), datalist05,  strName, Color.FromUint((uint)item.HR01021), Convert.ToInt32(item.HR01010), Convert.ToInt32(item.HR01011),
                             Convert.ToInt32(item.HR01008), Convert.ToInt32(item.HR01009), new Point(Convert.ToInt32(item.HM07014), Convert.ToInt32(item.HM07015)));
@@ -1039,7 +1229,6 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             }
 
         }
-
     }
 
     /// <summary>
@@ -1257,6 +1446,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task GuideSelectedIndexChanged()
     {
+        if (_suppressGuideSelectionChanged)
+        {
+            return;
+        }
+
         await LoadGuideDataAsync();
         WeakReferenceMessenger.Default.Send("", "RefreshGuideToken");
     }
@@ -1268,18 +1462,39 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// <returns></returns>
     public async Task LoadGuideDataAsync()
     {
-        GuideXItems.Clear();
-        GuideYItems.Clear();
-        GuideY2Items.Clear();
+        GuideXItems = new List<GuideDrawItem>();
+        GuideYItems = new List<GuideDrawItem>();
+        GuideY2Items = new List<GuideDrawItem>();
 
         if (CurrentMap == null || MapSelectIndex < 0 || GuideSelectIndex < 0 || Maps.Count == 0 || Guide.Count == 0)
+        {
             return;
+        }
 
         string mapCode = Maps[MapSelectIndex].Value;
         int guideNo = int.Parse(Guide[GuideSelectIndex].Value);
+        var result = await LoadGuideDataCoreAsync(mapCode, guideNo, CurrentMap);
+
+        GuideXItems = result.XItems;
+        GuideYItems = result.YItems;
+        GuideY2Items = new List<GuideDrawItem>();
+    }
+
+    private async Task<GuideLoadResult> LoadGuideDataCoreAsync(string mapCode, int guideNo, HM04MAPM currentMap)
+    {
+        bool loadXEnabled = Convert.ToInt32(currentMap.HM04015) == 0;
+        bool loadYEnabled = Convert.ToInt32(currentMap.HM04020) == 0;
+        List<GuideDrawItem> xItems = new();
+        List<GuideDrawItem> yItems = new();
+
+        Task<List<HM14GUIDANDHM20>>? loadXTask = null;
+        Task<(double FontSize, string FontFamily, Color Color)>? loadXStyleTask = null;
+
+        Task<List<HM14GUIDANDHM20>>? loadYTask = null;
+        Task<(double FontSize, string FontFamily, Color Color)>? loadYStyleTask = null;
 
         // X
-        if (Convert.ToInt32(CurrentMap.HM04015) == 0)
+        if (loadXEnabled)
         {
             var hm14X = new HM14GUID
             {
@@ -1289,9 +1504,31 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                 HM14015 = guideNo
             };
 
-            _guideRawX = await Service.GetHM14GUIDCODEList(hm14X);
+            loadXTask = Service.GetHM14GUIDCODEList(hm14X);
+            loadXStyleTask = GetGuideStyleAsync(mapCode, 0, guideNo);
+        }
 
-            var xStyle = await GetGuideStyleAsync(mapCode, 0, guideNo);
+        // Y
+        if (loadYEnabled)
+        {
+            var hm14Y = new HM14GUID
+            {
+                HM14001 = Service.AppContext.WorkCD,
+                HM14002 = mapCode.Trim(),
+                HM14004 = 1,
+                HM14015 = guideNo
+            };
+
+            loadYTask = Service.GetHM14GUIDCODEList(hm14Y);
+            loadYStyleTask = GetGuideStyleAsync(mapCode, 1, guideNo);
+        }
+
+        // X
+        if (loadXTask != null && loadXStyleTask != null)
+        {
+            _guideRawX = await loadXTask;
+
+            var xStyle = await loadXStyleTask;
 
             double picScaleX = GetPicScaleX(_guideRawX);
             picScaleX = double.IsInfinity(picScaleX) ? 0 : picScaleX;
@@ -1306,10 +1543,10 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                            Convert.ToDecimal(item.HM20009) == 0;
 
                 int intEX = isAngleZero
-                    ? CalcXGuidePositionWhenAngleZero(item, CurrentMap)
-                    : CalcXGuidePositionWhenAngleNotZero(item, CurrentMap, picScaleX);
+                    ? CalcXGuidePositionWhenAngleZero(item, currentMap)
+                    : CalcXGuidePositionWhenAngleNotZero(item, currentMap, picScaleX);
 
-                GuideXItems.Add(new GuideDrawItem
+                xItems.Add(new GuideDrawItem
                 {
                     Text = item.HM14006?.Trim() ?? "",
                     LogicalValue = intEX,
@@ -1325,19 +1562,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         }
 
         // Y
-        if (Convert.ToInt32(CurrentMap.HM04020) == 0)
+        if (loadYTask != null && loadYStyleTask != null)
         {
-            var hm14Y = new HM14GUID
-            {
-                HM14001 = Service.AppContext.WorkCD,
-                HM14002 = mapCode.Trim(),
-                HM14004 = 1,
-                HM14015 = guideNo
-            };
+            _guideRawY = await loadYTask;
 
-            _guideRawY = await Service.GetHM14GUIDCODEList(hm14Y);
-
-            var yStyle = await GetGuideStyleAsync(mapCode, 1, guideNo);
+            var yStyle = await loadYStyleTask;
 
             double picScaleY = GetPicScaleY(_guideRawY);
             picScaleY = double.IsInfinity(picScaleY) ? 0 : picScaleY;
@@ -1352,11 +1581,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     Convert.ToDecimal(item.HM20009) == 0;
 
                 int intEY = isAngleZero
-                    ? CalcYGuidePositionWhenAngleZero(item, CurrentMap)
-                    : CalcYGuidePositionWhenAngleNotZero(item, CurrentMap, picScaleY);
+                    ? CalcYGuidePositionWhenAngleZero(item, currentMap)
+                    : CalcYGuidePositionWhenAngleNotZero(item, currentMap, picScaleY);
 
                 // Y方向也先不过滤，交给页面判断显示位置
-                GuideYItems.Add(new GuideDrawItem
+                yItems.Add(new GuideDrawItem
                 {
                     Text = item.HM14006?.Trim() ?? "",
                     LogicalValue = intEY,
@@ -1370,6 +1599,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                 });
             }
         }
+
+        var result = new GuideLoadResult
+        {
+            XItems = xItems,
+            YItems = yItems
+        };
+        return result;
     }
 
     /// <summary>
@@ -1389,11 +1625,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             byte[] intBuff = BitConverter.GetBytes(row.HM19006);
             var color = Color.FromRgba(intBuff[2], intBuff[1], intBuff[0], intBuff[3]);
 
-            return (
+            var style = (
                 Convert.ToDouble(row.HM19008),
-                row.HM19007 ?? "",
+                row.HM19007.Trim() ?? "",
                 color
             );
+
+            return style;
         }
 
         return type == 0
@@ -1735,6 +1973,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
         return intEY;
     }
+
 }
 
 public class GuideDrawItem

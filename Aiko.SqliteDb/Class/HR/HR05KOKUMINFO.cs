@@ -8,13 +8,13 @@ public class HR05KOKUMINFO
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HR05001 { get; set; }
+	public string HR05001 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// アイテムコード
 	/// </summary>
-	public string HR05002 { get; set; }
+	public string HR05002 { get; set; } = string.Empty;
 
     /// <summary>
     /// 頂点No
@@ -34,21 +34,21 @@ public class HR05KOKUMINFO
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HR05006 { get; set; }
+    public string HR05006 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HR05007 { get; set; }
+    public string HR05007 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HR05008 { get; set; }
+    public string HR05008 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HR05009 { get; set; }
+    public string HR05009 { get; set; } = string.Empty;
 }
 

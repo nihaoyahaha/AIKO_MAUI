@@ -8,19 +8,11 @@ namespace DI.DiNetWinServiceObject
     /// </summary>
     public class HM17VERSIONLISTDC : CMObjectDC
     {
-        // 部位マスタリスト
-        private ArrayList _HM17VERSION = new ArrayList();
 
         /// <summary>
         /// 部位マスタリスト
         /// </summary>
-        public ArrayList HM17VERSION
-        {
-            get { return _HM17VERSION; }
-            set { _HM17VERSION = value; }
-        }
+        public ArrayList HM17VERSION { get; set; } = new ArrayList();
 
-       
     }
 }
-

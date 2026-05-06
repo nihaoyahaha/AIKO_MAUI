@@ -20,7 +20,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     private bool _first = false;
 
     [ObservableProperty]
-    private bool _isDarkenMode = true;
+    public partial bool IsDarkenMode { get; set; } = true;
 
     // 图片存储路径
     public string ImageFolderPath;
@@ -32,36 +32,36 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     private List<HR01ITEMPINFO> _hr01ItempInfoList = new List<HR01ITEMPINFO>();
 
     [ObservableProperty]
-    private Toast _toast = new Toast();
+    public partial Toast Toast { get; set; } = new Toast();
 
     // 颜料版
     [ObservableProperty]
-    private ObservableCollection<Color> _colorPalette = new ObservableCollection<Color>();
+    public partial ObservableCollection<Color> ColorPalette { get; set; } = new ObservableCollection<Color>();
 
     // 图片集
     [ObservableProperty]
-    private ObservableCollection<InkImage> _imageList = new ObservableCollection<InkImage>();
+    public partial ObservableCollection<InkImage> ImageList { get; set; } = new ObservableCollection<InkImage>();
     [ObservableProperty]
-    private List<InkImage> _original‌ImageList = new List<InkImage>();
+    public partial List<InkImage> Original‌ImageList { get; set; } = new List<InkImage>();
     public string Summary => $"{SourceImageList.Count(image => image.IsVisualized)}/{ImagesCount}";
 
     [ObservableProperty]
-    private int _imagesCount = 0;
+    public partial int ImagesCount { get; set; } = 0;
 
     [ObservableProperty]
-    private bool _isAscending = true;
+    public partial bool IsAscending { get; set; } = true;
     public string SortText => IsAscending ? "昇順 ▲" : "降順 ▼";
 
     public List<InkImage> SourceImageList = new List<InkImage>();
     private int _pageSize = 12;
     private bool _isImageLoading;
     [ObservableProperty]
-    private bool _isFooterVisible;
+    public partial bool IsFooterVisible { get; set; }
 
     public bool IsLoaded => SourceImageList.Count(image => image.IsVisualized) >= (SourceImageList.Count > _pageSize - 3 ? _pageSize - 3 : SourceImageList.Count);
 
     [ObservableProperty]
-    private ImageSource _danmImageSource;
+    public partial ImageSource DanmImageSource { get; set; }
 
     private int _selectImageIndex
     {
@@ -79,138 +79,138 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     /// 配筋確認
     /// </summary>
     [ObservableProperty]
-    private string _danmTitle = "";
+    public partial string DanmTitle { get; set; } = "";
     /// <summary>
     /// 部位
     /// </summary>
     [ObservableProperty]
-    private string _buim = "";
+    public partial string Buim { get; set; } = "";
     /// <summary>
     /// 階・グループ
     /// </summary>
     [ObservableProperty]
-    private string _grpl = "";
+    public partial string Grpl { get; set; } = "";
     /// <summary>
     /// 断面
     /// </summary>
     [ObservableProperty]
-    private string _danm = "";
+    public partial string Danm { get; set; } = "";
     /// <summary>
     /// 工区
     /// </summary>
     [ObservableProperty]
-    private string _koku = "";
+    public partial string Koku { get; set; } = "";
     /// <summary>
     /// 位置
     /// </summary>
     [ObservableProperty]
-    private string _location = "";
+    public partial string Location { get; set; } = "";
 
     /// <summary>
     /// 工程
     /// </summary>
     [ObservableProperty]
-    private ListItem _proc;
+    public partial ListItem Proc { get; set; }
     [ObservableProperty]
-    private List<ListItem> _procList = new List<ListItem>();
+    public partial List<ListItem> ProcList { get; set; } = new List<ListItem>();
     /// <summary>
     /// 確認項目
     /// </summary>
     [ObservableProperty]
-    private ListItem _proj;
+    public partial ListItem Proj { get; set; }
     [ObservableProperty]
-    private List<ListItem> _projList = new List<ListItem>();
+    public partial List<ListItem> ProjList { get; set; } = new List<ListItem>();
     /// <summary>
     /// 判定基準
     /// </summary>
     [ObservableProperty]
-    private string _hantei;
+    public partial string Hantei { get; set; }
     [ObservableProperty]
-    private Dictionary<string, string> _hanteiDic = new Dictionary<string, string>();
+    public partial Dictionary<string, string> HanteiDic { get; set; } = new Dictionary<string, string>();
 
     /// <summary>
     /// 撮影方向
     /// </summary>
     [ObservableProperty]
-    private string _dirsDisplyName;
+    public partial string DirsDisplyName { get; set; }
     [ObservableProperty]
-    private ListItem _dirs;
+    public partial ListItem Dirs { get; set; }
     [ObservableProperty]
-    private List<ListItem> _dirsList = new List<ListItem>();
+    public partial List<ListItem> DirsList { get; set; } = new List<ListItem>();
     [ObservableProperty]
-    private List<ListItem> _dbDirsList = new List<ListItem>();
+    public partial List<ListItem> DbDirsList { get; set; } = new List<ListItem>();
     /// <summary>
     /// 備考
     /// </summary>
     [ObservableProperty]
-    private string _comment;
+    public partial string Comment { get; set; }
     /// <summary>
     /// 撮影日時
     /// </summary>
     [ObservableProperty]
-    private string _date;
+    public partial string Date { get; set; }
     /// <summary>
     /// 撮影者
     /// </summary>
     [ObservableProperty]
-    private string _author;
+    public partial string Author { get; set; }
 
     [ObservableProperty]
-    private int _checkrsl1StrokeThickness = 0;
+    public partial int Checkrsl1StrokeThickness { get; set; } = 0;
     [ObservableProperty]
-    private int _checkrsl2StrokeThickness = 0;
+    public partial int Checkrsl2StrokeThickness { get; set; } = 0;
     [ObservableProperty]
-    private int _checkrsl4StrokeThickness = 0;
+    public partial int Checkrsl4StrokeThickness { get; set; } = 0;
     [ObservableProperty]
-    private int _checkrsl5StrokeThickness = 0;
+    public partial int Checkrsl5StrokeThickness { get; set; } = 0;
 
     [ObservableProperty]
-    private int _sign;
+    public partial int Sign { get; set; }
 
     [ObservableProperty]
-    private bool _isBlackboardVisible;
+    public partial bool IsBlackboardVisible { get; set; }
     [ObservableProperty]
-    private bool _isStrokesVisible;
+    public partial bool IsStrokesVisible { get; set; }
 
     [ObservableProperty]
-    private bool _isSvg;
+    public partial bool IsSvg { get; set; }
 
     [ObservableProperty]
-    private string _selectedTool;
+    public partial string SelectedTool { get; set; }
     [ObservableProperty]
-    private bool _ballpointPenSelected;
+    public partial bool BallpointPenSelected { get; set; }
     [ObservableProperty]
-    private bool _pencilSelected;
+    public partial bool PencilSelected { get; set; }
     [ObservableProperty]
-    private bool _highlighterSelected;
+    public partial bool HighlighterSelected { get; set; }
     [ObservableProperty]
-    private bool _lineSelected;
+    public partial bool LineSelected { get; set; }
     [ObservableProperty]
-    private bool _fixedRectSelected;
+    public partial bool FixedRectSelected { get; set; }
     [ObservableProperty]
-    private bool _fixedCircleSelected;
+    public partial bool FixedCircleSelected { get; set; }
     [ObservableProperty]
-    private bool _textSelected;
+    public partial bool TextSelected { get; set; }
     [ObservableProperty]
-    private bool _circleTextSelected;
+    public partial bool CircleTextSelected { get; set; }
     [ObservableProperty]
-    private bool _rectTextSelected;
+    public partial bool RectTextSelected { get; set; }
     [ObservableProperty]
-    private bool _acceptSelected;
+    public partial bool AcceptSelected { get; set; }
     [ObservableProperty]
-    private bool _moveSelected;
+    public partial bool MoveSelected { get; set; }
     [ObservableProperty]
-    private bool _eraserSelected;
+    public partial bool EraserSelected { get; set; }
     [ObservableProperty]
-    private bool _emptySelected;
+    public partial bool EmptySelected { get; set; }
 
     public bool IsPreviousSwitchable => (!IsSvg || EmptySelected) && _selectImageIndex > 0;
     public bool IsNextSwitchable => (!IsSvg || EmptySelected) && (_selectImageIndex > -1 && _selectImageIndex < SourceImageList.Count - 1);
 
     [ObservableProperty]
-    private bool _isImageGalleryVisible = true;
+    public partial bool IsImageGalleryVisible { get; set; } = true;
     [ObservableProperty]
-    private bool _isImageGridVisible = false;
+    public partial bool IsImageGridVisible { get; set; } = false;
 
     private List<ProjectPhotoMessage> _projectPhotoList = new List<ProjectPhotoMessage>();
 
@@ -238,7 +238,9 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
         if (Query == null || Query.Count == 0)
         {
-            Logger.LogError("クエリパラメータを取得できませんでした");
+#if DEBUG
+            Logger.LogError("クエリパラメータを取得できませんでした / Failed to retrieve query parameters");
+#endif
         }
 
         await LoadData();
@@ -331,19 +333,12 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
         DbDirsList = dirsList.Select(dirs => new ListItem(dirs.DisplyName, dirs.Value)).ToList();
 
-        string prefDirsListStr = Preferences.Get("DirsList", "");
-        List<string> prefDirsList = prefDirsListStr.Split(',').ToList();
-        foreach (var item in prefDirsList)
+        foreach (var item in Service.AppContext.DirectionList)
         {
             if (!dirsList.Any(dirs => dirs.DisplyName == item))
             {
                 dirsList.Add(new ListItem(item, item));
             }
-        }
-
-        if (!dirsList.Any(dirs => dirs.Value == ""))
-        {
-            dirsList.Add(new ListItem("", ""));
         }
 
         DirsList = dirsList;
@@ -381,6 +376,14 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         else
         {
             DirsDisplyName = "";
+        }
+    }
+
+    partial void OnDirsDisplyNameChanged(string value)
+    {
+        if (value.Trim() == "" && Dirs != null)
+        {
+            DirsDisplyName = Dirs.DisplyName;
         }
     }
 
@@ -694,7 +697,9 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
                         }
                         catch (Exception ex)
                         {
-                            Logger.LogError(ex, "指定されたパスの画像の削除に失敗しました: {Path}", image.FullName);
+#if DEBUG
+                            Logger.LogError(ex, "指定されたパスの画像の削除に失敗しました / Failed to delete image at specified path: {Path}", image.FullName);
+#endif
                             // 无法删除文件，请检查文件是否正在使用。
                             DialogHelper.MessageDialog("ファイルを削除できません。ファイルが他のプログラムで使用中ではないか確認してください。");
 
@@ -868,13 +873,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     {
         if (value != "" && !DbDirsList.Any(dirs => dirs.Value == value))
         {
-            string prefDirsListStr = Preferences.Get("DirsList", "");
-            List<string> prefDirsList = prefDirsListStr.Split(',').ToList();
-            if (!prefDirsList.Contains(value))
-            {
-                prefDirsList.Add(value);
-                Preferences.Set("DirsList", string.Join(",", prefDirsList));
-            }
+            Service.AppContext.AddPreferencesDirection(value);
         }
     }
 

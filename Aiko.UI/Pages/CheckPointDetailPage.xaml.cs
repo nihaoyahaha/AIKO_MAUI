@@ -30,10 +30,14 @@ public partial class CheckPointDetailPage : ContentPage
         base.OnAppearing();
         Shell.SetTitleView(this, null);
 
+        if (_toolManager == null) InitToolManager();
+
         await LoadTypeface("ヒラギノ角ゴシック");
         await LoadTypeface("ヒラギノ明朝 ProN");
         await LoadTypeface("ヒラギノ丸ゴ ProN");
         _toolManager.LoadTypefaces(_typefaces);
+
+        SwitchTool("Empty");
 
         _appearingTcs.TrySetResult(true);
     }
@@ -56,8 +60,7 @@ public partial class CheckPointDetailPage : ContentPage
         // 订阅 VM 的属性变更通知
         _vm.PropertyChanged += OnViewModelPropertyChanged;
 
-        _toolManager = new InkToolManager();
-        _toolManager.TextEditRequested += OnTextEditRequested;
+        if (_toolManager == null) InitToolManager();
 
         MainGridView.SizeChanged += (s, e) =>
         {
@@ -96,6 +99,12 @@ public partial class CheckPointDetailPage : ContentPage
 
             message.Tcs.TrySetResult(true);
         });
+    }
+
+    private void InitToolManager()
+    {
+        _toolManager = new InkToolManager();
+        _toolManager.TextEditRequested += OnTextEditRequested;
     }
 
     private async void OnViewModelPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -329,14 +338,25 @@ public partial class CheckPointDetailPage : ContentPage
 #endif
     }
 
+    private readonly SemaphoreSlim _galleryItemTappedSemaphore = new SemaphoreSlim(1, 1);
+
     private async void OnGalleryItemTapped(object sender, EventArgs e)
     {
         if (!_vm.IsLoaded) return;
 
-        var border = sender as Border;
-        var image = border?.BindingContext as InkImage;
+        await _galleryItemTappedSemaphore.WaitAsync();
 
-        if (image != null) await SwitchImage(image);
+        try
+        {
+            var border = sender as Border;
+            var image = border?.BindingContext as InkImage;
+
+            if (image != null) await SwitchImage(image);
+        }
+        finally
+        {
+            _galleryItemTappedSemaphore.Release();
+        }
     }
 
     private async Task SwitchImage(InkImage? image)

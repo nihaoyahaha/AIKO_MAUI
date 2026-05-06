@@ -28,5 +28,5 @@ public partial class SelectionButtonModel : ObservableValidator
 	/// 断面ボタンの背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _backgroundColor = Color.FromRgba(153, 201, 239, 250);
+	public partial Color BackgroundColor { get; set; } = Color.FromRgba(153, 201, 239, 250);
 }

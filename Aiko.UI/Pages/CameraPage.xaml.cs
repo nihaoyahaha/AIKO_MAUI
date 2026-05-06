@@ -5,6 +5,7 @@ namespace Aiko.UI;
 
 public partial class CameraPage : ContentPage
 {
+	double _startScale = 1;
 	CameraPageVM _vm;
 	public CameraPage(CameraPageVM vm)
 	{
@@ -77,4 +78,26 @@ public partial class CameraPage : ContentPage
 		}
 	}
 
+	private void PinchGestureRecognizer_PinchUpdated(object sender, PinchGestureUpdatedEventArgs e)
+	{
+		if (_vm.CurrentZoom > slider.Maximum)
+		{
+			_vm.CurrentZoom = (float)slider.Maximum;
+			return;
+		}
+		if (_vm.CurrentZoom < slider.Minimum)
+		{
+			_vm.CurrentZoom = (float)slider.Minimum;
+			return;
+		}
+
+		switch (e.Status)
+		{
+			case GestureStatus.Started: 
+				_startScale = _vm.CurrentZoom;break;
+			
+			case GestureStatus.Running: 
+				_vm.CurrentZoom += (float)((e.Scale - 1) * _startScale);break;
+		}
+	}
 }

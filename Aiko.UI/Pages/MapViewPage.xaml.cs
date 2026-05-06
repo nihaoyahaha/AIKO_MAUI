@@ -267,6 +267,14 @@ public partial class MapViewPage : ContentPage
     /// </summary>
     private void RegisterMessages()
     {
+        WeakReferenceMessenger.Default.Register<string, string>(this, "CaptureMapViewportStateToken", (_, _) =>
+        {
+            if (BindingContext is MapViewPageVM vm)
+            {
+                vm.SavePendingViewportState(pinchToZoom.CaptureViewportState());
+            }
+        });
+
         // 修改底图后：清空旧图元并重新触发底图加载流程
         WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshMapToken", (_, _) =>
         {
@@ -275,14 +283,18 @@ public partial class MapViewPage : ContentPage
             _isPriorityShapesInitialized = false;
             _isDeferredShapesInitialized = false;
             ClearDynamicElements();
+            //originalWidth = 0;
+            //originalHeight = 0;
+            //showW = 0;
+            //showH = 0;
 
             // 等到底图绑定值写入到 Image 控件后，再主动启动一次尺寸探测，
-            // 避免切图瞬间直接拿到旧底图尺寸。
-            MainThread.BeginInvokeOnMainThread(async () =>
-            {
-                await Task.Yield();
-                OnContainerImgLoaded(ContainerImg, EventArgs.Empty);
-            });
+            // 这里仅让新底图完成一次自适应，不再顺手重绘旧图元。
+            //MainThread.BeginInvokeOnMainThread(async () =>
+            //{
+                //await Task.Yield();
+                RefreshContainerImgLayout(renderShapes: false);
+            //});
         });
 
         // 修改配筋点和工区后：清空并按当前尺寸重绘图元
@@ -292,7 +304,10 @@ public partial class MapViewPage : ContentPage
             _isPriorityShapesInitialized = false;
             _isDeferredShapesInitialized = false;
             ClearDynamicElements();
+            // 新图元数据已经准备完成，此时再放开显示并重绘。
+            _deferDynamicShapeDisplay = false;
             UpdateShapes(showW, showH);
+            TryRestorePendingViewportState();
         });
 
         // 仅更新现有图元的显示状态与文字，不重建整页数据
@@ -512,7 +527,17 @@ public partial class MapViewPage : ContentPage
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    private async void OnContainerImgLoaded(object sender, EventArgs e)
+    private void OnContainerImgLoaded(object sender, EventArgs e)
+    {
+        RefreshContainerImgLayout(renderShapes: true);
+    }
+
+    /// <summary>
+    /// 读取当前底图原始尺寸，并按需要决定是否同时重绘图元。
+    /// 切图阶段只做底图自适应；图元重绘交给 RefreshMapContentToken。
+    /// </summary>
+    /// <param name="renderShapes"></param>
+    private async void RefreshContainerImgLayout(bool renderShapes)
     {
         // 确保图片源已加载
         if (ContainerImg.Source == null) return;
@@ -527,7 +552,7 @@ public partial class MapViewPage : ContentPage
                 originalHeight = size.Height;
 
                 // 图片自适应宽度
-                UpdateImageDimensions();
+                UpdateImageDimensions(renderShapes);
 
                 return;
             }
@@ -539,7 +564,8 @@ public partial class MapViewPage : ContentPage
     /// <summary>
     /// 根据底图原始尺寸和当前容器大小，计算页面实际显示尺寸并更新图层布局。
     /// </summary>
-    private void UpdateImageDimensions()
+    /// <param name="renderShapes">是否在完成底图自适应后立即重绘图元</param>
+    private void UpdateImageDimensions(bool renderShapes = true)
     {
         if (originalWidth <= 0 || originalHeight <= 0)
             return;
@@ -564,16 +590,42 @@ public partial class MapViewPage : ContentPage
         ContainerImg.HeightRequest = showH;
 
         pinchToZoom.SetBaseSize(showW, showH);
-        UpdateShapes(showW, showH);
+        TryRestorePendingViewportState();
+        if (renderShapes)
+        {
+            UpdateShapes(showW, showH);
+        }
 
         if (!_isInitialImageReady)
         {
             _isInitialImageReady = true;
             ContainerImg.Opacity = 1;
             pinchToZoom.Opacity = 1;
-            ScheduleInitialShapeDisplay();
+
+            if (renderShapes)
+            {
+                ScheduleInitialShapeDisplay();
+            }
         }
 
+    }
+
+    /// <summary>
+    /// 如果 VM 中有待恢复的视口状态，就在当前底图尺寸稳定后恢复。
+    /// 恢复成功后立即清空，避免后续普通刷新重复套用旧状态。
+    /// </summary>
+    private void TryRestorePendingViewportState()
+    {
+        if (BindingContext is not MapViewPageVM vm)
+            return;
+
+        if (!vm.TryGetPendingViewportState(out var viewportState))
+            return;
+
+        if (pinchToZoom.TryRestoreViewportState(viewportState))
+        {
+            vm.ClearPendingViewportState();
+        }
     }
 
     /// <summary>

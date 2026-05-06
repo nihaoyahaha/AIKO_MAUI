@@ -51,7 +51,7 @@ public class DataSyncService
 
 	#region プライベートフィールド
 
-	int _timeout = 30000;
+	int _timeout = 120000;
 	decimal _pageSize = 10000;
 	IUWPServiceAPI _serviceApi02;
 	string[] _mimeTypes = { ".jpg", ".svg", ".json" };

@@ -7,11 +7,11 @@ namespace Aiko.Common;
 
 public partial class LogItem : ObservableObject
 {
-	public string FileName { get; set; }
-	public string FilePath { get; set; }
-	public string FileSize { get; set; }
+	public string FileName { get; set; } = string.Empty;
+	public string FilePath { get; set; } = string.Empty;
+	public string FileSize { get; set; } = string.Empty;
 	public DateTime CreatedDate { get; set; }
 
 	[ObservableProperty]
-	private bool _isSelected;
+	public partial bool IsSelected { get; set; }
 }

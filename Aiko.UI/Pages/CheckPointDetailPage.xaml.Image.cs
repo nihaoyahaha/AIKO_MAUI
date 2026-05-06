@@ -126,7 +126,7 @@ public partial class CheckPointDetailPage : ContentPage
             PhotoCanvasView.InvalidateSurface();
             BlackboardCanvasView.InvalidateSurface();
 
-            _codeCache = null;
+            _cacheCode = null;
             InkCanvasView.InvalidateSurface();
 
             return;
@@ -136,7 +136,7 @@ public partial class CheckPointDetailPage : ContentPage
 
         _toolManager.ResetStrokesChange();
 
-        if (_currentImage == image && (image.Bitmap != null || image.PhotoSvg != null || image.BlackboardSvg != null))
+        if (_currentImage == image && (image.Bitmap != null || image.PhotoBitmap != null))
             return;
 
         _currentImage?.ClearBitmap();
@@ -155,7 +155,7 @@ public partial class CheckPointDetailPage : ContentPage
         PhotoCanvasView.InvalidateSurface();
         BlackboardCanvasView.InvalidateSurface();
 
-        _codeCache = null;
+        _cacheCode = null;
         InkCanvasView.InvalidateSurface();
     }
 

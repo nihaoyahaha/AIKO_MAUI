@@ -6,17 +6,17 @@ public class HM14GUIDANDHM20
     /// <summary>
     /// 工事コード
     /// </summary>
-    public string HM14001 { get; set; }
+    public string HM14001 { get; set; } = string.Empty;
 
     /// <summary>
     /// マップコード
     /// </summary>
-    public string HM14002 { get; set; }
+    public string HM14002 { get; set; } = string.Empty;
 
     /// <summary>
     /// ガイドコード
     /// </summary>
-    public string HM14003 { get; set; }
+    public string HM14003 { get; set; } = string.Empty;
 
     /// <summary>
     /// ガイドタイプ
@@ -26,12 +26,12 @@ public class HM14GUIDANDHM20
     /// <summary>
     /// 並び順
     /// </summary>
-    public string HM14005 { get; set; }
+    public string HM14005 { get; set; } = string.Empty;
 
     /// <summary>
     /// 座標種別
     /// </summary>
-    public string HM14006 { get; set; }
+    public string HM14006 { get; set; } = string.Empty;
 
     /// <summary>
     /// 間隔

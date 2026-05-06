@@ -6,7 +6,7 @@ namespace Aiko.SqliteDb;
 public class FluentFtpClient
 {
 	readonly ILogger<FluentFtpClient> _logger;
-	AsyncFtpClient _client;
+	AsyncFtpClient _client = new AsyncFtpClient();
 	public FluentFtpClient(ILogger<FluentFtpClient> logger)
 	{
 		_logger = logger;
@@ -154,7 +154,7 @@ public class FluentFtpClient
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError($"ftp-ファイル削除に失敗しました:{remotePath}");
+			_logger.LogError($"ftp-ファイル削除に失敗しました:{remotePath},{ex.ToString()}");
 			return false;
 		}
 	}
@@ -197,9 +197,9 @@ public class FluentFtpClient
 
 public class FluentFtpOptions
 {
-	public string Host { get; set; }
+	public string Host { get; set; } = string.Empty;
 	public int Port { get; set; }
-	public string Username { get; set; }
-	public string Password { get; set; }
+	public string Username { get; set; } = string.Empty;
+	public string Password { get; set; } = string.Empty;
 	public bool UseSsl { get; set; } = false;
 }

@@ -3,94 +3,103 @@
     x:Class="Aiko.UI.MapListPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Aiko.UI"
     xmlns:vm="clr-namespace:Aiko.UI.ViewModels.PageVMs"
     x:DataType="vm:MapListPageVM"
-    xmlns:local="clr-namespace:Aiko.UI"
     Shell.NavBarIsVisible="False">
 
     <Grid BackgroundColor="White">
 
-        <!-- 当前图片 -->
-        <Grid x:Name="MainGridView" BackgroundColor="White" IsClippedToBounds="True">
+        <!--  当前图片  -->
+        <Grid
+            x:Name="MainGridView"
+            BackgroundColor="White"
+            IsClippedToBounds="True">
             <Grid.GestureRecognizers>
-                <SwipeGestureRecognizer Direction="Left"
-                            Swiped="OnSwipeLeft" />
-                <SwipeGestureRecognizer Direction="Right"
-                            Swiped="OnSwipeRight" />
+                <SwipeGestureRecognizer Direction="Left" Swiped="OnSwipeLeft" />
+                <SwipeGestureRecognizer Direction="Right" Swiped="OnSwipeRight" />
             </Grid.GestureRecognizers>
             <local:PinchToZoomContainer x:Name="pinchToZoom">
                 <AbsoluteLayout x:Name="ZoomLayer">
-                    <Image x:Name="ContainerImg" 
-                           Source="{Binding CurrentImage}"
-                           Aspect="AspectFit"
-                           HorizontalOptions="Fill"
-                           VerticalOptions="Fill" 
-                           Loaded="OnContainerImgLoaded"/>
+                    <Image
+                        x:Name="ContainerImg"
+                        Aspect="AspectFit"
+                        HorizontalOptions="Fill"
+                        Loaded="OnContainerImgLoaded"
+                        Source="{Binding CurrentImage}"
+                        VerticalOptions="Fill" />
                 </AbsoluteLayout>
             </local:PinchToZoomContainer>
         </Grid>
 
-        <!-- 左右箭头 -->
-        <Grid ColumnDefinitions="Auto,*,Auto"
-              Margin="10,0"
-              VerticalOptions="Center"
-              HorizontalOptions="Fill"
-              InputTransparent="True"
-              CascadeInputTransparent="False"
-              ZIndex="10">
+        <!--  左右箭头  -->
+        <Grid
+            Margin="10,0"
+            CascadeInputTransparent="False"
+            ColumnDefinitions="Auto,*,Auto"
+            HorizontalOptions="Fill"
+            InputTransparent="True"
+            VerticalOptions="Center"
+            ZIndex="10">
 
-            <ImageButton Grid.Column="0"
-                         InputTransparent="False"
-                         Source="arrowleft.png"
-                         Command="{Binding PreviousImageCommand}"
-                         IsEnabled="{Binding CanGoPrevious}"
-                         BackgroundColor="#66000000"
-                         CornerRadius="24"
-                         WidthRequest="48"
-                         HeightRequest="48"
-                         Padding="10" />
+            <ImageButton
+                Grid.Column="0"
+                Padding="10"
+                BackgroundColor="#66000000"
+                Command="{Binding PreviousImageCommand}"
+                CornerRadius="24"
+                HeightRequest="48"
+                InputTransparent="False"
+                IsVisible="{Binding CanGoPrevious}"
+                Source="arrowleft.png"
+                WidthRequest="48" />
 
-            <ImageButton Grid.Column="2"
-                         InputTransparent="False"
-                         Source="arrowleft.png"
-                         Rotation="180"
-                         Command="{Binding NextImageCommand}"
-                         IsEnabled="{Binding CanGoNext}"
-                         BackgroundColor="#66000000"
-                         CornerRadius="24"
-                         WidthRequest="48"
-                         HeightRequest="48"
-                         Padding="10" />
+            <ImageButton
+                Grid.Column="2"
+                Padding="10"
+                BackgroundColor="#66000000"
+                Command="{Binding NextImageCommand}"
+                CornerRadius="24"
+                HeightRequest="48"
+                InputTransparent="False"
+                IsVisible="{Binding CanGoNext}"
+                Rotation="180"
+                Source="arrowleft.png"
+                WidthRequest="48" />
         </Grid>
 
-        <!-- 页码 -->
-        <Label Text="{Binding PageInfo}"
-               HorizontalOptions="Center"
-               VerticalOptions="End"
-               Margin="0,0,0,20"
-               Padding="10,4"
-               TextColor="White"
-               BackgroundColor="#66000000"
-               InputTransparent="True"
-               ZIndex="10" />
+        <!--  页码  -->
+        <Label
+            Margin="0,0,0,20"
+            Padding="10,4"
+            BackgroundColor="#66000000"
+            HorizontalOptions="Center"
+            InputTransparent="True"
+            Text="{Binding PageInfo}"
+            TextColor="White"
+            VerticalOptions="End"
+            ZIndex="10" />
 
-        <!-- 返回按钮 -->
-        <ImageButton Source="arrowleft.png"
-                     Command="{Binding GoBackCommand}"
-                     BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
-                     CornerRadius="5"
-                     WidthRequest="48"
-                     HeightRequest="48"
-                     Padding="10"
-                     HorizontalOptions="End"
-                     VerticalOptions="Start"
-                     Margin="0,5,5,0"
-                     ZIndex="10">
+        <!--  返回按钮  -->
+        <ImageButton
+            Margin="0,5,5,0"
+            Padding="10"
+            BackgroundColor="{AppThemeBinding Light={StaticResource White},
+                                              Dark={StaticResource Gray900}}"
+            Command="{Binding GoBackCommand}"
+            CornerRadius="5"
+            HeightRequest="48"
+            HorizontalOptions="End"
+            Source="arrowleft.png"
+            VerticalOptions="Start"
+            WidthRequest="48"
+            ZIndex="10">
             <ImageButton.Shadow>
-                <Shadow Brush="Black"
-                        Offset="2,2"
-                        Radius="5"
-                        Opacity="0.3" />
+                <Shadow
+                    Brush="Black"
+                    Opacity="0.3"
+                    Radius="5"
+                    Offset="2,2" />
             </ImageButton.Shadow>
         </ImageButton>
     </Grid>

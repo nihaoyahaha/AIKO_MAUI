@@ -28,28 +28,28 @@ public partial class UploadPageVM : Observablebase<UploadPageVM, IUploadService>
 	/// 进度值 (0.0 - 1.0)
 	/// </summary>
 	[ObservableProperty]
-	private double progress;
+	public partial double Progress { get; set; }
 
 	[ObservableProperty]
-	private string progressMessage;
+	public partial string ProgressMessage { get; set; }
 
 	[ObservableProperty]
-	private string percentText = "0%";
+	public partial string PercentText { get; set; } = "0%";
 
 	[ObservableProperty]
-	private bool isShowProgressGridFlag = false;
+	public partial bool IsShowProgressGridFlag { get; set; } = false;
 
 	/// <summary>
 	/// 指定した時間内の写真をダウンロードするためのヒント
 	/// </summary>
 	[ObservableProperty]
-	private string _saveDaysMessageInfo = "";
+	public partial string SaveDaysMessageInfo { get; set; } = "";
 
 	/// <summary>
 	/// 図面ファイルを含む
 	/// </summary>
 	[ObservableProperty]
-	private bool _isCheckDrawing = false;
+	public partial bool IsCheckDrawing { get; set; } = false;
 
 	[RelayCommand]
 	private async Task PageLoaded()

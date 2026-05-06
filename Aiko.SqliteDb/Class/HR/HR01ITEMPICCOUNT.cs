@@ -5,12 +5,12 @@ public class HR01ITEMPICCOUNT
     /// <summary>
     /// 工事コード
     /// </summary>
-    public string HR01001 { get; set; }
+    public string HR01001 { get; set; } = string.Empty;
 
     /// <summary>
     /// アイテムコード
     /// </summary>
-    public string HR01003 { get; set; }
+    public string HR01003 { get; set; } = string.Empty;
 
     /// <summary>
     ///  採用枚数

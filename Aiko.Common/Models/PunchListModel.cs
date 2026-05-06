@@ -7,15 +7,15 @@ namespace Aiko.Common;
 /// </summary>
 public partial class PunchListModel:ObservableObject
 {
-	/// <summary>
-	/// 指摘事項メモ本文
-	/// </summary>
-	[ObservableProperty]
-	private string _text;
-
-	/// <summary>
-	/// チェック状態
-	/// </summary>
-	[ObservableProperty]
-	private bool _isSelected;
+    /// <summary>
+    /// 指摘事項メモ本文
+    /// </summary>
+    [ObservableProperty]
+    public partial string Text { get; set; } = string.Empty;
+ 
+    /// <summary>
+    /// チェック状態
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsSelected { get; set; }
 }

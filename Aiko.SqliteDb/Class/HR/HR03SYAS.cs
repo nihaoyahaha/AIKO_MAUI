@@ -8,28 +8,28 @@ public class HR03SYAS
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HR03001 { get; set; }
+	public string HR03001 { get; set; } = string.Empty;
 
-	[PrimaryKey]
+    [PrimaryKey]
 	/// <summary>
 	/// 写真コード
 	/// </summary>
-	public string HR03002 { get; set; }
+	public string HR03002 { get; set; } = string.Empty;
 
     /// <summary>
     /// アイテムコード
     /// </summary>
-    public string HR03003 { get; set; }
+    public string HR03003 { get; set; } = string.Empty;
 
     /// <summary>
     /// 確認項目コード
     /// </summary>
-    public string HR03004 { get; set; }
+    public string HR03004 { get; set; } = string.Empty;
 
     /// <summary>
     /// 並び順
     /// </summary>
-    public string HR03005 { get; set; }
+    public string HR03005 { get; set; } = string.Empty;
 
     /// <summary>
     /// 分類
@@ -44,7 +44,7 @@ public class HR03SYAS
     /// <summary>
     /// コメント
     /// </summary>
-    public string HR03008 { get; set; }
+    public string HR03008 { get; set; } = string.Empty;
 
     /// <summary>
     /// 撮影日付
@@ -59,37 +59,37 @@ public class HR03SYAS
     /// <summary>
     /// 作成日時
     /// </summary>
-    public string HR03011 { get; set; }
+    public string HR03011 { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成オペレータ
     /// </summary>
-    public string HR03012 { get; set; }
+    public string HR03012 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新日時
     /// </summary>
-    public string HR03013 { get; set; }
+    public string HR03013 { get; set; } = string.Empty;
 
     /// <summary>
     /// 更新オペレータ
     /// </summary>
-    public string HR03014 { get; set; }
+    public string HR03014 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期日時
     /// </summary>
-    public string HR03015 { get; set; }
+    public string HR03015 { get; set; } = string.Empty;
 
     /// <summary>
     /// 同期オペレータ
     /// </summary>
-    public string HR03016 { get; set; }
+    public string HR03016 { get; set; } = string.Empty;
 
-	/// <summary>
-	/// 写真方式 0：JPG 1：SVG
-	/// </summary>
-	public int HR03017 { get; set; }
+    /// <summary>
+    /// 写真方式 0：JPG 1：SVG
+    /// </summary>
+    public int HR03017 { get; set; }
 
 	/// <summary>
 	/// //SVGレイヤ表示
@@ -104,16 +104,16 @@ public class HR03SYAS
 	/// <summary>
 	/// 撮影方向
 	/// </summary>
-	public string HR03019 { get; set; }
-	/// <summary>
-	/// 写真更新日時
-	/// </summary>
-	public string HR03020 { get; set; }
+	public string HR03019 { get; set; } = string.Empty;
+    /// <summary>
+    /// 写真更新日時
+    /// </summary>
+    public string HR03020 { get; set; } = string.Empty;
 
-	/// <summary>
-	/// 図面状態
-	/// </summary>
-	[Ignore]
-	public string CHANGE { get; set; }
+    /// <summary>
+    /// 図面状態
+    /// </summary>
+    [Ignore]
+	public string CHANGE { get; set; } = string.Empty;
 }
 

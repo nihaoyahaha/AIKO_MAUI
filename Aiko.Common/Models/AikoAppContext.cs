@@ -13,47 +13,47 @@ public class AikoAppContext
 	/// <summary>
 	/// オペレータコード
 	/// </summary>
-	public string OperatorCD { get; set; }
+	public string OperatorCD { get; set; } = string.Empty;
 
 	/// <summary>
 	/// オペレータ名
 	/// </summary>
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
 	/// <summary>
 	/// オペレータ権限
 	/// </summary>
-	public string PowerLevel { get; set; }
+	public string PowerLevel { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string WorkCD { get; set; }
+	public string WorkCD { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 工事名(携帯工事コード)
 	/// </summary>
-	public string WorkName { get; set; }
+	public string WorkName { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 工事名(工事コードを携帯しない)
 	/// </summary>
-	public string WorkNameExcludeCode { get; set; }
+	public string WorkNameExcludeCode { get; set; } = string.Empty;
 
 	/// <summary>
 	/// オペレータID
 	/// </summary>
-	public string OperatorID { get; set; }
+	public string OperatorID { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 所属会社コード
 	/// </summary>
-	public string CompanyID { get; set; }
+	public string CompanyID { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 図面ファイルフォル
 	/// </summary>
-	public string HC01013 { get; set; }
+	public string HC01013 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// ログインステータス
@@ -168,7 +168,37 @@ public class AikoAppContext
 		}
 	}
 
+	/// <summary>
+	/// 現在工事現場の撮影方向を取得
+	/// </summary>
+	public List<string> DirectionList 
+	{
+		get 
+		{
+			if(string.IsNullOrWhiteSpace(WorkCD)) return new List<string>();
 
+			string prefDirsListStr = Preferences.Get($"DirsList-{WorkCD}", "");
+			return prefDirsListStr.Split(',')
+				.Where(s => !string.IsNullOrWhiteSpace(s))
+				.ToList();
+		}
+	}
+
+	/// <summary>
+	/// 現在工事現場の撮影方向を追加
+	/// </summary>
+	/// <param name="directionText">撮影方向</param>
+	public void AddPreferencesDirection(string directionText)
+	{
+		if (string.IsNullOrWhiteSpace(WorkCD)) return;
+		if(string.IsNullOrWhiteSpace(directionText)) return;
+
+		string key = $"DirsList-{WorkCD}";
+		List<string> directions = DirectionList;
+		directions.Add(directionText);
+
+		Preferences.Set(key, string.Join(",", directions));
+	}
 
 }
 

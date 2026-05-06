@@ -17,8 +17,8 @@ public class HkksDatabase
 		SQLiteOpenFlags.Create |
 		SQLiteOpenFlags.SharedCache;
 	private readonly ILogger<HkksDatabase> _logger;
-	private SQLiteAsyncConnection _db;
-	public SQLiteAsyncConnection Db
+	private SQLiteAsyncConnection _db = null!;
+    public SQLiteAsyncConnection Db
 	{
 		get => _db;
 	}
@@ -39,7 +39,10 @@ public class HkksDatabase
 #if WINDOWS
                 using var stream = Assembly.Load("Aiko.UI").GetManifestResourceStream(_databaseFileName);
 
-                using var reader = new StreamReader(stream);
+				if (stream is null)
+				{
+					throw new FileNotFoundException($"Embedded resource not found: {_databaseFileName}");
+				}
 
                 using (MemoryStream memoryStream = new())
                 {
@@ -47,8 +50,8 @@ public class HkksDatabase
                     File.WriteAllBytes(dbPath, memoryStream.ToArray());
                 }
 #else
-				// 使用 MAUI 内置的文件系统接口打开 Resources/Raw 下的文件 // 此时路径就是你在 LogicalName 里定义的 "hkks.db" 
-				using var stream = await FileSystem.OpenAppPackageFileAsync(_databaseFileName);
+                // 使用 MAUI 内置的文件系统接口打开 Resources/Raw 下的文件 // 此时路径就是你在 LogicalName 里定义的 "hkks.db" 
+                using var stream = await FileSystem.OpenAppPackageFileAsync(_databaseFileName);
 				using var newFile = File.Create(dbPath);
 				await stream.CopyToAsync(newFile);
 #endif
@@ -672,7 +675,7 @@ public class HkksDatabase
 		catch (Exception ex)
 		{
 			_logger.LogError(ex.ToString());
-			return null;
+			return new List<HM02OPER>();
 		}
 	}
 	#endregion

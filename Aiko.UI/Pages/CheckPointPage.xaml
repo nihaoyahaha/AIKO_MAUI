@@ -31,66 +31,7 @@
                 WidthRequest="140" />
         </DataTemplate>
 
-        <DataTemplate x:Key="DataTemplateDark" x:DataType="model:InspectionItem">
-            <Grid HeightRequest="40" RowDefinitions="*, Auto">
-                <Grid
-                    BackgroundColor="#FFFFFF"
-                    ColumnDefinitions="1*,4*,1*"
-                    RowDefinitions="Auto"
-                    VerticalOptions="Center">
-                    <Image HeightRequest="20" Source="{Binding CheckResultImage}">
-                        <Image.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=InspectionItemSelectedItemCheckResultImageTappedCommand}" />
-                        </Image.GestureRecognizers>
-                    </Image>
-                    <StackLayout Grid.Column="1">
-                        <Label FontAttributes="Bold" Text="{Binding ArtistName}" />
-                    </StackLayout>
-                    <StackLayout
-                        Grid.Column="2"
-                        HorizontalOptions="Center"
-                        Orientation="Horizontal">
-                        <Border BackgroundColor="{Binding CameraColor}" Stroke="Transparent">
-                            <Image
-                                HeightRequest="20"
-                                Source="ca.png"
-                                WidthRequest="20">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=NavigateToDetailsCommand}" NumberOfTapsRequired="1" />
-                                </Image.GestureRecognizers>
-                            </Image>
-                        </Border>
-                        <Label
-                            HorizontalTextAlignment="End"
-                            Text="{Binding PicNumInfo}"
-                            WidthRequest="60" />
-                    </StackLayout>
-                </Grid>
-                <BoxView
-                    Grid.Row="1"
-                    Margin="0"
-                    BackgroundColor="White"
-                    HeightRequest="1" />
-                <!--  选中态背景色  -->
-                <VisualStateManager.VisualStateGroups>
-                    <VisualStateGroup Name="CommonStates">
-                        <VisualState Name="Normal">
-                            <VisualState.Setters>
-                                <Setter Property="BackgroundColor" Value="Transparent" />
-                            </VisualState.Setters>
-                        </VisualState>
-                        <VisualState Name="Selected">
-                            <VisualState.Setters>
-                                <!--  你想要的选中颜色  -->
-                                <Setter Property="BackgroundColor" Value="#334155" />
-                            </VisualState.Setters>
-                        </VisualState>
-                    </VisualStateGroup>
-                </VisualStateManager.VisualStateGroups>
-            </Grid>
-        </DataTemplate>
-
-        <DataTemplate x:Key="DataTemplateLight" x:DataType="model:InspectionItem">
+        <DataTemplate x:Key="CollectionViewDataTemplate" x:DataType="model:InspectionItem">
             <Grid HeightRequest="40" RowDefinitions="*, Auto">
                 <Grid
                     ColumnDefinitions="0.8*,4*,1*,0.5*"
@@ -116,17 +57,16 @@
                             <Image
                                 HeightRequest="20"
                                 Source="ca.png"
-                                WidthRequest="20">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=NavigateToDetailsCommand}" NumberOfTapsRequired="1" />
-                                </Image.GestureRecognizers>
-                            </Image>
+                                WidthRequest="20" />
                         </Border>
                         <Label
                             HorizontalTextAlignment="End"
                             Text="{Binding PicNumInfo}"
                             WidthRequest="60" />
                     </StackLayout>
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CheckPointPageVM}}, Path=NavigateToDetailsCommand}" NumberOfTapsRequired="2" />
+                    </Grid.GestureRecognizers>
                 </Grid>
                 <BoxView
                     Grid.Row="1"
@@ -150,10 +90,6 @@
             </Grid>
         </DataTemplate>
 
-        <local:MyDataTemplateSelector
-            x:Key="MyDataTemplateSelector"
-            DataTemplateDark="{StaticResource DataTemplateDark}"
-            DataTemplateLight="{StaticResource DataTemplateLight}" />
     </ContentPage.Resources>
 
     <Grid x:Name="GridAll" RowSpacing="2">
@@ -243,16 +179,6 @@
             Padding="10,0,10,0"
             ColumnSpacing="10">
 
-            <Grid.Resources>
-                <Style TargetType="Entry">
-                    <Setter Property="FontSize" Value="Body" />
-                    <Setter Property="IsEnabled" Value="False" />
-                    <Setter Property="VerticalTextAlignment" Value="Center" />
-                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
-                    <Setter Property="BackgroundColor" Value="#CCCCCC" />
-                </Style>
-            </Grid.Resources>
-
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="0.9*" />
@@ -278,7 +204,11 @@
             <Entry
                 x:Name="ety_Buim"
                 Grid.Column="1"
-                Text="{Binding BuimName}" />
+                BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}"
+                FontSize="Body"
+                IsReadOnly="True"
+                Text="{Binding BuimName}"
+                VerticalTextAlignment="Center" />
 
             <Label
                 Grid.Column="2"
@@ -288,7 +218,11 @@
             <Entry
                 x:Name="ety_Grpl"
                 Grid.Column="3"
-                Text="{Binding FloorName}" />
+                BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}"
+                FontSize="Body"
+                IsReadOnly="True"
+                Text="{Binding FloorName}"
+                VerticalTextAlignment="Center" />
 
             <Label
                 Grid.Column="4"
@@ -298,7 +232,11 @@
             <Entry
                 x:Name="ety_Danm"
                 Grid.Column="5"
-                Text="{Binding DanmName}" />
+                BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}"
+                FontSize="Body"
+                IsReadOnly="True"
+                Text="{Binding DanmName}"
+                VerticalTextAlignment="Center" />
 
             <Label
                 Grid.Column="6"
@@ -308,7 +246,11 @@
             <Entry
                 x:Name="ety_Koku"
                 Grid.Column="7"
-                Text="{Binding KokuName}" />
+                BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}"
+                FontSize="Body"
+                IsReadOnly="True"
+                Text="{Binding KokuName}"
+                VerticalTextAlignment="Center" />
 
             <Label
                 Grid.Column="8"
@@ -318,8 +260,12 @@
             <Entry
                 x:Name="ety_Location"
                 Grid.Column="9"
+                BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}"
+                FontSize="Body"
+                IsReadOnly="True"
                 MaxLength="20"
-                Text="{Binding LocationName}" />
+                Text="{Binding LocationName}"
+                VerticalTextAlignment="Center" />
         </Grid>
 
         <!--  下左 按钮 图片  -->
@@ -553,7 +499,7 @@
                     x:Name="lvDataList"
                     Grid.Row="2"
                     Margin="0,30,0,40"
-                    ItemTemplate="{StaticResource MyDataTemplateSelector}"
+                    ItemTemplate="{StaticResource CollectionViewDataTemplate}"
                     ItemsSource="{Binding InspectionItems}"
                     SelectedItem="{Binding InspectionItemSelectedItem}"
                     SelectionMode="Single">

@@ -7,14 +7,14 @@ public class AikoWcf
 {
 	private readonly ILogger<AikoWcf> _logger;
 
-	private static IUWPServiceAPI _serviceApi02;
+	private IUWPServiceAPI? _serviceApi02;
 
 	public AikoWcf(ILogger<AikoWcf> logger)
 	{
 		_logger = logger;
 	}
 
-	public IUWPServiceAPI ServiceApi02(string server = "", string serverPort = "", string serverTimeOut = "")
+	public IUWPServiceAPI? ServiceApi02(string server = "", string serverPort = "", string serverTimeOut = "")
 	{
 		try
 		{
@@ -66,7 +66,7 @@ public class AikoWcf
 	/// <param name="serverPort">ポート</param>
 	/// <param name="serverTimeOut">タイムアウト時間（秒）</param>
 	/// <returns></returns>
-	public IUWPServiceAPI WcfConnectionTest(string server = "", string serverPort = "", string serverTimeOut = "")
+	public IUWPServiceAPI? WcfConnectionTest(string server = "", string serverPort = "", string serverTimeOut = "")
 	{
 		try
 		{

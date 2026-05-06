@@ -7,13 +7,13 @@ namespace Aiko.UI.ViewModels.PageVMs;
 public partial class RemotingFtpServerPageVM: ObservableValidator
 {
     [ObservableProperty]
-    private string ftpServerProxyType;
+    public partial string FtpServerProxyType { get; set; }
 
     [ObservableProperty]
-    private string ftpServerProxy;
+    public partial string FtpServerProxy { get; set; }
 
     [ObservableProperty]
-    private string ftpServerProxyPort;
+    public partial string FtpServerProxyPort { get; set; }
 
     [RelayCommand]
     private void PageLoad()

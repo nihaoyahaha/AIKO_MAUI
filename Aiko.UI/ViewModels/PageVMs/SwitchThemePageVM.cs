@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Aiko.UI.Themes;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
@@ -10,39 +11,21 @@ namespace Aiko.UI.ViewModels.PageVMs;
 
 public partial class SwitchThemePageVM: ObservableValidator
 {
-    private const string ThemeChangedToken = "ThemeChangedToken";
+	[ObservableProperty]
+	public partial ObservableCollection<string> Themes { get; set; } = new() { "Light", "Dark" };
 
 	[ObservableProperty]
-	private ObservableCollection<string> _themes = new() { "Light", "Dark" };
-
-	[ObservableProperty]
-	private string _selectedTheme ="Light";
+	public partial string SelectedTheme { get; set; } = "Light";
 
 	[RelayCommand]
 	private void PageLoaded()
 	{
-		SelectedTheme =  Preferences.Default.Get("Theme", "Light");
+		SelectedTheme = ThemeManager.GetSavedTheme();
 	}
 
 	[RelayCommand]
 	private void ThemeSelectedIndexChanged()
 	{
-		ICollection<ResourceDictionary> mergedDictionaries = Application.Current.Resources.MergedDictionaries;
-		if (mergedDictionaries != null)
-		{
-			mergedDictionaries.Clear();
-			switch (SelectedTheme)
-			{
-				case "Dark":
-					mergedDictionaries.Add(new DarkTheme());
-					break;
-				case "Light":
-				default:
-					mergedDictionaries.Add(new LightTheme());
-					break;
-			}
-			Preferences.Default.Set("Theme", SelectedTheme);
-			WeakReferenceMessenger.Default.Send(string.Empty, ThemeChangedToken);
-		}
+		ThemeManager.ApplyTheme(SelectedTheme);
 	}
 }

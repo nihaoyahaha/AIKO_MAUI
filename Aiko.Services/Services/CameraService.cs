@@ -71,10 +71,10 @@ public class CameraService : BaseService<CameraService>, ICameraService
 	/// </summary>
 	/// <param name="projectCode">工程コード</param>
 	/// <param name="hm13004">確認項目コード</param>
-	public void SetProjectCodeAndInspectionItemCode(string projectCode, string hm13004) 
+	public void SetProjectCodeAndInspectionItemCode(string projectCode, string hm13004)
 	{
 		_projectCode = projectCode;
-		_hm13004 = hm13004; 
+		_hm13004 = hm13004;
 	}
 
 	/// <summary>
@@ -105,13 +105,15 @@ public class CameraService : BaseService<CameraService>, ICameraService
 			ListItem listItem = new ListItem(item.HM16003.Trim(), item.HM16002.ToString());
 			listItems.Add(listItem);
 		}
-		string prefDirsListStr = Preferences.Get("DirsList", "");
-		List<string> prefDirsList = prefDirsListStr.Split(',').ToList();
+
+		//現在工事現場の撮影方向を取得
+		List<string> prefDirsList = AppContext.DirectionList;
+
 		foreach (var item in prefDirsList)
 		{
 			if (!listItems.Any(dirs => dirs.DisplyName == item))
 			{
-				listItems.Add(new ListItem(item, item));
+				listItems.Add(new ListItem(item,"-1"));
 			}
 		}
 		return listItems;
@@ -199,7 +201,7 @@ public class CameraService : BaseService<CameraService>, ICameraService
 	/// 画像プレビューデータの追加
 	/// </summary>
 	/// <param name="filePath"></param>
-	public void AddImageViewPhotoPreviewModel(string filePath,byte[] bytes ,PhotoLayer layer)
+	public void AddImageViewPhotoPreviewModel(string filePath, byte[] bytes, PhotoLayer layer)
 	{
 		_imageViewService.AddPhotoPreviewModel(
 			new PhotoPreviewModel()
@@ -209,7 +211,7 @@ public class CameraService : BaseService<CameraService>, ICameraService
 #else
          		ImageUrl = filePath,
 #endif
-				JPgImageSource= ImageSource.FromStream(() => new MemoryStream(bytes)),
+				JPgImageSource = ImageSource.FromStream(() => new MemoryStream(bytes)),
 				HR03001 = _hr01.HR01001,
 				HR03002 = Path.GetFileNameWithoutExtension(filePath),
 				HR03003 = _hr01.HR01003,

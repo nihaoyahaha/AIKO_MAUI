@@ -17,10 +17,10 @@ public partial class LogPageVM : Observablebase<LogPageVM, ILogService>
 	}
 
 	[ObservableProperty]
-	private ObservableCollection<LogItem> _logFiles = new();
+	public partial ObservableCollection<LogItem> LogFiles { get; set; } = new();
 
 	[ObservableProperty]
-	private bool _isEnabled = true;
+	public partial bool IsEnabled { get; set; } = true;
 
 
 	[RelayCommand]

@@ -12,7 +12,7 @@ public partial class PhotoPreviewModel : ObservableObject
 	/// <summary>
 	/// ファイルパス
 	/// </summary>
-	public string ImageUrl { get; set; }
+	public string ImageUrl { get; set; }=string.Empty;
 
 	/// <summary>
 	/// jpg写真データソース
@@ -23,7 +23,7 @@ public partial class PhotoPreviewModel : ObservableObject
 	/// 画像の詳細
 	/// </summary>
 	[ObservableProperty]
-	private PhotoLayer? _photoLayer;
+	public partial PhotoLayer PhotoLayer { get; set; }
 
 	/// <summary>
 	/// 写真方式 0：JPG 1：SVG
@@ -33,22 +33,22 @@ public partial class PhotoPreviewModel : ObservableObject
 	/// <summary>
 	/// 工事コード
 	/// </summary>
-	public string HR03001 { get; set; }
+	public string HR03001 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 写真コード
 	/// </summary>
-	public string HR03002 { get; set; }
+	public string HR03002 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// アイテムコード
 	/// </summary>
-	public string HR03003 { get; set; }
+	public string HR03003 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 確認項目コード
 	/// </summary>
-	public string HR03004 { get; set; }
+	public string HR03004 { get; set; } = string.Empty;
 
 	public void ChangePhotoSize(double screenWidth, double screenHeight)
 	{
@@ -75,8 +75,8 @@ public partial class PhotoPreviewModel : ObservableObject
 		double greenWidth = double.Parse(PhotoLayer.GreenWidth);
 		double greenHeight = double.Parse(PhotoLayer.GreenHeight);
 
-		double greenLeft = PhotoLayer.Margin.Value.Left;
-		double greenTop = PhotoLayer.Margin.Value.Top;
+		double greenLeft = PhotoLayer.Margin.Left;
+		double greenTop = PhotoLayer.Margin.Top;
 
 		PhotoLayer.GreenWidth = (greenWidth * scale).ToString();
 		PhotoLayer.GreenHeight = (greenHeight * scale).ToString();

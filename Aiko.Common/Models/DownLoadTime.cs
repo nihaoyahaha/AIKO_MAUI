@@ -8,13 +8,13 @@ namespace Aiko.Common;
 public class DownLoadTime
 {
 	[JsonPropertyName("ProjectCode")]
-	public string ProjectCode { get; set; }
+	public string ProjectCode { get; set; } = string.Empty;
 
 	[JsonPropertyName("TableName")]
-	public string TableName { get; set; }
+	public string TableName { get; set; } = string.Empty;
 
 	[JsonPropertyName("Time")]
-	public string Time { get; set; }
+	public string Time { get; set; } = string.Empty;
 }
 
 [JsonSourceGenerationOptions(WriteIndented = true)]

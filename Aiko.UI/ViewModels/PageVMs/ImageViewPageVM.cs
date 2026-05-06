@@ -19,25 +19,25 @@ public partial class ImageViewPageVM : Observablebase<ImageViewPageVM, IImageVie
 	}
 
 	[ObservableProperty]
-	private bool _greenBackgroundCheckBoxLabelIsVisible = false;
+	public partial bool GreenBackgroundCheckBoxLabelIsVisible { get; set; } = false;
 
 	[ObservableProperty]
-	private bool _photoCheckBoxLabelIsVisible = false;
+	public partial bool PhotoCheckBoxLabelIsVisible { get; set; } = false;
 
 	[ObservableProperty]
-	private ObservableCollection<PhotoPreviewModel> _photoPreviews = new ObservableCollection<PhotoPreviewModel>();
+	public partial ObservableCollection<PhotoPreviewModel> PhotoPreviews { get; set; } = new ObservableCollection<PhotoPreviewModel>();
 
 	[ObservableProperty]
-	private PhotoPreviewModel _photoPreview;
+	public partial PhotoPreviewModel PhotoPreview { get; set; }
 
 	[ObservableProperty]
-	private bool _canGoPrevious = false;
+	public partial bool CanGoPrevious { get; set; } = false;
 
 	[ObservableProperty]
-	private bool _canGoNext = false;
+	public partial bool CanGoNext { get; set; } = false;
 
 	[ObservableProperty]
-	private string _pageInfo;
+	public partial string PageInfo { get; set; }= string.Empty;
 
 	public PinchToZoomContainer ZoomContainer;
 

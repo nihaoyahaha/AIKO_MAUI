@@ -7,7 +7,15 @@ namespace Aiko.UI.Pages;
 
 public partial class CheckPointDetailPage : ContentPage
 {
-    private IInkTool _currentTool => _toolManager.CurrentTool;
+    private IInkTool _currentTool
+    {
+        get
+        {
+            if (_toolManager == null) InitToolManager();
+
+            return _toolManager.CurrentTool;
+        }
+    }
 
     private Dictionary<string, SKTypeface> _typefaces = new Dictionary<string, SKTypeface>();
 
@@ -21,6 +29,16 @@ public partial class CheckPointDetailPage : ContentPage
 
     // 存储当前选中的颜色 Border，用于视觉状态切换
     private Border _selectedColorBorder;
+
+    private InkStatusType _lastInkStatus = InkStatusType.Idle;
+
+    private readonly SemaphoreSlim _cacheSemaphore = new SemaphoreSlim(1, 1);
+
+    private string? _cacheCode;
+    private SKBitmap? _bitmapCache;
+    private SKBitmap? _bitmapCacheWithStrokes;
+    private SKBitmap? _strokesBehindSelected;
+    private SKBitmap? _strokesFrontSelected;
 
     // --- 画布 ---
 
@@ -54,16 +72,15 @@ public partial class CheckPointDetailPage : ContentPage
 
         canvas.Clear(SKColors.Transparent);
 
-        if (_currentImage != null)
+        if (_currentImage == null) return;
+
+        if (_currentImage.Bitmap != null)
         {
-            if (_currentImage.Bitmap != null)
-            {
-                canvas.DrawBitmap(_currentImage.Bitmap, 0, 0);
-            }
-            else if (_currentImage.PhotoSvg != null)
-            {
-                canvas.DrawPicture(_currentImage.PhotoSvg.Picture);
-            }
+            canvas.DrawBitmap(_currentImage.Bitmap, 0, 0);
+        }
+        else if (_currentImage.PhotoBitmap != null)
+        {
+            canvas.DrawBitmap(_currentImage.PhotoBitmap, 0, 0);
         }
     }
     private void OnBlackboardCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -72,12 +89,18 @@ public partial class CheckPointDetailPage : ContentPage
 
         canvas.Clear(SKColors.Transparent);
 
-        if (_currentImage != null)
+        if (_currentImage == null) return;
+
+        if (_currentImage.BlackboardBitmap != null)
         {
-            if (_currentImage.BlackboardSvg != null)
-            {
-                canvas.DrawPicture(_currentImage.BlackboardSvg.Picture);
-            }
+            SKRect blackboardBitmapRect = new SKRect(
+                _currentImage.BlackboardBitmapRect.X,
+                _currentImage.BlackboardBitmapRect.Y,
+                _currentImage.BlackboardBitmapRect.X + _currentImage.BlackboardBitmapRect.Width,
+                _currentImage.BlackboardBitmapRect.Y + _currentImage.BlackboardBitmapRect.Height
+            );
+
+            canvas.DrawBitmap(_currentImage.BlackboardBitmap, blackboardBitmapRect);
         }
     }
     private void OnInkCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -86,39 +109,65 @@ public partial class CheckPointDetailPage : ContentPage
 
         canvas.Clear(SKColors.Transparent);
 
-        if (_toolManager.Status != InkStatusType.Drawing)
+        // 绘制边框以区分画布边界
+        using (var paint = new SKPaint())
         {
-            if (string.IsNullOrEmpty(_codeCache))
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = Color.FromArgb("#999999").ToSKColor();
+            paint.StrokeWidth = 1;
+
+            canvas.DrawRect(new SKRect(0, 0, e.Info.Width, e.Info.Height), paint);
+        }
+
+        if (_currentImage == null) return;
+
+        if (_toolManager.Status == InkStatusType.Idle)
+        {
+            if (_bitmapCache == null || string.IsNullOrEmpty(_cacheCode))
             {
                 UpdateBitmapCache();
             }
 
-            if (_toolManager.Status == InkStatusType.Idle)
+            Task.Run(async () =>
             {
-                Task.Run(async () =>
+                await _cacheSemaphore.WaitAsync();
+                try
                 {
-                    await _cacheSemaphore.WaitAsync();
-                    try
-                    {
-                        UpdateBitmapCacheWithStroke();
-                    }
-                    finally
-                    {
-                        _cacheSemaphore.Release();
-                    }
-                });
-            }
+                    await UpdateBitmapCacheWithStrokes();
+                }
+                finally
+                {
+                    _cacheSemaphore.Release();
+                }
+            });
 
             canvas.DrawBitmap(_bitmapCache, 0, 0, null);
         }
-        else
+        else if (_toolManager.Status == InkStatusType.Drawing)
         {
-            canvas.DrawBitmap(_bitmapCacheWithStroke, 0, 0, null);
+            canvas.DrawBitmap(_bitmapCacheWithStrokes, 0, 0, null);
         }
 
-        if (_currentImage != null)
+        if (_vm.IsStrokesVisible)
         {
-            if (_vm.IsStrokesVisible)
+            if (_toolManager.Status == InkStatusType.Moving)
+            {
+                if (_lastInkStatus != InkStatusType.Moving)
+                {
+                    UpdateStrokesBehindSelected();
+                    //UpdateStrokesFrontSelected();
+                }
+
+                var selectedStroke = (_currentTool as MoveTool)?.GetSelectedStroke();
+                if (selectedStroke != null)
+                {
+                    canvas.DrawBitmap(_strokesBehindSelected, 0, 0, null);
+                    _toolManager.HandleDrawing(canvas, selectedStroke, null, null);
+                    //canvas.DrawBitmap(_strokesFrontSelected, 0, 0, null);
+                    _toolManager.HandleFrontSelectedDrawing(canvas, null, null);
+                }
+            }
+            else
             {
                 if (_currentTool.GetCurrentTempStroke() != null)
                 {
@@ -131,99 +180,146 @@ public partial class CheckPointDetailPage : ContentPage
             }
         }
 
-        // 绘制边框以区分画布边界
-        using (var paint = new SKPaint())
-        {
-            paint.Style = SKPaintStyle.Stroke;
-            paint.Color = Color.FromArgb("#CCCCCC").ToSKColor();
-            paint.StrokeWidth = 1;
-
-            canvas.DrawRect(new SKRect(0, 0, e.Info.Width, e.Info.Height), paint);
-        }
+        _lastInkStatus = _toolManager.Status;
     }
 
-    private string? _codeCache;
-    private SKBitmap? _bitmapCache;
-    private SKBitmap? _bitmapCacheWithStroke;
     private void UpdateBitmapCache()
     {
         _bitmapCache?.Dispose();
-        if (_currentImage != null)
-        {
-            _bitmapCache = new SKBitmap((int)_currentImage.Width, (int)_currentImage.Height);
-        }
-        else
-        {
-            _bitmapCache = new SKBitmap();
-        }
+        _bitmapCache = null;
+
+        if (_currentImage == null) return;
+
+        _bitmapCache = new SKBitmap((int)_currentImage.Width, (int)_currentImage.Height);
 
         using (var canvasCache = new SKCanvas(_bitmapCache))
         {
             canvasCache.Clear(SKColors.Transparent);
 
-            if (_currentImage != null)
+            if (_vm.IsDarkenMode)
             {
-                if (_vm.IsDarkenMode)
+                if (_currentImage.Bitmap != null)
                 {
-                    if (_currentImage.Bitmap != null)
-                    {
-                        canvasCache.DrawBitmap(_currentImage.Bitmap, 0, 0);
-                    }
-                    else if (_currentImage.PhotoSvg != null)
-                    {
-                        canvasCache.DrawPicture(_currentImage.PhotoSvg.Picture);
-                    }
-
-                    if (_currentImage.BlackboardSvg != null && _vm.IsBlackboardVisible)
-                    {
-                        canvasCache.DrawPicture(_currentImage.BlackboardSvg.Picture);
-                    }
+                    canvasCache.DrawBitmap(_currentImage.Bitmap, 0, 0);
+                }
+                else if (_currentImage.PhotoBitmap != null)
+                {
+                    canvasCache.DrawBitmap(_currentImage.PhotoBitmap, 0, 0);
                 }
 
-                _codeCache = _currentImage.Code;
+                if (_currentImage.BlackboardBitmap != null && _vm.IsBlackboardVisible)
+                {
+                    SKRect blackboardBitmapRect = new SKRect(
+                        _currentImage.BlackboardBitmapRect.X,
+                        _currentImage.BlackboardBitmapRect.Y,
+                        _currentImage.BlackboardBitmapRect.X + _currentImage.BlackboardBitmapRect.Width,
+                        _currentImage.BlackboardBitmapRect.Y + _currentImage.BlackboardBitmapRect.Height
+                    );
+
+                    canvasCache.DrawBitmap(_currentImage.BlackboardBitmap, blackboardBitmapRect);
+                }
+            }
+
+            _cacheCode = _currentImage.Code;
+        }
+    }
+    private async Task UpdateBitmapCacheWithStrokes()
+    {
+        _bitmapCacheWithStrokes?.Dispose();
+        _bitmapCacheWithStrokes = null;
+
+        if (_currentImage == null) return;
+
+        if (_vm.IsDarkenMode)
+        {
+            if (_bitmapCache == null)
+            {
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                {
+                    try
+                    {
+                        while (_bitmapCache == null)
+                        {
+                            cts.Token.ThrowIfCancellationRequested();
+                            await Task.Delay(100, cts.Token);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        System.Diagnostics.Debug.WriteLine("UpdateBitmapCacheWithStrokes: Waiting for _bitmapCache != null timed out");
+                    }
+                }
+            }
+
+            _bitmapCacheWithStrokes = _bitmapCache?.Copy();
+        }
+
+        if (_bitmapCacheWithStrokes == null)
+        {
+            _bitmapCacheWithStrokes = new SKBitmap((int)_currentImage.Width, (int)_currentImage.Height);
+
+            using (var canvasCache = new SKCanvas(_bitmapCacheWithStrokes))
+            {
+                canvasCache.Clear(SKColors.Transparent);
+            }
+        }
+
+        if (_vm.IsStrokesVisible)
+        {
+            using (var canvasCache = new SKCanvas(_bitmapCacheWithStrokes))
+            {
+                _toolManager.HandleCompletedDrawing(canvasCache, null, null);
             }
         }
     }
-    private readonly SemaphoreSlim _cacheSemaphore = new SemaphoreSlim(1, 1);
-    private void UpdateBitmapCacheWithStroke()
+    private void UpdateStrokesBehindSelected()
     {
-        _bitmapCacheWithStroke?.Dispose();
-        if (_currentImage != null)
+        _strokesBehindSelected?.Dispose();
+        _strokesBehindSelected = null;
+
+        if (_currentImage == null) return;
+
+        if (_vm.IsDarkenMode)
         {
-            _bitmapCacheWithStroke = new SKBitmap((int)_currentImage.Width, (int)_currentImage.Height);
-        }
-        else
-        {
-            _bitmapCacheWithStroke = new SKBitmap();
+            if (_bitmapCache == null) UpdateBitmapCache();
+
+            _strokesBehindSelected = _bitmapCache?.Copy();
         }
 
-        using (var canvasCache = new SKCanvas(_bitmapCacheWithStroke))
+        if (_strokesBehindSelected == null)
+        {
+            _strokesBehindSelected = new SKBitmap((int)_currentImage.Width, (int)_currentImage.Height);
+
+            using (var canvasCache = new SKCanvas(_strokesBehindSelected))
+            {
+                canvasCache.Clear(SKColors.Transparent);
+            }
+        }
+
+        if (_vm.IsStrokesVisible)
+        {
+            using (var canvasCache = new SKCanvas(_strokesBehindSelected))
+            {
+                _toolManager.HandleBehindSelectedDrawing(canvasCache, null, null);
+            }
+        }
+    }
+    private void UpdateStrokesFrontSelected()
+    {
+        _strokesFrontSelected?.Dispose();
+        _strokesFrontSelected = null;
+
+        if (_currentImage == null) return;
+
+        _strokesFrontSelected = new SKBitmap((int)_currentImage.Width, (int)_currentImage.Height);
+
+        using (var canvasCache = new SKCanvas(_strokesFrontSelected))
         {
             canvasCache.Clear(SKColors.Transparent);
 
-            if (_currentImage != null)
+            if (_vm.IsStrokesVisible)
             {
-                if (_vm.IsDarkenMode)
-                {
-                    if (_currentImage.Bitmap != null)
-                    {
-                        canvasCache.DrawBitmap(_currentImage.Bitmap, 0, 0);
-                    }
-                    else if (_currentImage.PhotoSvg != null)
-                    {
-                        canvasCache.DrawPicture(_currentImage.PhotoSvg.Picture);
-                    }
-
-                    if (_currentImage.BlackboardSvg != null && _vm.IsBlackboardVisible)
-                    {
-                        canvasCache.DrawPicture(_currentImage.BlackboardSvg.Picture);
-                    }
-                }
-
-                if (_vm.IsStrokesVisible)
-                {
-                    _toolManager.HandleCompletedDrawing(canvasCache, null, null);
-                }
+                _toolManager.HandleFrontSelectedDrawing(canvasCache, null, null);
             }
         }
     }
@@ -258,7 +354,7 @@ public partial class CheckPointDetailPage : ContentPage
     {
         _vm.IsBlackboardVisible = !_vm.IsBlackboardVisible;
 
-        _codeCache = null;
+        _cacheCode = null;
         InkCanvasView.InvalidateSurface();
     }
     private void OnBtnInkClicked(object sender, EventArgs e)

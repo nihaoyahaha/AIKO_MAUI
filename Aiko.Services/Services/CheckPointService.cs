@@ -175,7 +175,7 @@ namespace Aiko.Services.Services
 				hm10.HM10002 = _floorCode;
 			}
 			List<HM10DANM> hm10List = await HkksDb.GetHM10DANMListAsync(hm10, null);
-			if (!string.IsNullOrEmpty(_hr01.HR01020) && hm10List.Count > 1)
+			if (!string.IsNullOrEmpty(_hr01.HR01020) && hm10List.Count > 0)
 			{
 				var item = hm10List.FirstOrDefault(x => x.HM10003 == _hr01.HR01020);
 				if (item == null)
@@ -291,7 +291,7 @@ namespace Aiko.Services.Services
 				HM09PROC hm09DC = new HM09PROC();
 				hm09DC.HM09001 = _hr01.HR01001;
 				hm09DC.HM09002 = hm13List[i].HM13003;
-				string strHm09 = _projectCodes.FirstOrDefault(x => x.Value == hm13List[i].HM13003).DisplyName;
+				string strHm09 = _projectCodes.FirstOrDefault(x => x.Value == hm13List[i].HM13003).DisplyName.Trim();
 				var result = await GetInspectionRecordItemsAsync(hm13List[i].HM13004.TrimEnd());
 				int m_intPicCount = result.m_intPicCount;
 				int _localPicCount = result._localPicCount;
@@ -315,21 +315,21 @@ namespace Aiko.Services.Services
 					}
 					InspectionItem inspectionItem = new InspectionItem();
 					//確認項目名
-					inspectionItem.ArtistName = hm13List[i].HM13005;
+					inspectionItem.ArtistName = hm13List[i].HM13005.Trim();
 					//工程名
 					inspectionItem.CompositionName = strHm09;
 					//工程コード
-					inspectionItem.Composition = hm13List[i].HM13003;
+					inspectionItem.Composition = hm13List[i].HM13003.Trim();
 					//検査結果画像
-					inspectionItem.CheckResultImage = checkResultImage;
+					inspectionItem.CheckResultImage = checkResultImage.Trim();
 					//結果コード
 					inspectionItem.HR02005 = resultHr02[j].HR02005;
 					//確認項目コード
-					inspectionItem.HM13004 = hm13List[i].HM13004;
+					inspectionItem.HM13004 = hm13List[i].HM13004.Trim();
 					//確認日
-					inspectionItem.HR02006 = strHR02006;
+					inspectionItem.HR02006 = strHR02006.Trim();
 					//確認者
-					inspectionItem.HR02007 = resultHr02[j].HR02007;
+					inspectionItem.HR02007 = resultHr02[j].HR02007.Trim();
 					//写真枚数
 					inspectionItem.Num = m_intPicCount;
 					inspectionItem.LocalPicNum = _localPicCount;
@@ -337,27 +337,27 @@ namespace Aiko.Services.Services
 					//値の入力が可能
 					inspectionItem.HM13010 = hm13List[i].HM13010;
 					//値
-					inspectionItem.HR02004 = resultHr02[j].HR02004;
+					inspectionItem.HR02004 = resultHr02[j].HR02004.Trim();
 					//指摘日
-					inspectionItem.HR02008 = strHR02008;
+					inspectionItem.HR02008 = strHR02008.Trim();
 					//指摘者
-					inspectionItem.HR02009 = resultHr02[j].HR02009;
+					inspectionItem.HR02009 = resultHr02[j].HR02009.Trim();
 					//説明
-					inspectionItem.HM13012 = hm13List[i].HM13012;
+					inspectionItem.HM13012 = hm13List[i].HM13012.Trim();
 					//メモ
-					inspectionItem.HR02010 = resultHr02[j].HR02010;
+					inspectionItem.HR02010 = resultHr02[j].HR02010.Trim();
 					//方法
-					inspectionItem.HR02011 = resultHr02[j].HR02011;
+					inspectionItem.HR02011 = resultHr02[j].HR02011.Trim();
 					//作成日時
-					inspectionItem.HR02013 = resultHr02[j].HR02013;
+					inspectionItem.HR02013 = resultHr02[j].HR02013.Trim();
 					//作成オペレータ
-					inspectionItem.HR02014 = resultHr02[j].HR02014;
+					inspectionItem.HR02014 = resultHr02[j].HR02014.Trim();
 					//更新日時
-					inspectionItem.HR02015 = resultHr02[j].HR02015;
+					inspectionItem.HR02015 = resultHr02[j].HR02015.Trim();
 					//同期日時
-					inspectionItem.HR02017 = resultHr02[j].HR02017;
+					inspectionItem.HR02017 = resultHr02[j].HR02017.Trim();
 					//同期オペレータ
-					inspectionItem.HR02018 = resultHr02[j].HR02018;
+					inspectionItem.HR02018 = resultHr02[j].HR02018.Trim();
 					//確認方法
 					inspectionItem.HR02019 = resultHr02[j].HR02019;
 					//写真タイプ 0：不要　1：確認箇所ごと　2：工区・符号ごと　3：工区ごと
@@ -806,37 +806,62 @@ namespace Aiko.Services.Services
 				var originalList = _originalInspectionGroups[key];
 				for (int i = 0; i < currentList.Count; i++)
 				{
-					if (currentList[i].CheckResultImage != originalList[i].CheckResultImage) return true;
-					if (currentList[i].HR02005 != originalList[i].HR02005) return true;
-					if (currentList[i].HM13004 != originalList[i].HM13004) return true;
-					if (currentList[i].ArtistName != originalList[i].ArtistName) return true;
-					if (currentList[i].Composition != originalList[i].Composition) return true;
-					if (currentList[i].CompositionName != originalList[i].CompositionName) return true;
-					if (currentList[i].ReleaseDateTime != originalList[i].ReleaseDateTime) return true;
-					if (currentList[i].HR02006 != originalList[i].HR02006) return true;
-					if (currentList[i].HR02007 != originalList[i].HR02007) return true;
-					if (currentList[i].HR02004 != originalList[i].HR02004) return true;
-					if (currentList[i].HM13011 != originalList[i].HM13011) return true;
-					if (currentList[i].HM13010 != originalList[i].HM13010) return true;
-					if (currentList[i].HR02008 != originalList[i].HR02008) return true;
-					if (currentList[i].HR02009 != originalList[i].HR02009) return true;
-					if (currentList[i].HR02010 != originalList[i].HR02010) return true;
-					if (currentList[i].HM13012 != originalList[i].HM13012) return true;
-					if (currentList[i].HR02011 != originalList[i].HR02011) return true;
-					if (currentList[i].HR02019 != originalList[i].HR02019) return true;
-					if (currentList[i].HM13009 != originalList[i].HM13009) return true;
+					if (currentList[i].HR02005 != originalList[i].HR02005) 
+						return true;
+					if (currentList[i].HM13004 != originalList[i].HM13004) 
+						return true;
+					if (currentList[i].ArtistName != originalList[i].ArtistName) 
+						return true;
+					if (currentList[i].Composition != originalList[i].Composition) 
+						return true;
+					if (currentList[i].CompositionName != originalList[i].CompositionName) 
+						return true;
+					if (currentList[i].ReleaseDateTime != originalList[i].ReleaseDateTime) 
+						return true;
+					if (currentList[i].HR02006 != originalList[i].HR02006) 
+						return true;
+					if (currentList[i].HR02007 != originalList[i].HR02007) 
+						return true;
+					if (currentList[i].HR02004 != originalList[i].HR02004) 
+						return true;
+					if (currentList[i].HM13011 != originalList[i].HM13011) 
+						return true;
+					if (currentList[i].HM13010 != originalList[i].HM13010)
+						return true;
+					if (currentList[i].HR02008 != originalList[i].HR02008) 
+						return true;
+					if (currentList[i].HR02009 != originalList[i].HR02009) 
+						return true;
+					if (currentList[i].HR02010 != originalList[i].HR02010) 
+						return true;
+					if (currentList[i].HM13012 != originalList[i].HM13012) 
+						return true;
+					if (currentList[i].HR02011 != originalList[i].HR02011) 
+						return true;
+					if (currentList[i].HR02019 != originalList[i].HR02019) 
+						return true;
+					if (currentList[i].HM13009 != originalList[i].HM13009) 
+						return true;
 					
 					if (isCompareNum)
-					{   if (currentList[i].Num != originalList[i].Num) return true;
-						if (currentList[i].LocalPicNum != originalList[i].LocalPicNum) return true;
-						if (currentList[i].UsedNum != originalList[i].UsedNum) return true;
+					{   if (currentList[i].Num != originalList[i].Num) 
+							return true;
+						if (currentList[i].LocalPicNum != originalList[i].LocalPicNum) 
+							return true;
+						if (currentList[i].UsedNum != originalList[i].UsedNum) 
+							return true;
 					}
 					
-					if (currentList[i].HR02013 != originalList[i].HR02013) return true;
-					if (currentList[i].HR02014 != originalList[i].HR02014) return true;
-					if (currentList[i].HR02015 != originalList[i].HR02015) return true;
-					if (currentList[i].HR02017 != originalList[i].HR02017) return true;
-					if (currentList[i].HR02018 != originalList[i].HR02018) return true;
+					if (currentList[i].HR02013 != originalList[i].HR02013) 
+						return true;
+					if (currentList[i].HR02014 != originalList[i].HR02014) 
+						return true;
+					if (currentList[i].HR02015 != originalList[i].HR02015) 
+						return true;
+					if (currentList[i].HR02017 != originalList[i].HR02017) 
+						return true;
+					if (currentList[i].HR02018 != originalList[i].HR02018) 
+						return true;
 				}
 			}
 			return false;

@@ -1,18 +1,30 @@
 ﻿using Aiko.Common;
 using Aiko.IServices.IServices;
+using Aiko.UI.Themes;
+using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Animations;
 
 namespace Aiko.UI;
 
 public partial class App : Application
 {
+	readonly ILogger<App> _logger;
 	readonly IAppInitializationService _appInitializationService;
 	readonly AppShell _shell;
-	public App(IAppInitializationService appInitializationService, AppShell shell)
+	public App(IAppInitializationService appInitializationService, 
+		AppShell shell, 
+		ILogger<App> logger)
 	{
 		InitializeComponent();
-		Application.Current.UserAppTheme = AppTheme.Light;
+		Current.UserAppTheme = AppTheme.Light;
 		_appInitializationService = appInitializationService;
 		_shell = shell;
+		_logger = logger;
+		AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+		{
+			var exception = e.ExceptionObject as Exception;
+			_logger.LogCritical($"appに未処理異常が発生しました:{exception.ToString()}");
+		};
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
@@ -32,22 +44,7 @@ public partial class App : Application
 	/// </summary>
 	void InitializeTheme()
 	{
-		string theme = Preferences.Default.Get("Theme", "Light");
-		ICollection<ResourceDictionary> mergedDictionaries = Application.Current.Resources.MergedDictionaries;
-		if (mergedDictionaries != null)
-		{
-			mergedDictionaries.Clear();
-			switch (theme)
-			{
-				case "Dark":
-					mergedDictionaries.Add(new DarkTheme());
-					break;
-				case "Light":
-				default:
-					mergedDictionaries.Add(new LightTheme());
-					break;
-			}
-		}
+		ThemeManager.ApplySavedTheme(notify: false);
 	}
 
 }

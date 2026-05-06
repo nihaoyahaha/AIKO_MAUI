@@ -37,277 +37,277 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	/// 配筋確認名
 	/// </summary>
 	[ObservableProperty]
-	private string _danmTitleName = "";
+	public partial string DanmTitleName { get; set; } = "";
 
 	/// <summary>
 	/// 部位名
 	/// </summary>
 	[ObservableProperty]
-	private string _buimName = "";
+	public partial string BuimName { get; set; } = "";
 
 	/// <summary>
 	/// 階名
 	/// </summary>
 	[ObservableProperty]
-	private string _floorName = "";
+	public partial string FloorName { get; set; } = "";
 
 	/// <summary>
 	/// 断面名
 	/// </summary>
 	[ObservableProperty]
-	private string _danmName = "";
+	public partial string DanmName { get; set; } = "";
 
 	/// <summary>
 	/// 工区名
 	/// </summary>
 	[ObservableProperty]
-	private string _kokuName = "";
+	public partial string KokuName { get; set; } = "";
 
 	/// <summary>
 	/// 位置
 	/// </summary>
 	[ObservableProperty]
-	private string _locationName = "";
+	public partial string LocationName { get; set; } = "";
 
 	/// <summary>
 	/// 確認项目リストのデータソース
 	/// </summary>
 	[ObservableProperty]
-	private ObservableCollection<InspectionItem> _inspectionItems;
+	public partial ObservableCollection<InspectionItem> InspectionItems { get; set; }
 
 	/// <summary>
 	/// 確認项目リスト選択行
 	/// </summary>
 	[ObservableProperty]
-	private InspectionItem? _inspectionItemSelectedItem;
+	public partial InspectionItem? InspectionItemSelectedItem { get; set; }
 
 	/// <summary>
 	/// 工程
 	/// </summary>
 	[ObservableProperty]
-	private ObservableCollection<ListItem> _projects = new();
+	public partial ObservableCollection<ListItem> Projects { get; set; } = new();
 
 	/// <summary>
 	/// 工程の選択された行インデックス
 	/// </summary>
 	[ObservableProperty]
-	private int _projectSelectedIndex = -1;
+	public partial int ProjectSelectedIndex { get; set; } = -1;
 
 	/// <summary>
 	/// 第1行断面ボタンコンテナ
 	/// </summary>
 	[ObservableProperty]
-	private ObservableCollection<SelectionButtonModel> _row1Buttons = new();
+	public partial ObservableCollection<SelectionButtonModel> Row1Buttons { get; set; } = new();
 
 	/// <summary>
 	/// 第2行断面ボタンコンテナ
 	/// </summary>
 	[ObservableProperty]
-	private ObservableCollection<SelectionButtonModel> _row2Buttons = new();
+	public partial ObservableCollection<SelectionButtonModel> Row2Buttons { get; set; } = new();
 
 	/// <summary>
 	/// 第3行断面ボタンコンテナ
 	/// </summary>
 	[ObservableProperty]
-	private ObservableCollection<SelectionButtonModel> _row3Buttons = new();
+	public partial ObservableCollection<SelectionButtonModel> Row3Buttons { get; set; } = new();
 
 	/// <summary>
 	/// 判定基準
 	/// </summary>
 	[ObservableProperty]
-	private string _criterion = "";
+	public partial string Criterion { get; set; } = "";
 
 	/// <summary>
 	/// 確認日
 	/// </summary>
 	[ObservableProperty]
-	private string _confirmationDate = "";
+	public partial string ConfirmationDate { get; set; } = "";
 
 	/// <summary>
 	/// 確認日の有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _confirmationDateIsEnabled = true;
+	public partial bool ConfirmationDateIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 確認日の背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _confirmationDateBackgroundColor = null;
+	public partial Color ConfirmationDateBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 確認者
 	/// </summary>
 	[ObservableProperty]
-	private string _confirmer = "";
+	public partial string Confirmer { get; set; } = "";
 
 	/// <summary>
 	/// 確認者の有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _confirmerIsEnabled = true;
+	public partial bool ConfirmerIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 確認者の背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _confirmerBackgroundColor = null;
+	public partial Color ConfirmerBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 値
 	/// </summary>
 	[ObservableProperty]
-	private string _ti = "";
+	public partial string Ti { get; set; } = "";
 
 	/// <summary>
 	/// 値の有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _tiIsEnabled = true;
+	public partial bool TiIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 値の背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _tiBackgroundColor = null;
+	public partial Color TiBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 指摘日
 	/// </summary>
 	[ObservableProperty]
-	private string _indicationDate = "";
+	public partial string IndicationDate { get; set; } = "";
 
 	/// <summary>
 	/// 指摘日の有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _indicationDateIsEnabled = true;
+	public partial bool IndicationDateIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 指摘日の背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _indicationDateBackgroundColor = null;
+	public partial Color IndicationDateBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 指摘者
 	/// </summary>
 	[ObservableProperty]
-	private string _ndicationer = "";
+	public partial string Ndicationer { get; set; } = "";
 
 	/// <summary>
 	/// 指摘者の有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _ndicationerIsEnabled = true;
+	public partial bool NdicationerIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 指摘者の背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _ndicationerBackgroundColor = null;
+	public partial Color NdicationerBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 是正方法
 	/// </summary>
 	[ObservableProperty]
-	private string _correctionMethod = "";
+	public partial string CorrectionMethod { get; set; } = "";
 
 	/// <summary>
 	/// 是正方法の有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _correctionMethodIsEnabled = true;
+	public partial bool CorrectionMethodIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 是正方法の背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _correctionMethodBackgroundColor = null;
+	public partial Color CorrectionMethodBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 指摘事項
 	/// </summary>
 	[ObservableProperty]
-	private string _indication = "";
+	public partial string Indication { get; set; } = "";
 
 	/// <summary>
 	/// 指摘事項の有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _indicationIsEnabled = true;
+	public partial bool IndicationIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 指摘事項の背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _indicationBackgroundColor = null;
+	public partial Color IndicationBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 確認方法の選択インデックス
 	/// </summary>
 	[ObservableProperty]
-	private int _confirmationMethodSelectedIndex = 0;
+	public partial int ConfirmationMethodSelectedIndex { get; set; } = 0;
 
 	/// <summary>
 	/// 確認方法の有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _confirmationMethodIsEnabled = true;
+	public partial bool ConfirmationMethodIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 確認方法の背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _confirmationMethodBackgroundColor = null;
+	public partial Color ConfirmationMethodBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 指摘事項ボタンの有効状態
 	/// </summary>
 	[ObservableProperty]
-	private bool _openButtonIsEnabled = true;
+	public partial bool OpenButtonIsEnabled { get; set; } = true;
 
 	/// <summary>
 	/// 指摘事項ボタンの背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _openButtonBackgroundColor = null;
+	public partial Color OpenButtonBackgroundColor { get; set; } = null;
 
 	/// <summary>
 	/// 未確認画像の枠の厚さ
 	/// </summary>
 	[ObservableProperty]
-	private int _checkrsl1StrokeThickness = 0;
+	public partial int Checkrsl1StrokeThickness { get; set; } = 0;
 
 	/// <summary>
 	/// 不合格画像の枠の厚さ
 	/// </summary>
 	[ObservableProperty]
-	private int _checkrsl2StrokeThickness = 0;
+	public partial int Checkrsl2StrokeThickness { get; set; } = 0;
 
 	/// <summary>
 	/// 対象外画像の枠の厚さ
 	/// </summary>
 	[ObservableProperty]
-	private int _checkrsl3StrokeThickness = 0;
+	public partial int Checkrsl3StrokeThickness { get; set; } = 0;
 
 	/// <summary>
 	/// 合格画像の枠の厚さ
 	/// </summary>
 	[ObservableProperty]
-	private int _checkrsl4StrokeThickness = 0;
+	public partial int Checkrsl4StrokeThickness { get; set; } = 0;
 
 	/// <summary>
 	/// 是正済画像の枠の厚さ
 	/// </summary>
 	[ObservableProperty]
-	private int _checkrsl5StrokeThickness = 0;
+	public partial int Checkrsl5StrokeThickness { get; set; } = 0;
 
 	/// <summary>
 	/// 断面図
 	/// </summary>
 	[ObservableProperty]
-	private ImageSource _containerImageSource;
+	public partial ImageSource ContainerImageSource { get; set; }
 	#endregion
 
 	#region プライベートフィールド
@@ -433,6 +433,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		RowButtonAddChild(Row1Buttons, row1Data, 0);
 		RowButtonAddChild(Row2Buttons, row2Data, 4);
 		RowButtonAddChild(Row3Buttons, row3Data, 8);
+		ContainerImageSource = null;
 		if (list.Count > 0)
 		{
 			Row1Buttons[0].BackgroundColor = _pink;

@@ -3,7 +3,7 @@ namespace Aiko.SqliteDb;
 
 public class HR03TYPECOUNT
 {
-    public string HM13004 { get; set; }
+    public string HM13004 { get; set; } = string.Empty;
     /// <summary>
     /// 各类型下，写真数量统计
     /// </summary>

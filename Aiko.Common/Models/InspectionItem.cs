@@ -14,138 +14,158 @@ namespace Aiko.Common.Models;
 /// </summary>
 public partial class InspectionItem : ObservableObject
 {
+	string _theme = Preferences.Default.Get("Theme", "Light");
+
+	// 検査結果画像
+	private string _checkResultImage = string.Empty;
+
 	/// <summary>
 	/// 検査結果画像
 	/// </summary>
-	[ObservableProperty]	
-	private string? _checkResultImage;
+	public string CheckResultImage
+	{
+		get 
+		{
+			string themeSuffix = _theme == "Light" ? "light" : "dark";
+			return $"{themeSuffix}{_checkResultImage}";
+		}
+		set
+		{
+			if (_checkResultImage != value)
+			{
+				_checkResultImage = value;
+
+				OnPropertyChanged(nameof(CheckResultImage));
+			}
+		}
+	}
 
 	/// <summary>
 	/// 結果コード
 	/// </summary>
 	[ObservableProperty]
-	private int _hR02005;
+	public partial int HR02005 { get; set; }
 
 	/// <summary>
 	/// 確認コード
 	/// </summary>
 	[ObservableProperty]
-	private string? _hM13004;
+	public partial string HM13004 { get; set; }= string.Empty;
 
 	/// <summary>
 	/// 確認項目名
 	/// </summary>
 	[ObservableProperty]
-	private string? _artistName;
+	public partial string ArtistName { get; set; }= string.Empty;
 
 	/// <summary>
 	/// 工程コード
 	/// </summary>
 	[ObservableProperty]
-	private string? _composition;
+	public partial string Composition { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 工程名
 	/// </summary>
 	[ObservableProperty]
-	private string? _compositionName;
+	public partial string CompositionName { get; set; } = string.Empty;
 
 	[ObservableProperty]
-	private DateTime _releaseDateTime;
+	public partial DateTime ReleaseDateTime { get; set; }
 
 	/// <summary>
 	/// 確認日
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02006;
+	public partial string HR02006 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 確認者
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02007;
+	public partial string HR02007 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 値
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02004;
+	public partial string HR02004 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 単位
 	/// </summary>
 	[ObservableProperty]
-	private string _hM13011;
+	public partial string HM13011 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 入力可能
 	/// </summary>
 	[ObservableProperty]
-	private int _hM13010;
+	public partial int HM13010 { get; set; }
 
 	/// <summary>
 	/// 指摘日
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02008;
+	public partial string HR02008 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 指摘者
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02009;
+	public partial string HR02009 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// メモ
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02010;
+	public partial string HR02010 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 説明
 	/// </summary>
 	[ObservableProperty]
-	private string? _hM13012;
+	public partial string HM13012 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 方法
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02011;
+	public partial string HR02011 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 確認方法
 	/// </summary>
 	[ObservableProperty]
-	private int _hR02019;
+	public partial int HR02019 { get; set; }
 
 	/// <summary>
 	/// 写真タイプ
 	/// 0：不要　1：確認箇所ごと　2：工区・符号ごと　3：工区ごと
 	/// </summary>
 	[ObservableProperty]
-	private int _hM13009;
+	public partial int HM13009 { get; set; }
 
 	[ObservableProperty]
-	private bool _hasSyas = false;
+	public partial bool HasSyas { get; set; } = false;
 
 	/// <summary>
 	/// 写真アイコンの背景色
 	/// </summary>
 	[ObservableProperty]
-	private Color _cameraColor = Colors.White;
+	public partial Color CameraColor { get; set; } = Colors.White;
 
 	/// <summary>
 	/// 枚数
 	/// </summary>
 	[ObservableProperty]
-	private int _num;
+	public partial int Num { get; set; }
 
 	/// <summary>
 	/// ローカル画像数
 	/// </summary>
 	[ObservableProperty]
-	private int _localPicNum;
+	public partial int LocalPicNum { get; set; }
 
 	/// <summary>
 	/// 写真枚数(写真フォルダー下にJPEG又はSVGの写真枚数)
@@ -159,37 +179,37 @@ public partial class InspectionItem : ObservableObject
 	/// 枚数
 	/// </summary>
 	[ObservableProperty]
-	private int _usedNum;
+	public partial int UsedNum { get; set; }
 
 	/// <summary>
 	/// 作成日時
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02013;
+	public partial string HR02013 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 作成オペレータ
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02014;
+	public partial string HR02014 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 更新日時
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02015;
+	public partial string HR02015 { get;set; } = string.Empty;
 
 	/// <summary>
 	/// 同期日時
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02017;
+	public partial string HR02017 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 同期オペレータ
 	/// </summary>
 	[ObservableProperty]
-	private string? _hR02018;
+	public partial string HR02018 { get; set; } = string.Empty;
 
 	public void SetCameraColor()
 	{
@@ -228,35 +248,34 @@ public partial class InspectionItem : ObservableObject
 	{
 		return new InspectionItem()
 		{
-			CheckResultImage = _checkResultImage,
-			HR02005 = _hR02005,
-			HM13004 = _hM13004,
-			ArtistName = _artistName,
-			Composition = _composition,
-			CompositionName = _compositionName,
-			ReleaseDateTime = _releaseDateTime,
-			HR02006 = _hR02006,
-			HR02007 = _hR02007,
-			HR02004 = _hR02004,
-			HM13011 = _hM13011,
-			HM13010 = _hM13010,
-			HR02008 = _hR02008,
-			HR02009 = _hR02009,
-			HR02010 = _hR02010,
-			HM13012 = _hM13012,
-			HR02011 = _hR02011,
-			HR02019 = _hR02019,
-			HM13009 = _hM13009,
-			HasSyas = _hasSyas,
-			CameraColor = _cameraColor,
-			Num = _num ,
-			LocalPicNum = _localPicNum,
-			UsedNum = _usedNum,
-			HR02013 = _hR02013,
-			HR02014 = _hR02014,
-			HR02015 = _hR02015,
-			HR02017 = _hR02017,
-			HR02018 = _hR02018
+			HR02005 = HR02005,
+			HM13004 = HM13004,
+			ArtistName = ArtistName,
+			Composition = Composition,
+			CompositionName = CompositionName,
+			ReleaseDateTime = ReleaseDateTime,
+			HR02006 = HR02006,
+			HR02007 = HR02007,
+			HR02004 = HR02004,
+			HM13011 = HM13011,
+			HM13010 = HM13010,
+			HR02008 = HR02008,
+			HR02009 = HR02009,
+			HR02010 = HR02010,
+			HM13012 = HM13012,
+			HR02011 = HR02011,
+			HR02019 = HR02019,
+			HM13009 = HM13009,
+			HasSyas = HasSyas,
+			CameraColor = CameraColor,
+			Num = Num ,
+			LocalPicNum = LocalPicNum,
+			UsedNum = UsedNum,
+			HR02013 = HR02013,
+			HR02014 = HR02014,
+			HR02015 = HR02015,
+			HR02017 = HR02017,
+			HR02018 = HR02018
 		};
 	}
 }

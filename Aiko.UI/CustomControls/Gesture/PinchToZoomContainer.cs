@@ -5,6 +5,19 @@ using Microsoft.UI.Xaml.Input;
 
 namespace Aiko.UI;
 
+public sealed class MapViewportState
+{
+    public double Scale { get; init; }
+    public double OffsetX { get; init; }
+    public double OffsetY { get; init; }
+    public double LogicalCenterX { get; init; }
+    public double LogicalCenterY { get; init; }
+    public double LayerWidth { get; init; }
+    public double LayerHeight { get; init; }
+    public double ViewportWidth { get; init; }
+    public double ViewportHeight { get; init; }
+}
+
 public class PinchToZoomContainer : ContentView
 {
     // 允许的最小/最大缩放比例。
@@ -101,6 +114,70 @@ public class PinchToZoomContainer : ContentView
         Content.VerticalOptions = LayoutOptions.Start;
 
         Reset();
+    }
+
+    // 捕获当前视口状态。
+    // 同时保存原始偏移和当前视口中心对应的逻辑坐标，便于在相同或近似布局下恢复。
+    public MapViewportState? CaptureViewportState()
+    {
+        if (Content == null || Width <= 0 || Height <= 0 || LayerWidth <= 0 || LayerHeight <= 0)
+            return null;
+
+        double scale = currentScale <= 0 ? 1.0 : currentScale;
+        double offsetX = Content.TranslationX;
+        double offsetY = Content.TranslationY;
+
+        double logicalCenterX = (Width / 2.0 - offsetX) / scale;
+        double logicalCenterY = (Height / 2.0 - offsetY) / scale;
+
+        return new MapViewportState
+        {
+            Scale = scale,
+            OffsetX = offsetX,
+            OffsetY = offsetY,
+            LogicalCenterX = Math.Clamp(logicalCenterX, 0, LayerWidth),
+            LogicalCenterY = Math.Clamp(logicalCenterY, 0, LayerHeight),
+            LayerWidth = LayerWidth,
+            LayerHeight = LayerHeight,
+            ViewportWidth = Width,
+            ViewportHeight = Height
+        };
+    }
+
+    // 恢复先前保存的视口状态。
+    // 如果布局尺寸没有变化，优先恢复原始偏移；否则按逻辑中心点回推，尽量保持用户正在看的位置不变。
+    public bool TryRestoreViewportState(MapViewportState? state)
+    {
+        if (state == null || Content == null || Width <= 0 || Height <= 0 || LayerWidth <= 0 || LayerHeight <= 0)
+            return false;
+
+        double targetScale = Math.Clamp(state.Scale, MinScale, MaxScale);
+        bool sameGeometry =
+            Math.Abs(Width - state.ViewportWidth) < 0.5 &&
+            Math.Abs(Height - state.ViewportHeight) < 0.5 &&
+            Math.Abs(LayerWidth - state.LayerWidth) < 0.5 &&
+            Math.Abs(LayerHeight - state.LayerHeight) < 0.5;
+
+        double targetX = sameGeometry
+            ? state.OffsetX
+            : Width / 2.0 - Math.Clamp(state.LogicalCenterX, 0, LayerWidth) * targetScale;
+        double targetY = sameGeometry
+            ? state.OffsetY
+            : Height / 2.0 - Math.Clamp(state.LogicalCenterY, 0, LayerHeight) * targetScale;
+
+        currentScale = targetScale;
+        startScale = targetScale;
+        Content.Scale = currentScale;
+        Content.TranslationX = ClampX(targetX, currentScale);
+        Content.TranslationY = ClampY(targetY, currentScale);
+
+        xOffset = Content.TranslationX;
+        yOffset = Content.TranslationY;
+        panX = xOffset;
+        panY = yOffset;
+
+        RaiseViewportChanged();
+        return true;
     }
 
     // 恢复到 1 倍缩放，并把内容居中显示。

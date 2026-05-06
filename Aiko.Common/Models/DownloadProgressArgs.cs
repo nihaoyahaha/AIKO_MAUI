@@ -12,7 +12,7 @@ public class DownloadProgressArgs
 	/// <summary>
 	/// 現在のステータスメッセージ
 	/// </summary>
-	public string Message { get; set; }
+	public string Message { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 現在のダウンロード進捗値(0.0-1.0)
@@ -22,5 +22,5 @@ public class DownloadProgressArgs
 	/// <summary>
 	/// ダウンロードの進捗率テキスト
 	/// </summary>
-	public string PercentText { get; set; }
+	public string PercentText { get; set; } = string.Empty;
 }

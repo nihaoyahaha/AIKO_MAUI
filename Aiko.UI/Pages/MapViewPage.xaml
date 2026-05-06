@@ -199,7 +199,7 @@
                 <Grid
                     x:Name="MainGridView"
                     Margin="80,48,80,0"
-                    Background="#FF8B8B8B"
+                    BackgroundColor="#FF8B8B8B"
                     IsClippedToBounds="True">
                     <local:PinchToZoomContainer x:Name="pinchToZoom">
                         <AbsoluteLayout x:Name="ZoomLayer">
@@ -239,7 +239,7 @@
                 HeightRequest="350"
                 HorizontalOptions="End"
                 IsVisible="{Binding IsSettingVisible}"
-                Stroke="#E0E0E0"
+                Stroke="{DynamicResource BorderStroke}"
                 StrokeShape="RoundRectangle 5"
                 StrokeThickness="1"
                 VerticalOptions="Start"
@@ -266,7 +266,6 @@
                                 <Switch
                                     Grid.Column="1"
                                     IsToggled="{Binding ThemeFlag}"
-                                    OnColor="#87CEEB"
                                     VerticalOptions="Center" />
                             </Grid>
 
@@ -285,7 +284,6 @@
                                 <Switch
                                     Grid.Column="1"
                                     IsToggled="{Binding Hr01003Flag}"
-                                    OnColor="#87CEEB"
                                     VerticalOptions="Center" />
                             </Grid>
 
@@ -304,7 +302,6 @@
                                 <Switch
                                     Grid.Column="1"
                                     IsToggled="{Binding Hr01020Flag}"
-                                    OnColor="#87CEEB"
                                     VerticalOptions="Center" IsEnabled="False"/>
                             </Grid>
 
@@ -323,7 +320,6 @@
                                 <Switch
                                     Grid.Column="1"
                                     IsToggled="{Binding Hr01007Flag}"
-                                    OnColor="#87CEEB"
                                     VerticalOptions="Center" />
                             </Grid>
 
@@ -342,7 +338,6 @@
                                 <Switch
                                     Grid.Column="1"
                                     IsToggled="{Binding SizeFlag}"
-                                    OnColor="#87CEEB"
                                     VerticalOptions="Center" />
                             </Grid>
 
@@ -361,7 +356,6 @@
                                 <Switch
                                     Grid.Column="1"
                                     IsToggled="{Binding PhotoCountFlag}"
-                                    OnColor="#87CEEB"
                                     VerticalOptions="Center" />
                             </Grid>
 
