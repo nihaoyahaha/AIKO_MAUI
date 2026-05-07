@@ -67,7 +67,7 @@ public partial class PhotoPreviewModel : ObservableObject
 		PhotoLayer.PhotoWidth = (photoWidth * fitScale).ToString();
 		PhotoLayer.PhotoHeight = (photoHeight * fitScale).ToString();
 
-		if (HR03017 == 1) ComputeGreenBackgroundSize(fitScale);
+		if (HR03017 == 1 && PhotoLayer.GreenBackgroundIsVisible) ComputeGreenBackgroundSize(fitScale);
 	}
 
 	void ComputeGreenBackgroundSize(double scale) 

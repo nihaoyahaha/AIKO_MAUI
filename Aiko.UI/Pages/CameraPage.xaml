@@ -26,7 +26,6 @@
             <Setter Property="BorderColor" Value="Blue" />
             <Setter Property="BorderWidth" Value="2" />
             <Setter Property="TextColor" Value="Blue" />
-            <Setter Property="FontFamily" Value="Segoe UI Symbol" />
             <Setter Property="FontSize" Value="24" />
             <Setter Property="Padding" Value="12,5" />
             <Setter Property="HorizontalOptions" Value="Center" />
@@ -163,6 +162,7 @@
                     <PanGestureRecognizer PanUpdated="PanGestureRecognizer_PanUpdated" />
                 </Grid.GestureRecognizers>
                 <local:EditView_IncludingImage
+                    x:Name="editView"
                     ConfirmProject="{Binding GreenBackgroundModel.ConfirmProject}"
                     ConstructionName="{Binding GreenBackgroundModel.ConstructionName}"
                     Constructor="{Binding GreenBackgroundModel.Constructor}"

@@ -98,7 +98,7 @@ public class PinchToZoomContainer : ContentView
     }
 
     // 设置内容的基础尺寸，并把内容锚点固定到左上角，后续缩放和平移都基于这个坐标系计算。
-    public void SetBaseSize(double width, double height)
+    public void SetBaseSize(double width, double height, bool resetViewport = true)
     {
         if (width <= 0 || height <= 0 || Content == null)
             return;
@@ -113,7 +113,14 @@ public class PinchToZoomContainer : ContentView
         Content.HorizontalOptions = LayoutOptions.Start;
         Content.VerticalOptions = LayoutOptions.Start;
 
-        Reset();
+        if (resetViewport)
+        {
+            Reset();
+        }
+        else
+        {
+            RefreshBounds();
+        }
     }
 
     // 捕获当前视口状态。

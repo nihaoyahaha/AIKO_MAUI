@@ -1,7 +1,8 @@
 ﻿using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
+using static System.Net.Mime.MediaTypeNames;
 
-namespace Aiko.Common.InkTools.InkToolsList
+namespace Aiko.Common.InkTools
 {
     /// <summary>
     /// 圆形文本工具
@@ -16,9 +17,27 @@ namespace Aiko.Common.InkTools.InkToolsList
             Size = 16;
         }
 
+        //public override void OnDown(SKPoint point, SKCanvasView canvasView)
+        //{
+        //    TextEditRequest(point, SKColors.White, Size, Font, Color);
+        //}
+
         public override void OnDown(SKPoint point, SKCanvasView canvasView)
         {
-            TextEditRequest(point, SKColors.White, Size, Font, Color);
+            currentStroke = new InkStroke
+            {
+                Type = this.Type,
+                Points = new List<SKPoint> { point },
+                Color = this.Color,
+                Size = this.Size,
+                Text = this.Text,
+                Font = this.Font
+            };
+
+            _manager.AddStroke(currentStroke);
+            currentStroke = null;
+
+            canvasView.InvalidateSurface();
         }
 
         public override void Draw(SKCanvas canvas, InkStroke stroke)

@@ -19,8 +19,6 @@ public partial class MapViewPage : ContentPage
     private double originalWidth = 0;
     private double originalHeight = 0;
 
-    // 动态图层是否已初始化
-    private bool _isShapesInitialized = false;
     // 首屏优先图元（IMG）是否已初始化
     private bool _isPriorityShapesInitialized = false;
     // 次级图元（RECT/POLY/LBL）是否已初始化
@@ -52,6 +50,8 @@ public partial class MapViewPage : ContentPage
 
     // 是否已经完成当前底图的首次尺寸计算与首帧显示。
     private bool _isInitialImageReady = false;
+    // 下一次底图尺寸适配时是否需要把视口重置为初始状态；只有首次加载和切换底图时需要。
+    private bool _resetViewportOnNextLayout = true;
     // 地图切换时，先让底图单独显示一小段时间，再显示图元，避免视觉上出现“工区先于底图”。
     private bool _deferDynamicShapeDisplay = false;
     // Skia 绘制日文字体缓存，避免重复从资源加载。
@@ -267,65 +267,86 @@ public partial class MapViewPage : ContentPage
     /// </summary>
     private void RegisterMessages()
     {
+        // 注册“保存当前地图视口状态”的消息；通常在跳转前调用，用来记住缩放比例和拖动位置。 CheckPointPage返回
         WeakReferenceMessenger.Default.Register<string, string>(this, "CaptureMapViewportStateToken", (_, _) =>
         {
+            // 只有当前页面绑定的是 MapViewPageVM 时，才把视口状态写回 VM。
             if (BindingContext is MapViewPageVM vm)
             {
+                // 从自定义缩放容器读取当前视口状态，并交给 VM 暂存，后续返回地图页时可恢复。
                 vm.SavePendingViewportState(pinchToZoom.CaptureViewportState());
             }
         });
 
+        // 注册“恢复地图视口状态”的消息；只恢复缩放比例和拖动位置，不重新加载地图数据。
+        WeakReferenceMessenger.Default.Register<string, string>(this, "RestoreMapViewportStateToken", (_, _) =>
+        {
+            // 使用 VM 中暂存的视口状态恢复 pinchToZoom；恢复成功后会自动清除暂存状态。
+            TryRestorePendingViewportState();
+        });
+
         // 修改底图后：清空旧图元并重新触发底图加载流程
+        // 这个消息只负责“底图切换阶段”的视觉清理和尺寸适配，不负责加载/重绘新图元数据。
         WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshMapToken", (_, _) =>
         {
+            // 开始一次地图视觉刷新：取消旧的延迟显示任务，并临时阻止动态图元显示。
             BeginMapVisualRefresh();
-            _isShapesInitialized = false;
+            // 标记优先图元（主要是确认点图片）未初始化。
             _isPriorityShapesInitialized = false;
+            // 标记延迟图元（矩形、多边形、文字等）未初始化。
             _isDeferredShapesInitialized = false;
+            // 清掉 ZoomLayer 中动态添加的控件；保留 XAML 固定定义的底图 Image。
             ClearDynamicElements();
-            //originalWidth = 0;
-            //originalHeight = 0;
-            //showW = 0;
-            //showH = 0;
-
-            // 等到底图绑定值写入到 Image 控件后，再主动启动一次尺寸探测，
-            // 这里仅让新底图完成一次自适应，不再顺手重绘旧图元。
-            //MainThread.BeginInvokeOnMainThread(async () =>
-            //{
-                //await Task.Yield();
-                RefreshContainerImgLayout(renderShapes: false);
-            //});
+            // iOS/Mac 的矩形、多边形、文字绘制在 Skia 叠加层中，需要主动要求重绘来清空旧内容。
+            OverlayCanvas?.InvalidateSurface();
+            // 根据新的 ImageSource 重新探测底图尺寸并适配布局；此阶段不立即重绘图元。
+            RefreshContainerImgLayout(renderShapes: false);
         });
 
         // 修改配筋点和工区后：清空并按当前尺寸重绘图元
+        // 这个消息表示 VM 侧的新图元数据已经准备好，可以用当前底图尺寸绘制覆盖内容。
         WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshMapContentToken", (_, _) =>
         {
-            _isShapesInitialized = false;
+            // 重置优先图元初始化状态，让图片类图元重新初始化。
             _isPriorityShapesInitialized = false;
+            // 重置延迟图元初始化状态，让文字、矩形、多边形等重新参与刷新。
             _isDeferredShapesInitialized = false;
+            // 先移除上一轮动态控件，避免新旧图元叠加。
             ClearDynamicElements();
+            // 同步刷新 Skia 叠加层，清掉 iOS/Mac 上旧的文字和线框。
+            OverlayCanvas?.InvalidateSurface();
             // 新图元数据已经准备完成，此时再放开显示并重绘。
+            // RefreshMapToken 阶段会临时隐藏图元，这里解除限制，让新图元可以显示。
             _deferDynamicShapeDisplay = false;
+            // 轻量刷新：只根据现有图元数据更新布局与绘制，不清空也不重建。
+            // 使用当前 showW/showH 把 VM 中的地图坐标转换为页面显示坐标。
             UpdateShapes(showW, showH);
+            // 如果之前保存过缩放/拖动状态，在新图元绘制后尝试恢复视口位置。
             TryRestorePendingViewportState();
         });
 
         // 仅更新现有图元的显示状态与文字，不重建整页数据
+        // 适用于图元数据结构不变、只需要刷新可见性/文字/状态的场景。
         WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshMapDisplayToken", (_, _) =>
         {
             // 轻量刷新：只根据现有图元数据更新布局与绘制，不清空也不重建。
+            // 不清空控件缓存，可以减少频繁切换显示状态时的 UI 抖动和创建成本。
             UpdateShapes(showW, showH);
         });
 
         // 刷新标尺
+        // 标尺独立于动态图元，缩放/拖动或 Guide 数据变化时只需要重画 Guide 层。
         WeakReferenceMessenger.Default.Register<string, string>(this, "RefreshGuideToken", (_, _) =>
         {
+            // 按当前地图尺寸、缩放比例和偏移量重新计算上下左右标尺标签。
             RenderGuides();
         });
 
         // 主题切换后，页面即使被缓存也主动刷新这三个 Picker 的样式
+        // 页面被 Shell 缓存时不一定重新走构造函数，所以主题变化需要通过消息主动刷新。
         WeakReferenceMessenger.Default.Register<string, string>(this, "ThemeChangedToken", (_, _) =>
         {
+            // 切回主线程更新 Picker 的 TextColor、TitleColor、BackgroundColor 和 Enabled 样式。
             RefreshThemeAwarePickersOnMainThread();
         });
     }
@@ -337,11 +358,8 @@ public partial class MapViewPage : ContentPage
     /// </summary>
     private void BeginMapVisualRefresh()
     {
-        _initialShapeDisplayCts?.Cancel();
-        _initialShapeDisplayCts?.Dispose();
-        _initialShapeDisplayCts = null;
-
         _isInitialImageReady = false;
+        _resetViewportOnNextLayout = true;
         _deferDynamicShapeDisplay = true;
 
         // 这里不再把整个底图层隐藏，避免尺寸探测失败时页面只剩 Guide。
@@ -355,6 +373,8 @@ public partial class MapViewPage : ContentPage
     /// </summary>
     private void ClearDynamicElements()
     {
+        // ScheduleInitialShapeDisplay 可能已经排了一个 80ms 后显示图元的任务；
+        // 清图时必须取消它，避免快速切图后旧任务回调又把图元显示打开。
         _initialShapeDisplayCts?.Cancel();
         _initialShapeDisplayCts?.Dispose();
         _initialShapeDisplayCts = null;
@@ -589,7 +609,8 @@ public partial class MapViewPage : ContentPage
         ContainerImg.WidthRequest = showW;
         ContainerImg.HeightRequest = showH;
 
-        pinchToZoom.SetBaseSize(showW, showH);
+        pinchToZoom.SetBaseSize(showW, showH, _resetViewportOnNextLayout);
+        _resetViewportOnNextLayout = false;
         TryRestorePendingViewportState();
         if (renderShapes)
         {
@@ -727,7 +748,6 @@ public partial class MapViewPage : ContentPage
 #endif
 
         _isDeferredShapesInitialized = true;
-        _isShapesInitialized = _isPriorityShapesInitialized && _isDeferredShapesInitialized;
     }
 
     /// <summary>
@@ -764,7 +784,6 @@ public partial class MapViewPage : ContentPage
         });
 #else
         _isDeferredShapesInitialized = true;
-        _isShapesInitialized = _isPriorityShapesInitialized && _isDeferredShapesInitialized;
 #endif
     }
     /// <summary>
@@ -800,6 +819,11 @@ public partial class MapViewPage : ContentPage
 
             if (shape.Type == MapShapeType.Image)
             {
+                if (element is Image image)
+                {
+                    image.Source = GetOrCreateMapIconSource(shape.ImageSource);
+                }
+
                 element.AnchorX = 0;
                 element.AnchorY = 0;
 
@@ -849,6 +873,11 @@ public partial class MapViewPage : ContentPage
             if (shape.Type == MapShapeType.Image)
             {
                 var element = GetOrCreateElement(shape);
+                if (element is Image image)
+                {
+                    image.Source = GetOrCreateMapIconSource(shape.ImageSource);
+                }
+
                 element.IsVisible = !_deferDynamicShapeDisplay && shape.IsVisible;
 
                 element.AnchorX = 0;
@@ -1415,6 +1444,9 @@ public partial class MapViewPage : ContentPage
         canvas.Clear(SKColors.Transparent);
 
         if (originalWidth <= 0 || originalHeight <= 0 || showW <= 0 || showH <= 0)
+            return;
+
+        if (_deferDynamicShapeDisplay)
             return;
 
         float density = OverlayCanvas.Width > 0

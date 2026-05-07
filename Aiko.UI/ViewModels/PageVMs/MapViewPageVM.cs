@@ -206,7 +206,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
     private List<HM14GUIDANDHM20> _guideRawX = new();
     private List<HM14GUIDANDHM20> _guideRawY = new();
+    // 程序内部批量设置 GuideSelectIndex 时屏蔽选择变化事件，避免重复加载 Guide 数据。
     private bool _suppressGuideSelectionChanged;
+    // 跳转到确认点页面前记录当前配筋点编号，返回时只刷新这个点的图标和文字。
+    private string _pendingRefreshItemCode = "";
+    // 跳转到确认点页面前记录当前配筋点所属部位编号，用于返回时重新计算该点状态。
+    private string _pendingRefreshPositionCode = "";
 
 
 
@@ -262,12 +267,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             }
             else if (fromPage == "CheckPointPage")
             {
-                await GetdataSource();
+                await RefreshPendingCheckPointAsync();
 
                 // 3. 回到主线程发送消息（UI 刷新通常需要主线程）
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
+                    WeakReferenceMessenger.Default.Send("", "RefreshMapDisplayToken");
+                    WeakReferenceMessenger.Default.Send("", "RestoreMapViewportStateToken");
                 });
             }
             else if (fromPage == "LoginOutPage")
@@ -289,13 +295,14 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             }
             else if (fromPage == "MapListPage") 
             {
-                await GetdataSource();
-
-                // 3. 回到主线程发送消息（UI 刷新通常需要主线程）
+                // 从构造图预览页返回时，MapViewPage 仍在导航栈中，保留原来的底图、图元和缩放状态即可。
+                // 不重新取数、不刷新图元；只恢复跳转前捕获的视口，防止 iOS 返回时布局重算把缩放/拖动位置重置。
+                ClassSelectIndex = 0;
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    WeakReferenceMessenger.Default.Send("", "RefreshMapContentToken");
+                    WeakReferenceMessenger.Default.Send("", "RestoreMapViewportStateToken");
                 });
+                return;
             }
         }
         catch (Exception ex)
@@ -620,6 +627,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     {
         // 跳转前先让页面记录当前缩放和平移视口，返回时再恢复。
         WeakReferenceMessenger.Default.Send("", "CaptureMapViewportStateToken");
+        _pendingRefreshItemCode = item.HR01003?.TrimEnd() ?? "";
+        _pendingRefreshPositionCode = item.HR01019?.TrimEnd() ?? "";
         _checkPointService.SetHR01ITEM(item);
         string projectSelectedItemCode = ProckSelectIndex > -1 ? Procks[ProckSelectIndex].Value : "";
         await Shell.Current.GoToAsync("CheckPoint", CreateNavigationParameterForCheckPoint(projectSelectedItemCode));
@@ -892,7 +901,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     }
 
     /// <summary>
-    /// 工程
+    /// 构造图
     /// </summary>
     /// <returns></returns>
     [RelayCommand]
@@ -901,6 +910,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         string classCode = Classs[ClassSelectIndex].Value;
         if (classCode != "") 
         {
+            // 跳转到构造图预览页前保存当前视口；返回时只恢复缩放/拖动位置，不刷新地图数据。
+            WeakReferenceMessenger.Default.Send("", "CaptureMapViewportStateToken");
             await Shell.Current.GoToAsync($"MapList?ClassCode=" + classCode);
         }
     }
@@ -1113,74 +1124,15 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             // 0：配筋確認　1：工区
             if (item.HR01004 == 0)
             {
-                string strBuimName = item.HM06016.Trim();
-                strBuimName = strBuimName.Substring(0, strBuimName.Length - 4);
-
-                // 検査結果テーブルリモートサービス
-                int intStatus = 0;
-                if (dicHR02005 != null)
-                {
-                    string key = item.HR01003.TrimEnd() + "-" + item.HR01019.TrimEnd();
-                    if (dicHR02005.ContainsKey(key)) intStatus = dicHR02005[key];
-                    else intStatus = 2;
-                }
-                else
-                {
-                    intStatus = 2;
-                }
-
-                //0:绿色; 1:红色; 2:白色; 3:黄色; 4:蓝色
-                strBuimName = intStatus switch
-                {
-                    0 => $"p{strBuimName}g.png",
-                    1 => $"p{strBuimName}r.png",
-                    2 => $"p{strBuimName}w.png",
-                    3 => $"p{strBuimName}y.png",
-                    4 => $"p{strBuimName}b.png",
-                    _ => strBuimName
-                };
-
-                try
-                {
-                    strName = Convert.ToInt32(item.HR01003.TrimEnd()).ToString();
-                }
-                catch (Exception exp)
-                {
-                    strName = item.HR01003.TrimEnd();
-                    Logger.LogError(exp, "MapViewPageVM");
-                }
-
-                dictionaryHR01003.Add(item.HR01003, strName);
-
-                if (!string.IsNullOrEmpty(item.HM10004))
-                {
-                    dictionaryHM10004.Add(item.HR01003, item.HM10004.Trim());
-                }
-                else
-                {
-                    dictionaryHM10004.Add(item.HR01003, "");
-                }
-
-                strName = "";
-
-                if (Hr01003Flag)
-                {
-                    strName += dictionaryHR01003[item.HR01003.TrimEnd()];
-                }
-                if (Hr01020Flag)
-                {
-                    strName += dictionaryHM10004[item.HR01003.TrimEnd()];
-                }
-
-                if (PhotoCountFlag)
-                {
-                    //採用写真枚数/写真枚数
-                    if (dicPicCount != null)
-                    {
-                        strName += dicPicCount[item.HR01003.TrimEnd()];
-                    }
-                }
-
+                RegisterCheckPointLabelSources(item);
+                // アイテムコード
+                string itemCode = item.HR01003.TrimEnd();
+                // 确认点当前应该显示的状态颜色编号。
+                int intStatus = GetCheckPointStatus(item);
+                // 确认点状态生成地图上显示的部位图标文件名。
+                string strBuimName = BuildCheckPointImageSource(item, intStatus);
+                // 确认点编号拼接当前应显示的标签文本。
+                strName = BuildCheckPointLabelText(itemCode);
 
                 AddCheckPoint(item.HR01003.TrimEnd(), strName, new Point(item.HR01008, item.HR01009), intStatus, strBuimName, item);
 
@@ -1229,6 +1181,123 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             }
 
         }
+    }
+
+    /// <summary>
+    /// 从确认点页面返回时，只刷新刚才进入的配筋点图标和文字，不重建整张地图。
+    /// </summary>
+    private async Task RefreshPendingCheckPointAsync()
+    {
+        string itemCode = _pendingRefreshItemCode.Trim();
+        string positionCode = _pendingRefreshPositionCode.Trim();
+
+        if (string.IsNullOrWhiteSpace(itemCode))
+            return;
+
+        ITEMMETA? item = hr01ItemList
+            .FirstOrDefault(p => string.Equals(p.HR01003?.TrimEnd(), itemCode, StringComparison.OrdinalIgnoreCase));
+
+        if (item == null)
+            return;
+
+        string mapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
+        string procksCode = Procks.Count > 0 && ProckSelectIndex > -1 ? Procks[ProckSelectIndex].Value : "";
+
+        if (string.IsNullOrWhiteSpace(mapCode))
+            return;
+
+        HR01ITEM hr01DC = new()
+        {
+            HR01001 = Service.AppContext.WorkCD,
+            HR01002 = mapCode
+        };
+
+        // 复用既有接口刷新状态/照片数字典，随后只应用到当前确认点。
+        dicHR02005 = await Service.GetHR02005(hr01DC, procksCode.Trim());
+        dicPicCount = await Service.GetPicCount(procksCode.Trim());
+
+        RegisterCheckPointLabelSources(item);
+        int status = GetCheckPointStatus(item, positionCode);
+        string imageSource = BuildCheckPointImageSource(item, status);
+        string labelText = BuildCheckPointLabelText(itemCode);
+
+        foreach (var shape in dynamicShapes.Where(p => string.Equals(p.Tag, itemCode, StringComparison.OrdinalIgnoreCase)))
+        {
+            if (shape.LayoutRole == MapShapeLayoutRole.CheckPointIcon)
+            {
+                shape.ImageSource = imageSource;
+                shape.CommandParameter = item;
+            }
+            else if (shape.LayoutRole == MapShapeLayoutRole.CheckPointLabel)
+            {
+                shape.Text = labelText;
+                shape.IsVisible = Hr01020Flag || Hr01003Flag || PhotoCountFlag;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 取得指定确认点当前应该显示的状态颜色编号。
+    /// </summary>
+    private int GetCheckPointStatus(ITEMMETA item, string positionCode = "")
+    {
+        if (dicHR02005 == null)
+            return 2;
+
+        string resolvedPositionCode = string.IsNullOrWhiteSpace(positionCode)
+            ? item.HR01019?.TrimEnd() ?? ""
+            : positionCode;
+
+        string key = $"{item.HR01003.TrimEnd()}-{resolvedPositionCode}";
+        return dicHR02005.TryGetValue(key, out int status) ? status : 2;
+    }
+
+    /// <summary>
+    /// 登记确认点标签拼接所需的基础信息，供全量构建和单点刷新共用。
+    /// </summary>
+    private void RegisterCheckPointLabelSources(ITEMMETA item)
+    {
+        string itemCode = item.HR01003.TrimEnd();
+
+        dictionaryHR01003[itemCode] = BuildCheckPointItemNoText(item);
+        dictionaryHM10004[itemCode] = string.IsNullOrEmpty(item.HM10004) ? "" : item.HM10004.Trim();
+    }
+
+    /// <summary>
+    /// 生成确认点编号显示文本；数字编号去掉前导零，非数字则原样显示。
+    /// </summary>
+    private string BuildCheckPointItemNoText(ITEMMETA item)
+    {
+        string itemCode = item.HR01003.TrimEnd();
+
+        try
+        {
+            return Convert.ToInt32(itemCode).ToString();
+        }
+        catch (Exception exp)
+        {
+            Logger.LogError(exp, "MapViewPageVM");
+            return itemCode;
+        }
+    }
+
+    /// <summary>
+    /// 根据确认点状态生成地图上显示的部位图标文件名。
+    /// </summary>
+    private static string BuildCheckPointImageSource(ITEMMETA item, int status)
+    {
+        string buimName = item.HM06016.Trim();
+        buimName = buimName.Substring(0, buimName.Length - 4);
+
+        return status switch
+        {
+            0 => $"p{buimName}g.png",
+            1 => $"p{buimName}r.png",
+            2 => $"p{buimName}w.png",
+            3 => $"p{buimName}y.png",
+            4 => $"p{buimName}b.png",
+            _ => buimName
+        };
     }
 
     /// <summary>

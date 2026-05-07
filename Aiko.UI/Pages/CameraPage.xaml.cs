@@ -1,6 +1,4 @@
 ﻿using Aiko.UI.ViewModels.PageVMs;
-using CommunityToolkit.Mvvm.Messaging;
-
 namespace Aiko.UI;
 
 public partial class CameraPage : ContentPage
@@ -38,8 +36,9 @@ public partial class CameraPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+		_vm.EditViewWidth = editView.CalculateSectionalWidth();
 #if WINDOWS
-    Dispatcher.Dispatch(() =>
+		Dispatcher.Dispatch(() =>
     {
         if (this.Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement winView)
         {

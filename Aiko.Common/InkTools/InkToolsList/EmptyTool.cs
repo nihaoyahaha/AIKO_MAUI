@@ -1,7 +1,7 @@
 ﻿using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
 
-namespace Aiko.Common.InkTools.InkToolsList
+namespace Aiko.Common.InkTools
 {
     public class EmptyPenTool : InkTool
     {

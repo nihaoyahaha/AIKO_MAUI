@@ -182,10 +182,15 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 #if WINDOWS
           return Math.Min(50.0f, SelectedCamera?.MaximumZoomFactor ?? 50.0f);
 #else
-          return Math.Min(5.0f, SelectedCamera?.MaximumZoomFactor ?? 5.0f);
+		  return Math.Min(5.0f, SelectedCamera?.MaximumZoomFactor ?? 5.0f);
 #endif
 		}
 	}
+
+	/// <summary>
+	/// 緑の背景版の幅
+	/// </summary>
+	public double EditViewWidth;
 	#endregion
 
 	/// <summary>
@@ -760,9 +765,11 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		{
 			return;
 		}
-
+		
+		var measureResult = RectGrid.Measure(EditViewWidth, double.PositiveInfinity);
+		
 		RectGrid.TranslationX = offsetX;
-		RectGrid.TranslationY = previewHeight - RectGrid.DesiredSize.Height + offsetY;
+		RectGrid.TranslationY = previewHeight - measureResult.Height + offsetY;
 		panX = RectGrid.TranslationX;
 		panY = RectGrid.TranslationY;
 
@@ -777,7 +784,10 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	{
 		if (CameraViewActualVideoRect.Height <= 0) return;
 		RectGrid.TranslationX = 0;
-		RectGrid.TranslationY = CameraViewActualVideoRect.Height - RectGrid.DesiredSize.Height;
+
+		var measureResult = RectGrid.Measure(EditViewWidth, double.PositiveInfinity);
+
+		RectGrid.TranslationY = CameraViewActualVideoRect.Height - measureResult.Height;
 		panX = RectGrid.TranslationX;
 		panY = RectGrid.TranslationY;
 

@@ -28,12 +28,6 @@
             Margin="5"
             ColumnDefinitions="auto,auto,2*"
             RowDefinitions="auto,auto, auto, auto, auto, auto,auto,auto,auto,auto">
-            <Grid.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Stroke" Value="White" />
-                    <Setter Property="StrokeThickness" Value="1" />
-                </Style>
-            </Grid.Style>
             <Border Grid.ColumnSpan="3">
                 <Label
                     x:Name="lb_ConstructionName"
@@ -193,6 +187,4 @@
             </Border>
         </Grid>
     </Grid>
-
-
 </ContentView>

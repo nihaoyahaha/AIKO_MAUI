@@ -70,8 +70,7 @@ public partial class ImageViewPageVM : Observablebase<ImageViewPageVM, IImageVie
 	{
 		string? parm = parameter as string;
 		if(parm == "swipeGesture" && !ZoomContainer.IsAtInitialScale) return;
-
-		if (_currentPosition == 0) return;
+		if (_currentPosition <= 0) return;
 
 		_currentPosition--;
 		PositionChanged();
@@ -82,8 +81,7 @@ public partial class ImageViewPageVM : Observablebase<ImageViewPageVM, IImageVie
 	{
 		string? parm = parameter as string;
 		if (parm == "swipeGesture" && !ZoomContainer.IsAtInitialScale) return;
-
-		if (_currentPosition == PhotoPreviews.Count - 1) return;
+		if (_currentPosition >= PhotoPreviews.Count - 1) return;
 
 		_currentPosition++;
 		PositionChanged();
@@ -126,27 +124,12 @@ public partial class ImageViewPageVM : Observablebase<ImageViewPageVM, IImageVie
 
 	void InitializePage()
 	{
-		string photoType = Preferences.Default.Get("PhotoType", "JPEG");
 		PhotoPreviews = Service.GetPhotoPreviewModels();
 		_currentPosition = PhotoPreviews.Count > 0 ? 0 : -1;
 		SetPageInfo();
 		SetGoToImageEnable();
-		if (photoType == "SVG")
-		{
-			PhotoCheckBoxLabelIsVisible = true;
-			GreenBackgroundCheckBoxLabelIsVisible = PhotoPreviews[_currentPosition].PhotoLayer.GreenBackgroundIsVisible;
-		}
-		else
-		{
-			GreenBackgroundCheckBoxLabelIsVisible = false;
-			PhotoCheckBoxLabelIsVisible = false;
-		}
-		foreach (var photo in PhotoPreviews)
-		{
-			photo.ChangePhotoSize(_mainGridBoundRect.Width, _mainGridBoundRect.Height);
-		}
-		PhotoPreview = PhotoPreviews[0];
-		ZoomContainer.SetBaseSize(double.Parse(PhotoPreview.PhotoLayer.PhotoWidth), double.Parse(PhotoPreview.PhotoLayer.PhotoHeight));
+		SetCheckBoxLabelVisibility();
+		InitializePhotoPreview();
 	}
 
 	void PositionChanged()
@@ -155,7 +138,7 @@ public partial class ImageViewPageVM : Observablebase<ImageViewPageVM, IImageVie
 		{
 			SetGoToImageEnable();
 			SetPageInfo();
-			if (_currentPosition == -1)
+			if (PhotoPreviews.Count == 0)
 			{
 				PhotoPreview = null;
 			}
@@ -182,5 +165,32 @@ public partial class ImageViewPageVM : Observablebase<ImageViewPageVM, IImageVie
 		int currentPage = PhotoPreviews.Count == 0 ? 0 : _currentPosition + 1;
 		int totalPages = PhotoPreviews.Count;
 		PageInfo = $"{currentPage}/{totalPages}";
+	}
+
+	void SetCheckBoxLabelVisibility()
+	{
+		if (PhotoPreviews.Count == 0) return;
+		string photoType = Preferences.Default.Get("PhotoType", "JPEG");
+		if (photoType == "SVG")
+		{
+			PhotoCheckBoxLabelIsVisible = true;
+			GreenBackgroundCheckBoxLabelIsVisible = PhotoPreviews[_currentPosition].PhotoLayer.GreenBackgroundIsVisible;
+		}
+		else
+		{
+			GreenBackgroundCheckBoxLabelIsVisible = false;
+			PhotoCheckBoxLabelIsVisible = false;
+		}
+	}
+
+	void InitializePhotoPreview()
+	{
+		if (PhotoPreviews.Count == 0) return;
+		foreach (var photo in PhotoPreviews)
+		{
+			photo.ChangePhotoSize(_mainGridBoundRect.Width, _mainGridBoundRect.Height);
+		}
+		PhotoPreview = PhotoPreviews[0];
+		ZoomContainer.SetBaseSize(double.Parse(PhotoPreview.PhotoLayer.PhotoWidth), double.Parse(PhotoPreview.PhotoLayer.PhotoHeight));
 	}
 }

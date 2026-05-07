@@ -1,4 +1,4 @@
-﻿using Aiko.Common.InkTools.InkToolsList;
+﻿using Aiko.Common.InkTools;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
@@ -10,7 +10,7 @@ namespace Aiko.Common.InkTools
     public class InkToolManager
     {
         // 存储所有可用工具的字典
-        private Dictionary<string, IInkTool> _tools;
+        public Dictionary<string, IInkTool> _tools;
 
         public IInkTool CurrentTool { get; private set; }
 
@@ -62,6 +62,19 @@ namespace Aiko.Common.InkTools
             {
                 CurrentTool = _tools[type];
             }
+        }
+
+        public T? GetTool<T>() where T : class, IInkTool
+        {
+            foreach (var tool in _tools.Values)
+            {
+                if (tool is T typedTool)
+                {
+                    return typedTool;
+                }
+            }
+
+            return null;
         }
 
         public void LoadTypefaces(Dictionary<string, SKTypeface> typefaces)

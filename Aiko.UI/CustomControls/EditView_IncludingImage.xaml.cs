@@ -41,9 +41,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnConstructionNameChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_ConstructionName.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_ConstructionName.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	/// 工区名
@@ -56,9 +58,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnWorkAreaNameChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_WorkAreaName.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_WorkAreaName.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	/// 部位名
@@ -71,9 +75,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnRegionalNameChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_RegionalName.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_RegionalName.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	///断面名
@@ -86,9 +92,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnSectionNameChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_SectionName.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_SectionName.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	///位置
@@ -101,9 +109,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnPositionChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_Position.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_Position.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	///工程名
@@ -116,9 +126,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnProjectNameChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_ProjectName.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_ProjectName.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	///確認項目
@@ -131,9 +143,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnConfirmProjectChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_ConfirmProject.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_ConfirmProject.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	//撮影日
@@ -146,9 +160,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnShootingDateChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_ShootingDate.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_ShootingDate.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	//施工者
@@ -161,9 +177,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnConstructorChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_Constructor.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_Constructor.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	/// 断面図
@@ -176,9 +194,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnSectionalDrawingChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.img_SectionalDrawing.Source = (ImageSource)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.img_SectionalDrawing.Source = newValue is ImageSource ? (ImageSource)newValue : null;
+        }
+    }
 
 
 	/// <summary>
@@ -192,9 +212,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnDescribeChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_Describe.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_Describe.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	/// 備考と確認者の切り替え展示
@@ -207,9 +229,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnDescribeDetailChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.lb_DescribeDetail.Text = (string)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.lb_DescribeDetail.Text = newValue?.ToString() ?? string.Empty;
+        }
+    }
 
 	/// <summary>
 	/// 非表示を表示
@@ -222,9 +246,11 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnIsVisibleChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		view.grid_root.IsVisible = (bool)newValue;
-	}
+        if (bindable is EditView_IncludingImage view)
+        {
+            view.grid_root.IsVisible = (bool)newValue;
+        }
+    }
 
 	/// <summary>
 	/// 断面図の表示
@@ -237,10 +263,20 @@ public partial class EditView_IncludingImage : ContentView
 	}
 	static void OnIsSectionalDrawingVisibleChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		EditView_IncludingImage view = bindable as EditView_IncludingImage;
-		int columnSpan = (bool)newValue ? 1 : 2;
-		SetBorderColumSpan(view, columnSpan, (bool)newValue);
-	}
+        if (bindable is not EditView_IncludingImage view)
+            return;
+
+        bool isVisible = false;
+
+        if (newValue is bool value)
+        {
+            isVisible = value;
+        }
+
+        int columnSpan = isVisible ? 1 : 2;
+
+        SetBorderColumSpan(view, columnSpan, isVisible);
+    }
 
 	private static void SetBorderColumSpan(EditView_IncludingImage view, int value, bool isVisible)
 	{
@@ -260,10 +296,17 @@ public partial class EditView_IncludingImage : ContentView
 
 	private void this_Loaded(object sender, EventArgs e)
 	{
-		double fontSize = double.Parse(Preferences.Default.Get("BlackFontSize", "14"));
-		_scale = fontSize / 14 > 2.5 ? 2.5 : fontSize / 14;
+		CalculateSectionalWidth();
 		GlobalLabelHeight = 30 * _scale;
-		WidthRequest = border_SectionalDrawing.IsVisible ? 430 * _scale : 340 * _scale;
 		img_SectionalDrawing.HeightRequest = 30 * _scale * 5;
 	}
+
+	public double CalculateSectionalWidth()
+	{
+		double fontSize = double.Parse(Preferences.Default.Get("BlackFontSize", "14"));
+		_scale = fontSize / 14 > 2.5 ? 2.5 : fontSize / 14;
+		WidthRequest = border_SectionalDrawing.IsVisible ? 430 * _scale : 340 * _scale;
+		return WidthRequest;
+	}
+
 }

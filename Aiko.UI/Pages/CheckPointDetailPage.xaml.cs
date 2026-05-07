@@ -93,6 +93,10 @@ public partial class CheckPointDetailPage : ContentPage
                 case "ClearImage":
                     _currentImage = null;
                     break;
+                case "SetCircleTextToolText":
+                    var text = message.Parameters["text"] as string;
+                    if (text != null) SetCircleTextToolText(text);
+                    break;
                 default:
                     break;
             }
@@ -371,6 +375,14 @@ public partial class CheckPointDetailPage : ContentPage
         else
         {
             DialogHelper.MessageDialog("保存に失敗しました");
+        }
+    }
+
+    private void SetCircleTextToolText(string text)
+    {
+        if (_toolManager.GetTool<CircleTextTool>() is CircleTextTool circleTextTool)
+        {
+            circleTextTool.Text = text;
         }
     }
 

@@ -1,7 +1,7 @@
 ﻿using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
 
-namespace Aiko.Common.InkTools.InkToolsList
+namespace Aiko.Common.InkTools
 {
     /// <summary>
     /// 文本工具
@@ -10,6 +10,7 @@ namespace Aiko.Common.InkTools.InkToolsList
     {
         public override string Type => "Text";
         public string Font { get; set; } = "ヒラギノ丸ゴ ProN";
+        public string Text { get; set; } = "";
 
         public Dictionary<string, SKTypeface> Typefaces { get; set; } = new Dictionary<string, SKTypeface>();
 

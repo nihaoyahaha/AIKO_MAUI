@@ -126,6 +126,7 @@ namespace Aiko.UI.ViewModels.PageVMs
         [RelayCommand]
         private async Task GoBack()
         {
+            // 返回 MapViewPage 时只触发视口恢复，不触发地图数据刷新。
             await Shell.Current.GoToAsync("..?FromPage=MapListPage");
         }
     }

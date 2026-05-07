@@ -35,7 +35,7 @@
 	<ItemGroup>
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
-		<MauiFont Include="Resources\Fonts\OpenSans-Regular.ttf" />
+		<MauiFont Include="Resources\Fonts\*" />
 		<MauiImage Include="Resources\Images\**\*" />
 		<MauiAsset Include="Resources\Raw\**" Exclude="Resources\Raw\hkks.db" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>

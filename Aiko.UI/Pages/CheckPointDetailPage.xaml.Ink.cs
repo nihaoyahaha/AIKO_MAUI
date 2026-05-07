@@ -1,5 +1,4 @@
 ﻿using Aiko.Common.InkTools;
-using Aiko.Common.InkTools.InkToolsList;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 
@@ -58,6 +57,13 @@ public partial class CheckPointDetailPage : ContentPage
                     FinishTextEdit();
 
                 _toolManager.HandleTouch(e, InkCanvasView, null, null);
+
+                if (_currentTool is CircleTextTool circleTextTool && e.ActionType == SKTouchAction.Pressed)
+                {
+                    if (string.IsNullOrEmpty(_vm.CircleTextNumber)) _vm.CircleTextNumber = "1";
+                    _vm.CircleTextNumber = (int.Parse(_vm.CircleTextNumber) + 1).ToString();
+                    circleTextTool.Text = _vm.CircleTextNumber;
+                }
             }
             finally
             {

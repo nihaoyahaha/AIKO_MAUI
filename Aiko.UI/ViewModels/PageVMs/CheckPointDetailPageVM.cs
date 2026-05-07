@@ -204,6 +204,10 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [ObservableProperty]
     public partial bool EmptySelected { get; set; }
 
+    [ObservableProperty]
+    public partial string CircleTextNumber { get; set; } = "1";
+    private string _lastCircleTextNumber = "1";
+
     public bool IsPreviousSwitchable => (!IsSvg || EmptySelected) && _selectImageIndex > 0;
     public bool IsNextSwitchable => (!IsSvg || EmptySelected) && (_selectImageIndex > -1 && _selectImageIndex < SourceImageList.Count - 1);
 
@@ -415,6 +419,29 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
                 break;
             default:
                 break;
+        }
+    }
+
+    partial void OnCircleTextNumberChanged(string value)
+    {
+        if (SelectedTool != "CircleText") return;
+
+        if (int.TryParse(value, out int number))
+        {
+            CircleTextNumber = number.ToString();
+            _lastCircleTextNumber = CircleTextNumber;
+
+            var message = new AsyncRequestMessage("SetCircleTextToolText", new Dictionary<string, object?> { { "text", CircleTextNumber } });
+            _ = WeakReferenceMessenger.Default.Send(message);
+        }
+        else if (string.IsNullOrEmpty(value))
+        {
+            var message = new AsyncRequestMessage("SetCircleTextToolText", new Dictionary<string, object?> { { "text", "1" } });
+            _ = WeakReferenceMessenger.Default.Send(message);
+        }
+        else
+        {
+            CircleTextNumber = _lastCircleTextNumber;
         }
     }
 

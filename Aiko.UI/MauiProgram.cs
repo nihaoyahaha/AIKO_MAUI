@@ -20,12 +20,19 @@ public static class MauiProgram
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("MS-Gothic.ttf", "ＭＳ ゴシック");
+				fonts.AddFont("MS-Gothic.ttf", "ＭＳ ゴシック");
 
-                fonts.AddFont("Hiragino-Kaku-Gothic.otf", "ヒラギノ角ゴシック");
-                fonts.AddFont("Hiragino-Mincho-ProN.otf", "ヒラギノ明朝 ProN");
-                fonts.AddFont("Hiragino-Maru-Gothic-ProN.otf", "ヒラギノ丸ゴ ProN");
-            });
+				fonts.AddFont("Hiragino-Kaku-Gothic.otf", "ヒラギノ角ゴシック");
+				fonts.AddFont("Hiragino-Mincho-ProN.otf", "ヒラギノ明朝 ProN");
+				fonts.AddFont("Hiragino-Maru-Gothic-ProN.otf", "ヒラギノ丸ゴ ProN");
+			})
+			.ConfigureMauiHandlers(handlers =>
+			{
+				//ios環境でスライドバックジェスチャーを無効にする
+#if IOS
+                handlers.AddHandler<Shell,Platforms.iOS.CustomShellRenderer>();
+#endif
+			});
 
 #if DEBUG
 		builder.Logging.AddDebug();

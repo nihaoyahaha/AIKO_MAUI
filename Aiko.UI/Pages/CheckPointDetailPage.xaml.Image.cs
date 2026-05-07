@@ -157,6 +157,9 @@ public partial class CheckPointDetailPage : ContentPage
 
         _cacheCode = null;
         InkCanvasView.InvalidateSurface();
+
+        _vm.CircleTextNumber = "1";
+        SetCircleTextToolText(_vm.CircleTextNumber);
     }
 
     private async Task SaveImage(InkImage image, List<InkStroke>? strokes = null)
