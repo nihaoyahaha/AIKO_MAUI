@@ -700,7 +700,7 @@ public class DataSyncService
 			hm26DC.HM26001 = _appContext.CompanyID;
 			hm26DC.HM26002 = _appContext.OperatorCD;
 			hm26DC.HM26003 = await GetDeviceId();
-			hm26DC.HM26004 = Environment.MachineName;
+			hm26DC.HM26004 = DeviceInfo.Current.Name;
 			hm26DC.HM26007 = 2;
 			hm26DC.HM26008 = 0;
 			hm26DC.HM26010 = _appContext.Name;

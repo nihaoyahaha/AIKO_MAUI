@@ -101,9 +101,9 @@ public partial class SystemOptionServerPageVM : ObservableValidator
 			await DialogHelper.MessageDialogButton1("10~100数字を入力してください。");
 			return false;
 		}
-		if (!int.TryParse(BlackFontSize, out int fontSize) || fontSize < 14 || fontSize > 35)
+		if (!int.TryParse(BlackFontSize, out int fontSize) || fontSize < 10 || fontSize > 16)
 		{
-			await DialogHelper.MessageDialogButton1("14~35数字を入力してください。");
+			await DialogHelper.MessageDialogButton1("10~16数字を入力してください。");
 			return false;
 		}
 		if (!int.TryParse(SaveDays, out int days) || days < 1 || days > 180)

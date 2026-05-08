@@ -585,16 +585,23 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 			photoBitmap.Encode(photoStream, SKEncodedImageFormat.Jpeg, int.Parse(imageQuality));
 			string photoBase64 = Convert.ToBase64String(photoStream.ToArray());
 
-			using var overlayUIStream = new MemoryStream();
-			overlayUIBitmap.Encode(overlayUIStream, SKEncodedImageFormat.Jpeg, int.Parse(imageQuality));
-			string overlayUIBase64 = Convert.ToBase64String(overlayUIStream.ToArray());
-
 			var strBuild = new System.Text.StringBuilder();
 			strBuild.AppendLine($@"<svg xmlns=""http://www.w3.org/2000/svg"" xmlns:xlink=""http://www.w3.org/1999/xlink"" version=""1.1"" width=""{photoBitmap.Width}"" height=""{photoBitmap.Height}"" viewBox=""0 0 {photoBitmap.Width} {photoBitmap.Height}"">");
 			strBuild.AppendLine($@"<image id=""photo"" width=""{photoBitmap.Width}"" height=""{photoBitmap.Height}"" x=""0"" y=""0"" opacity=""1"" xlink:href=""data:image/png;base64,{photoBase64}"" />");
+			
 			if (BlackboardDisplay)
 			{
+				using var overlayUIStream = new MemoryStream();
+				overlayUIBitmap.Encode(overlayUIStream, SKEncodedImageFormat.Jpeg, int.Parse(imageQuality));
+				string overlayUIBase64 = Convert.ToBase64String(overlayUIStream.ToArray());
+
 				strBuild.AppendLine($@"<image id=""blackboard"" width=""{overlayRect.Width}"" height=""{overlayRect.Height}"" x=""{overlayRect.X}"" y=""{overlayRect.Y}"" opacity=""1"" xlink:href=""data:image/png;base64,{overlayUIBase64}"" />");
+
+				photoLayer.GreenBackgroundIsChecked = true;
+				photoLayer.GreenBmp = ImageSource.FromStream(() => new MemoryStream(overlayUIStream.ToArray()));
+				photoLayer.GreenWidth = overlayRect.Width.ToString();
+				photoLayer.GreenHeight = overlayRect.Height.ToString();
+				photoLayer.Margin = new Thickness(Convert.ToDouble(overlayRect.X), Convert.ToDouble(overlayRect.Y), 0, 0);
 			}
 			strBuild.AppendLine("</svg>");
 
@@ -610,14 +617,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 			photoLayer.PhotoBmp = ImageSource.FromStream(() => new MemoryStream(photoStream.ToArray()));
 			photoLayer.PhotoWidth = photoBitmap.Width.ToString();
 			photoLayer.PhotoHeight = photoBitmap.Height.ToString();
-			if (BlackboardDisplay)
-			{
-				photoLayer.GreenBackgroundIsChecked = true;
-				photoLayer.GreenBmp = ImageSource.FromStream(() => new MemoryStream(overlayUIStream.ToArray()));
-				photoLayer.GreenWidth = overlayRect.Width.ToString();
-				photoLayer.GreenHeight = overlayRect.Height.ToString();
-				photoLayer.Margin = new Thickness(Convert.ToDouble(overlayRect.X), Convert.ToDouble(overlayRect.Y), 0, 0);
-			}
+
 			byte[] bytes = await File.ReadAllBytesAsync(PhotoScreenshotPath);
 			AddImageViewPhotoPreviewDto(PhotoScreenshotPath, bytes, photoLayer);
 		}
@@ -852,10 +852,10 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		}
 		else//SVG
 		{
-			inspectionRecordItem.HR03018 = GreenBackgroundImageIsVisible ? 3 : 1;
+			inspectionRecordItem.HR03018 = BlackboardDisplay ? 3 : 1;
 		}
 		inspectionRecordItem.Direction = int.Parse(ReinforcementTypeSelectedItem.Value);
-		inspectionRecordItem.DirectionText = ReinforcementTypeSelectedItem.DisplyName;
+		inspectionRecordItem.DirectionText = inspectionRecordItem.Direction == -1 ? ReinforcementTypeSelectedItem.DisplyName : string.Empty;
 		return inspectionRecordItem;
 	}
 

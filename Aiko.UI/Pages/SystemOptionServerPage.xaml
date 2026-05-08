@@ -221,7 +221,7 @@
                                     <behaviors:NumericOnlyBehavior MaxLength="2" />
                                 </Entry.Behaviors>
                             </Entry>
-                            <Label FontSize="Body" Text="14～35の数字を入力してください。" />
+                            <Label FontSize="Body" Text="10～16の数字を入力してください。" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>

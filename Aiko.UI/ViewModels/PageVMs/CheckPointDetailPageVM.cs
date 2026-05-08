@@ -426,6 +426,12 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     {
         if (SelectedTool != "CircleText") return;
 
+        if (value.Length > 6)
+        {
+            CircleTextNumber = _lastCircleTextNumber;
+            return;
+        }
+
         if (int.TryParse(value, out int number))
         {
             CircleTextNumber = number.ToString();

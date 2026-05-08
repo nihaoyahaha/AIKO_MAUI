@@ -117,7 +117,6 @@ public class LoginService :BaseService<LoginService>, ILoginService
                 AikoAppContext.OperatorID = hm02OPERs[0].HM02015.Trim();
 				AikoAppContext.CompanyID = hm02OPERs[0].HM02004.Trim();
 				AikoAppContext.IsLogin = true;
-				await UpdateHM17Async(AikoAppContext.OperatorCD, AikoAppContext.Name, AikoAppContext.CompanyID,AikoAppContext.OperatorCD);
              
 				//将公司ID和用户ID保存到首选项
 				Preferences.Default.Set("SaveLoginFlag", checkLoginDto.IsSaveLoginInfo);
@@ -130,30 +129,6 @@ public class LoginService :BaseService<LoginService>, ILoginService
         {
             Logger.LogError(ex.ToString());
             return false;
-        }
-    }
-
-    async Task UpdateHM17Async(string operatorCd,string name,string companyID,string operatorID )
-    {
-        try
-        {
-            HM17VERSION hm17 = new();
-            hm17.HM17001 = DeviceInfo.Current.Name;
-            hm17.HM17002 = operatorCd;
-            hm17.HM17003 = name;
-            hm17.HM17004 = "";
-            hm17.HM17005 = AikoAppContext.AppVersion;
-			hm17.HM17007 = name;
-            hm17.HM17009 = name;
-            hm17.HM17011 = name;
-            hm17.HM17012 = companyID;
-            hm17.HM17013 = operatorID;
-
-            await HkksDb.UpdateHM17VERSIONAsync(hm17);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex.ToString());
         }
     }
 }

@@ -224,27 +224,27 @@ public partial class UploadPageVM : Observablebase<UploadPageVM, IUploadService>
 			DialogHelper.MessageDialogOk(ErrMsg);
 			return false;
 		}
-		////端末制限
-		//if (!_dataSyncService.CheckUUID())
-		//{
-		//	string ErrMsg = ErrorMessage.ERRORPOP("CM01136");
-		//	DialogHelper.MessageDialogOk(ErrMsg);
-		//	return false;
-		//}
-		////IP制限
-		//if (!_dataSyncService.CheckIPAddress(Service.AppContext.WorkCD))
-		//{
-		//	string ErrMsg = ErrorMessage.ERRORPOP("CM01127");
-		//	DialogHelper.MessageDialogOk(ErrMsg);
-		//	return false;
-		//}
-		////工事が終わったと判断します
-		//if (_dataSyncService.CheckProjectFinish(Service.AppContext.WorkCD))
-		//{
-		//	string ErrMsg = ErrorMessage.ERRORPOP("CM01032");
-		//	DialogHelper.MessageDialogOk(ErrMsg);
-		//	return false;
-		//}
+		//端末制限
+		if (! await _dataSyncService.CheckUUID())
+		{
+			string ErrMsg = ErrorMessage.ERRORPOP("CM01136");
+			DialogHelper.MessageDialogOk(ErrMsg);
+			return false;
+		}
+		//IP制限
+		if (!_dataSyncService.CheckIPAddress(Service.AppContext.WorkCD))
+		{
+			string ErrMsg = ErrorMessage.ERRORPOP("CM01127");
+			DialogHelper.MessageDialogOk(ErrMsg);
+			return false;
+		}
+		//工事が終わったと判断します
+		if (_dataSyncService.CheckProjectFinish(Service.AppContext.WorkCD))
+		{
+			string ErrMsg = ErrorMessage.ERRORPOP("CM01032");
+			DialogHelper.MessageDialogOk(ErrMsg);
+			return false;
+		}
 		return true;
 	}
 }
