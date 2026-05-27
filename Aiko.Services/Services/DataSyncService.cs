@@ -749,15 +749,15 @@ public class DataSyncService
 		int count = _serviceApi02.GetHR03SYASListCount(workCode, downLoadTime);
 
 		IList<HR03SYASDC> hr03DCListSer = new List<HR03SYASDC>();
-		if (count > 10000)
+		if (count > _pageSize)
 		{
-			int index = Convert.ToInt32(Math.Ceiling((decimal)count / 10000));
+			int index = Convert.ToInt32(Math.Ceiling((decimal)count / _pageSize));
 			IList<HR03SYASDC> hr03List = new List<HR03SYASDC>();
 			for (int i = 0; i < index; i++)
 			{
 				string message = $"写真:{i + 1}/{index}";
 				await asyncMethod(message, currentStep, totalSteps);
-				hr03List = _serviceApi02.GetHR03SYASListByPage(workCode, downLoadTime, 10000, (int)(i * 10000));
+				hr03List = _serviceApi02.GetHR03SYASListByPage(workCode, downLoadTime, (int)_pageSize, (int)(i * _pageSize));
 				if (hr03DCListSer.Count == 0)
 				{
 					hr03DCListSer = hr03List;
@@ -789,26 +789,12 @@ public class DataSyncService
 
 		for (int iRowCount = 0; iRowCount < liHR03Local.Count; iRowCount++)
 		{
-			int isExists = 0;
+			bool isExists = true;
 			if (isIncludePhotoFile)
 			{
 				if (liHR03Local[iRowCount].HR03002.Trim() != "")
 				{
-					string fileName = liHR03Local[iRowCount].HR03017 == 0 ? $"{liHR03Local[iRowCount].HR03002.Trim()}.jpg" : $"{liHR03Local[iRowCount].HR03002.Trim()}.svg";
-					string filePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", fileName);
-
-					if (!File.Exists(filePath))
-					{
-						isExists = 1;
-					}
-					else
-					{
-						FileInfo f = new FileInfo(filePath);
-						if (f.Length == 0)
-						{
-							isExists = 1;
-						}
-					}
+                    isExists = checkFileExists(workCode, liHR03Local[iRowCount]);
 				}
 			}
 
@@ -852,7 +838,7 @@ public class DataSyncService
 				}
 			}
 
-			if (isExists == 1)
+			if (!isExists)
 			{
 				HR03ImageList.Add(liHR03Local[iRowCount]);
 			}
@@ -890,7 +876,17 @@ public class DataSyncService
 					{
 						downloadHR03ImageList.Add(dataListLocal[i]);
 					}
-				}
+                    //else
+                    //{
+                    //    // 图片的情况下由于HR03020不会改变 会出现第一次不满足日期的情况下不下载  修改时间后,第二次才能下载的情况
+                    //    bool isExists = checkFileExists(workCode, dataListLocal[i]);
+                    //    if (!isExists)
+                    //    {
+                    //        downloadHR03ImageList.Add(dataListLocal[i]);
+                    //    }
+                    //}
+
+                }
 				else
 				{
 					downloadHR03ImageList.Add(dataListLocal[i]);
@@ -905,13 +901,43 @@ public class DataSyncService
 		return (serverHR03List, localHR03List, uploadHR03ImageList, downloadHR03ImageList);
 	}
 
-	/// <summary>
-	/// マップマスター
-	/// </summary>
-	/// <param name="workCode">工事コード</param>
-	/// <param name="isIncludeDrawingFile">図面ファイルを含む</param>
-	/// <returns></returns>
-	public async Task<List<HM04MAPM>> GetHM04MAPMAsync(string workCode, bool isIncludeDrawingFile)
+
+    /// <summary>
+    /// 判断图片本地是否存在
+    /// </summary>
+    /// <param name="hc01"></param>
+    /// <param name="hr03"></param>
+    /// <returns></returns>
+    private bool checkFileExists(string workCode, HR03SYAS hr03)
+    {
+        string fileName = hr03.HR03017 == 0 ? $"{hr03.HR03002.Trim()}.jpg" : $"{hr03.HR03002.Trim()}.svg";
+        string filePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", fileName);
+
+        if (!File.Exists(filePath))
+        {
+            return false;
+        }
+        else
+        {
+            FileInfo f = new FileInfo(filePath);
+            if (f.Length == 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
+
+    }
+
+
+    /// <summary>
+    /// マップマスター
+    /// </summary>
+    /// <param name="workCode">工事コード</param>
+    /// <param name="isIncludeDrawingFile">図面ファイルを含む</param>
+    /// <returns></returns>
+    public async Task<List<HM04MAPM>> GetHM04MAPMAsync(string workCode, bool isIncludeDrawingFile)
 	{
 		List<HM04MAPM> hm04List = new List<HM04MAPM>();
 		IList<HM04MAPMDC> hm04DCList = new List<HM04MAPMDC>();
@@ -2319,7 +2345,6 @@ public class DataSyncService
 			{
 				string message = $"ペイントファイル画像のダウンロード:{++count}/{allCount}";
 				await asyncMethod(message, currentStep, totalSteps);
-				using CancellationTokenSource cts = new CancellationTokenSource();
 				string fileUri = $"{workCode}/paint/{item.HM04042.Trim()}.jpg";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "paint", $"{item.HM04042.Trim()}.jpg");
 				bool result;
@@ -2332,7 +2357,7 @@ public class DataSyncService
 				{
 					//ファイルサーバタイプ:ftp
 					fileUri = $"/{_appContext.HC01013}/{fileUri}";
-					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
+					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath);
 				}
 				if (!result)
 				{
@@ -2363,7 +2388,6 @@ public class DataSyncService
 				string fileName = $"{item.HM12002.Trim()}{Path.GetExtension(item.HM12003.Trim())}";
 				string fileUri = $"{workCode}/{fileName}";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, fileName);
-				using CancellationTokenSource cts = new CancellationTokenSource();
 				bool result;
 				if (_appContext.FileServerType == 2)
 				{
@@ -2374,7 +2398,7 @@ public class DataSyncService
 				{
 					//ファイルサーバタイプ:ftp
 					fileUri = $"/{_appContext.HC01013}/{fileUri}";
-					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
+					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath);
 				}
 				if (!result)
 				{
@@ -2405,7 +2429,6 @@ public class DataSyncService
 				await asyncMethod(message, currentStep, totalSteps);
 				string fileUri = $"{workCode}/danm/{item.HM10025.Trim()}.jpg";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "danm", $"{item.HM10025.Trim()}.jpg");
-				using CancellationTokenSource cts = new CancellationTokenSource();
 				bool result;
 				if (_appContext.FileServerType == 2)
 				{
@@ -2416,7 +2439,7 @@ public class DataSyncService
 				{
 					//ファイルサーバタイプ:ftp
 					fileUri = $"/{_appContext.HC01013}/{fileUri}";
-					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
+					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath);
 				}
 				if (!result)
 				{
@@ -2442,18 +2465,19 @@ public class DataSyncService
 			int count = 0;
 			foreach (var item in hr03List)
 			{
+				string photoCode = item.HR03002.Trim();
 				string message = $"写真画像のダウンロード:{++count}/{allCount}";
 				foreach (var mimetype in _mimeTypes)
 				{
 					if (item.HR03017 == 0 && mimetype != ".jpg") continue;
 					if (item.HR03017 == 1 && mimetype == ".jpg") continue;
+
 					await asyncMethod(message, currentStep, totalSteps);
-					string fileUri = $"{workCode}/photo/{item.HR03002.Trim()}{mimetype}";
-					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", $"{item.HR03002.Trim()}{mimetype}");
+					string fileName = $"{photoCode}{mimetype}";
+					string fileUri = $"{workCode}/photo/{fileName}";
+					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", fileName);
 
 					if (mimetype == ".json" && !await JsonFileExistsAsync(fileUri)) continue;
-
-					using CancellationTokenSource cts = new CancellationTokenSource();
 					bool result;
 					if (_appContext.FileServerType == 2)
 					{
@@ -2463,8 +2487,8 @@ public class DataSyncService
 					else
 					{
 						//ファイルサーバタイプ:ftp
-						fileUri = $"/{_appContext.HC01013}/{fileUri}";
-						result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
+						string remotePath = $"/{_appContext.HC01013}/{fileUri}";
+						result = await _fluentFtpClient.DownloadAsync(remotePath, localFilePath);
 					}
 					if (!result)
 					{

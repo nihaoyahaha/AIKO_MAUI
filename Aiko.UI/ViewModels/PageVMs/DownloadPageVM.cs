@@ -12,8 +12,8 @@ namespace Aiko.UI.ViewModels.PageVMs;
 public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadService>
 {
 	readonly DataSyncService _dataSyncService;
-	public DownloadPageVM(ILogger<DownloadPageVM> logger, 
-		IDownloadService service, 
+	public DownloadPageVM(ILogger<DownloadPageVM> logger,
+		IDownloadService service,
 		DataSyncService dataSyncService) : base(logger, service)
 	{
 		_dataSyncService = dataSyncService;
@@ -215,8 +215,16 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 				PercentText = args.PercentText;
 			});
 			IsShowProgressGridFlag = true;
-			await _dataSyncService.UpdateHM17Async(1, SelectedConstruction.Value);
-			await Service.DownLoadAsync(SelectedConstruction.Value, IsIncludeDrawingFile, IsIncludePhotoFile, progressHandler);
+			await _dataSyncService.UpdateHM17Async(1, SelectedConstruction.Value).ConfigureAwait(false);
+			await Task.Run(async () =>
+			{
+				await Service.DownLoadAsync(
+					SelectedConstruction.Value,
+					IsIncludeDrawingFile,
+					IsIncludePhotoFile,
+					progressHandler).ConfigureAwait(false);
+			}).ConfigureAwait(false);
+
 		}
 		catch (Exception exp)
 		{
@@ -231,36 +239,40 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 		}
 		finally
 		{
-			InitializateProgress();
+			await MainThread.InvokeOnMainThreadAsync(async () =>
+			{
 
-			await _dataSyncService.UpdateHM17Async(0, SelectedConstruction.Value);
-			// 結果メッセージ
-			string errMsg;
-			if (ioExp)
-			{
-				errMsg = ErrorMessage.ERRORPOP("CM00105");
-			}
-			//テーブルデータの同期に失敗しました
-			else if (!_dataSyncService.DataStatus)
-			{
-				errMsg = ErrorMessage.ERRORPOP("CM01034");
-			}
-			else if(!_dataSyncService.FileStatus)
-			{
-				string msg = ErrorMessage.ERRORPOP("CM01038");
-				errMsg = string.Format(msg,_dataSyncService.FileSyncErrorMessage);
-			}
-			// ダウンロードに失敗しました
-			else if (!blResult)
-			{
-				errMsg = ErrorMessage.ERRORPOP("CM00001");
-			}
-			// ダウンロードに成功しました
-			else
-			{
-				errMsg = ErrorMessage.ERRORPOP("CM01030");
-			}
-			DialogHelper.MessageDialogOk(errMsg);
+				InitializateProgress();
+
+				await _dataSyncService.UpdateHM17Async(0, SelectedConstruction.Value);
+				// 結果メッセージ
+				string errMsg;
+				if (ioExp)
+				{
+					errMsg = ErrorMessage.ERRORPOP("CM00105");
+				}
+				//テーブルデータの同期に失敗しました
+				else if (!_dataSyncService.DataStatus)
+				{
+					errMsg = ErrorMessage.ERRORPOP("CM01034");
+				}
+				else if (!_dataSyncService.FileStatus)
+				{
+					string msg = ErrorMessage.ERRORPOP("CM01038");
+					errMsg = string.Format(msg, _dataSyncService.FileSyncErrorMessage);
+				}
+				// ダウンロードに失敗しました
+				else if (!blResult)
+				{
+					errMsg = ErrorMessage.ERRORPOP("CM00001");
+				}
+				// ダウンロードに成功しました
+				else
+				{
+					errMsg = ErrorMessage.ERRORPOP("CM01030");
+				}
+				DialogHelper.MessageDialogOk(errMsg);
+			});
 		}
 	}
 
@@ -319,7 +331,7 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 			return false;
 		}
 		//端末制限
-		if (! await _dataSyncService.CheckUUID())
+		if (!await _dataSyncService.CheckUUID())
 		{
 			string ErrMsg = ErrorMessage.ERRORPOP("CM01136");
 			DialogHelper.MessageDialogOk(ErrMsg);

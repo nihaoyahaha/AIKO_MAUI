@@ -16,7 +16,7 @@ public class InspectionRecordItem
 	/// <summary>
 	/// 撮影日時
 	/// </summary>
-	public DateTime? CreateTime { get; set; }
+	public DateTime CreateTime { get; set; }
 
 	/// <summary>
 	/// 方向
@@ -26,27 +26,27 @@ public class InspectionRecordItem
 	/// <summary>
 	/// 方向
 	/// </summary>
-	public string? DirectionText { get; set; }
+	public string DirectionText { get; set; } = string.Empty;
 
 	/// <summary>
 	/// 備考
 	/// </summary>
-	public string? Comment { get; set; }
+	public string Comment { get; set; } = string.Empty;
 
-	/// <summary>
-	/// 写真のフルパス
-	/// </summary>
-	public string? FilePath { get; set; }
+    /// <summary>
+    /// 写真のフルパス
+    /// </summary>
+    public string FilePath { get; set; } = string.Empty;
 
-	/// <summary>
-	/// 写真コード
-	/// </summary>
-	public string? HR03002 { get; set; }
+    /// <summary>
+    /// 写真コード
+    /// </summary>
+    public string HR03002 { get; set; } = string.Empty;
 
-	/// <summary>
-	/// 写真方式 0：JPG 1：SVG
-	/// </summary>
-	public int HR03017 { get; set; } = 0;
+    /// <summary>
+    /// 写真方式 0：JPG 1：SVG
+    /// </summary>
+    public int HR03017 { get; set; } = 0;
 
 	/// <summary>
 	/// SVGレイヤ表示

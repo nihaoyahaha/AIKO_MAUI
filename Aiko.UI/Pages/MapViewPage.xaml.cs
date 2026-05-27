@@ -54,6 +54,8 @@ public partial class MapViewPage : ContentPage
     private bool _resetViewportOnNextLayout = true;
     // 地图切换时，先让底图单独显示一小段时间，再显示图元，避免视觉上出现“工区先于底图”。
     private bool _deferDynamicShapeDisplay = false;
+    // 图元数据已刷新但底图尺寸尚未准备好时，延后到 showW/showH 计算完成后再绘制。
+    private bool _pendingMapContentRefresh = false;
     // Skia 绘制日文字体缓存，避免重复从资源加载。
     private static SKTypeface? _jpTypeface;
 
@@ -318,6 +320,11 @@ public partial class MapViewPage : ContentPage
             // 新图元数据已经准备完成，此时再放开显示并重绘。
             // RefreshMapToken 阶段会临时隐藏图元，这里解除限制，让新图元可以显示。
             _deferDynamicShapeDisplay = false;
+            if (showW <= 0 || showH <= 0)
+            {
+                _pendingMapContentRefresh = true;
+                return;
+            }
             // 轻量刷新：只根据现有图元数据更新布局与绘制，不清空也不重建。
             // 使用当前 showW/showH 把 VM 中的地图坐标转换为页面显示坐标。
             UpdateShapes(showW, showH);
@@ -450,7 +457,8 @@ public partial class MapViewPage : ContentPage
             Source = GetOrCreateMapIconSource(shape.ImageSource),
             HorizontalOptions = LayoutOptions.Start,
             VerticalOptions = LayoutOptions.Start,
-            Aspect = Aspect.AspectFill,
+            Aspect = shape.LayoutRole == MapShapeLayoutRole.CheckPointIcon ||
+                shape.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountIcon ? Aspect.AspectFit : Aspect.AspectFill,
             ZIndex = shape.ZIndex,
             IsVisible = shape.IsVisible
         };
@@ -509,8 +517,40 @@ public partial class MapViewPage : ContentPage
     /// </summary>
     /// <param name="shape"></param>
     /// <returns></returns>
-    private static Label CreateLabelElement(MapShape shape)
+    private static VisualElement CreateLabelElement(MapShape shape)
     {
+        if (shape.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountLabel)
+        {
+            return new HorizontalStackLayout
+            {
+                HorizontalOptions = LayoutOptions.Start,
+                VerticalOptions = LayoutOptions.Start,
+                Spacing = 0,
+                Padding = Thickness.Zero,
+                IsVisible = shape.IsVisible,
+                Children =
+                {
+                    new Image
+                    {
+                        Source = GetOrCreateMapIconSource(shape.ImageSource),
+                        Aspect = Aspect.AspectFit,
+                        HorizontalOptions = LayoutOptions.Start,
+                        VerticalOptions = LayoutOptions.Center
+                    },
+                    new Label
+                    {
+                        HorizontalOptions = LayoutOptions.Start,
+                        VerticalOptions = LayoutOptions.Center,
+                        LineBreakMode = LineBreakMode.NoWrap,
+                        VerticalTextAlignment = TextAlignment.Center,
+                        Text = shape.Text,
+                        TextColor = shape.TextColor,
+                        FontSize = shape.FontSize
+                    }
+                }
+            };
+        }
+
         return new Label
         {
             HorizontalOptions = LayoutOptions.Start,
@@ -521,6 +561,42 @@ public partial class MapViewPage : ContentPage
             FontSize = shape.FontSize,
             IsVisible = shape.IsVisible
         };
+    }
+
+    /// <summary>
+    /// 更新照片枚数组合控件，保证相机图标和枚数文字作为一个整体布局。
+    /// </summary>
+    /// <param name="layout"></param>
+    /// <param name="shape"></param>
+    /// <param name="sx"></param>
+    /// <param name="sy"></param>
+    /// <param name="baseScale"></param>
+    private static void UpdatePhotoCountLayout(HorizontalStackLayout layout, MapShape shape, double sx, double sy, double baseScale)
+    {
+        if (layout.Children.Count < 2)
+            return;
+
+        double iconSize = Math.Max(1d, shape.Bounds.Width * baseScale);
+        double fontSize = Math.Max(1d, shape.FontSize * baseScale);
+        double groupHeight = Math.Max(1d, shape.Bounds.Height * baseScale);
+
+        layout.HeightRequest = groupHeight;
+
+        if (layout.Children[0] is Image image)
+        {
+            image.Source = GetOrCreateMapIconSource(shape.ImageSource);
+            image.WidthRequest = iconSize;
+            image.HeightRequest = iconSize;
+        }
+
+        if (layout.Children[1] is Label label)
+        {
+            label.Text = shape.Text;
+            label.FontSize = fontSize;
+            label.HeightRequest = groupHeight;
+            label.VerticalTextAlignment = TextAlignment.Center;
+            label.TextColor = shape.TextColor;
+        }
     }
 
     /// <summary>
@@ -612,9 +688,11 @@ public partial class MapViewPage : ContentPage
         pinchToZoom.SetBaseSize(showW, showH, _resetViewportOnNextLayout);
         _resetViewportOnNextLayout = false;
         TryRestorePendingViewportState();
-        if (renderShapes)
+        if (renderShapes || _pendingMapContentRefresh)
         {
+            _pendingMapContentRefresh = false;
             UpdateShapes(showW, showH);
+            TryRestorePendingViewportState();
         }
 
         if (!_isInitialImageReady)
@@ -867,6 +945,17 @@ public partial class MapViewPage : ContentPage
                     AbsoluteLayout.AutoSize,
                     AbsoluteLayout.AutoSize));
                 AbsoluteLayout.SetLayoutFlags(lbl, AbsoluteLayoutFlags.None);
+            }
+            else if (shape.Type == MapShapeType.Label && element is HorizontalStackLayout photoCountLayout)
+            {
+                UpdatePhotoCountLayout(photoCountLayout, shape, sx, sy, baseScale);
+
+                AbsoluteLayout.SetLayoutBounds(photoCountLayout, new Rect(
+                    shape.Bounds.X * sx,
+                    shape.Bounds.Y * sy,
+                    AbsoluteLayout.AutoSize,
+                    Math.Max(1d, shape.Bounds.Height * baseScale)));
+                AbsoluteLayout.SetLayoutFlags(photoCountLayout, AbsoluteLayoutFlags.None);
             }
 #else
             // iOS/Mac：仅更新 IMG（RECT/POLY/LBL 在 OverlayCanvas 绘制）

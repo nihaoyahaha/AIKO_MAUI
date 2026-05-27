@@ -180,7 +180,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		get
 		{
 #if WINDOWS
-          return Math.Min(50.0f, SelectedCamera?.MaximumZoomFactor ?? 50.0f);
+		  return Math.Min(50.0f, SelectedCamera?.MaximumZoomFactor ?? 50.0f);
 #else
 		  return Math.Min(5.0f, SelectedCamera?.MaximumZoomFactor ?? 5.0f);
 #endif
@@ -860,7 +860,7 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	}
 
 	/// <summary>
-	/// 確認项目画面のナビゲーションパラメータを作成する
+	/// 確認項目画面のナビゲーションパラメータを作成する
 	/// </summary>
 	/// <returns></returns>
 	Dictionary<string, object> CreateNavigationParameterForCheckPoint()

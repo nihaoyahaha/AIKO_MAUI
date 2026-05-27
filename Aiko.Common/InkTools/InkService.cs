@@ -57,6 +57,17 @@ namespace Aiko.Common.InkTools
             return _toolCache.TryGetValue(type, out var tool) ? tool : null;
         }
 
+        public void LoadTypefaces(Dictionary<string, SKTypeface> typefaces)
+        {
+            foreach (var tool in _toolCache.Values)
+            {
+                if (tool is TextTool textTool)
+                {
+                    textTool.Typefaces = typefaces;
+                }
+            }
+        }
+
         /// <summary>
         /// 导出为 Base64 图片
         /// </summary>
@@ -115,6 +126,74 @@ namespace Aiko.Common.InkTools
             }
 
             return null;
+        }
+
+        // --- 平滑插值算法 ---
+
+        /// <summary>
+        /// 使用 Catmull-Rom 样条算法平滑点集并增加长度
+        /// </summary>
+        /// <param name="points">原始点集</param>
+        /// <param name="subdivisions">每两个相邻点之间插入的细分点数量（值越大，结果越长越平滑）</param>
+        /// <returns>更长、更平滑的新点集</returns>
+        public static List<SKPoint> SmoothLine(List<SKPoint> points, int subdivisions = 10)
+        {
+            if (points == null || points.Count < 2)
+            {
+                return points ?? new List<SKPoint>();
+            }
+
+            List<SKPoint> smoothedPoints = new List<SKPoint>();
+
+            // 为了计算边界点的曲率，我们在首尾各虚拟复制一个点
+            List<SKPoint> extendedPoints = new List<SKPoint>();
+            extendedPoints.Add(points[0]); // 虚拟起点
+            extendedPoints.AddRange(points);
+            extendedPoints.Add(points[points.Count - 1]); // 虚拟终点
+
+            // 遍历所有原始线段
+            for (int i = 1; i < extendedPoints.Count - 2; i++)
+            {
+                SKPoint p0 = extendedPoints[i - 1];
+                SKPoint p1 = extendedPoints[i];
+                SKPoint p2 = extendedPoints[i + 1];
+                SKPoint p3 = extendedPoints[i + 2];
+
+                // 在 p1 和 p2 之间进行插值
+                for (int j = 0; j < subdivisions; j++)
+                {
+                    float t = (float)j / subdivisions;
+                    SKPoint interpolatedPoint = GetCatmullRomPosition(t, p0, p1, p2, p3);
+                    smoothedPoints.Add(interpolatedPoint);
+                }
+            }
+
+            // 把最后一个原始点加进去，确保曲线完整
+            smoothedPoints.Add(points[points.Count - 1]);
+
+            return smoothedPoints;
+        }
+
+        /// <summary>
+        /// Catmull-Rom 公式计算
+        /// </summary>
+        private static SKPoint GetCatmullRomPosition(float t, SKPoint p0, SKPoint p1, SKPoint p2, SKPoint p3)
+        {
+            float t2 = t * t;
+            float t3 = t2 * t;
+
+            // Catmull-Rom 特征矩阵系数计算
+            float x = 0.5f * ((2f * p1.X) +
+                             (-p0.X + p2.X) * t +
+                             (2f * p0.X - 5f * p1.X + 4f * p2.X - p3.X) * t2 +
+                             (-p0.X + 3f * p1.X - 3f * p2.X + p3.X) * t3);
+
+            float y = 0.5f * ((2f * p1.Y) +
+                             (-p0.Y + p2.Y) * t +
+                             (2f * p0.Y - 5f * p1.Y + 4f * p2.Y - p3.Y) * t2 +
+                             (-p0.Y + 3f * p1.Y - 3f * p2.Y + p3.Y) * t3);
+
+            return new SKPoint(x, y);
         }
     }
 }

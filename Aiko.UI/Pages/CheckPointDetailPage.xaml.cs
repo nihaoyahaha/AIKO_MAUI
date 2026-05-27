@@ -36,10 +36,18 @@ public partial class CheckPointDetailPage : ContentPage
         await LoadTypeface("ヒラギノ明朝 ProN");
         await LoadTypeface("ヒラギノ丸ゴ ProN");
         _toolManager.LoadTypefaces(_typefaces);
+        InkService.Instance.LoadTypefaces(_typefaces);
 
         SwitchTool("Empty");
 
         _appearingTcs.TrySetResult(true);
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        if (_toolManager != null) _toolManager.SaveToolPreferences();
     }
 
     public CheckPointDetailPage(CheckPointDetailPageVM checkPointDetailPageVM)
@@ -222,7 +230,7 @@ public partial class CheckPointDetailPage : ContentPage
     // --- 拖拽重排 ---
 
     // 被拖拽的图片
-    private InkImage _draggedItem;
+    private InkImage? _draggedItem;
     // 插入位置
     private enum InsertPosition { Front, Behind };
     private InsertPosition _insertPosition = InsertPosition.Behind;

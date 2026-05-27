@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Aiko.UI.Pages.CheckPointDetailPage"
@@ -20,6 +20,7 @@
 
             <conv:OrBooleanConverter x:Key="OrConverter" />
             <conv:AndBooleanConverter x:Key="AndConverter" />
+            <conv:NotBooleanConverter x:Key="NotConverter" />
 
             <!--<Style TargetType="Label">
                 <Setter Property="FontSize" Value="Body" />
@@ -56,7 +57,7 @@
                     <Button x:Name="btn_back" Margin="15,0,0,0" Command="{Binding BackCommand}" FontSize="Body" HorizontalOptions="Start" Text="戻る" WidthRequest="105" />
                     <Label Grid.Column="1" x:Name="lb_DanmTitle" Text="{Binding DanmTitle}" VerticalTextAlignment="Center"  HorizontalOptions="Center" VerticalOptions="Center" />
                     <HorizontalStackLayout Grid.Column="2" HorizontalOptions="End" Spacing="10">
-                        <Button x:Name="btn_Save" Grid.Column="1" Command="{Binding SaveCommand}" FontSize="Body" Text="保存" WidthRequest="105"/>
+                        <Button x:Name="btn_Save" Grid.Column="1" Command="{Binding SaveCommand}" FontSize="Body" Text="写真保存" WidthRequest="105"/>
                         <Button x:Name="btn_Exit" Grid.Column="2" Command="{Binding SaveBackCommand}" FontSize="Body" Text="完了" WidthRequest="105"/>
                     </HorizontalStackLayout>
                 </Grid>
@@ -91,7 +92,7 @@
                     <Entry Grid.Column="7" x:Name="ety_Koku" IsReadOnly="True" Text="{Binding Koku}" BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}" />
 
                     <Label Grid.Column="8" Text="位置" VerticalTextAlignment="Center" />
-                    <Entry Grid.Column="9" x:Name="ety_Location" IsReadOnly="True" MaxLength="20" Text="{Binding Location}" BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}" />
+                    <Entry Grid.Column="9" x:Name="ety_Location" IsReadOnly="True" MaxLength="20" Margin="0,0,5,0" Text="{Binding Location}" BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}" />
                 </Grid>
                 <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnSpacing="10" Padding="0,5">
 
@@ -111,11 +112,11 @@
                     <Picker Grid.Column="3" x:Name="pck_Proj" ItemsSource="{Binding ProjList}" SelectedItem="{Binding Proj}" ItemDisplayBinding="{Binding DisplyName}" />
 
                     <Label Grid.Column="4" Text="判定基準" VerticalTextAlignment="Center" />
-                    <Entry Grid.Column="5" x:Name="ety_Hantei" IsReadOnly="True" Margin="0,0,10,0" Text="{Binding Hantei}" BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}" />
+                    <Entry Grid.Column="5" x:Name="ety_Hantei" IsReadOnly="True" Margin="0,0,5,0" Text="{Binding Hantei}" BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}" />
                 </Grid>
             </Grid>
 
-            <Grid Grid.Row="2" ColumnDefinitions="8*, 5*" Margin="5,0,5,0">
+            <Grid Grid.Row="2" ColumnDefinitions="4*, 3*" Margin="5,0,5,0">
                 <Grid Grid.Column="0" RowDefinitions="*, 33,auto">
                     <Grid Grid.Row="0">
 
@@ -684,7 +685,7 @@
                         </Grid>
                     </Grid>
 
-                    <Grid Grid.Row="2" ColumnDefinitions="*, *" ColumnSpacing="20" Padding="5">
+                    <Grid Grid.Row="2" ColumnDefinitions="*, *" ColumnSpacing="20" Padding="5,5,0,5">
 
                         <Grid Grid.Column="0"
                               RowDefinitions="Auto, Auto" 
@@ -737,7 +738,7 @@
                                    x:Name="txt_Comment"
                                    HorizontalOptions="Fill"
                                    VerticalOptions="Center"
-                                   MinimumHeightRequest="40"
+                                   MinimumHeightRequest="45"
                                    Text="{Binding Comment}" />
                         </Grid>
 
@@ -754,7 +755,7 @@
                                    IsReadOnly="True"
                                    HorizontalOptions="Fill"
                                    VerticalOptions="Center"
-                                   MinimumHeightRequest="40"
+                                   MinimumHeightRequest="45"
                                    Text="{Binding Date}"
                                    BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}" />
 
@@ -765,17 +766,16 @@
                                    IsReadOnly="True"
                                    HorizontalOptions="Fill"
                                    VerticalOptions="Center"
-                                   MinimumHeightRequest="40"
+                                   MinimumHeightRequest="45"
                                    Text="{Binding Author}"
                                    BackgroundColor="{DynamicResource EntryReadOnlyBackgroundColor}" />
                         </Grid>
-
                     </Grid>
                 </Grid>
 
-                <Grid Grid.Column="1" RowDefinitions="40, 40, *">
+                <Grid Grid.Column="1" RowDefinitions="30, *" >
 
-                    <Grid Grid.Row="0" Padding="5,0">
+                    <Grid Grid.Row="0" Padding="5,0,5,0">
 
                         <StackLayout Grid.Column="0" Orientation="Horizontal" Spacing="8">
                             <Border WidthRequest="60" HeightRequest="30"
@@ -818,28 +818,30 @@
                         
                     </Grid>
 
-                    <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" Padding="5,0">
+                    <Grid Grid.Row="1" RowDefinitions="40, *" Padding="5,0,0,0" IsVisible="{Binding IsImageGalleryVisible}" >
 
-                        <Grid x:Name="CheckOptions"
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
+
+                            <Grid x:Name="CheckOptions"
                               Margin="0,0,10,0"
                               BackgroundColor="#FFCCCCCC"
                               ColumnSpacing="10"
                               HeightRequest="33"
                               HorizontalOptions="Start"
                               VerticalOptions="Center">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0"
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0"
                                     Margin="3,0,0,0"
                                     HeightRequest="26"
                                     Stroke="Blue"
                                     StrokeThickness="{Binding Checkrsl1StrokeThickness}"
                                     WidthRequest="26">
-                                <Image x:Name="imgBtn_rsl1"
+                                    <Image x:Name="imgBtn_rsl1"
                                        Aspect="Fill"
                                        HeightRequest="16"
                                        HorizontalOptions="Center"
@@ -847,18 +849,18 @@
                                        ToolTipProperties.Text="未確認"
                                        VerticalOptions="Center"
                                        WidthRequest="16">
-                                    <Image.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="0" />
-                                    </Image.GestureRecognizers>
-                                </Image>
-                            </Border>
-                            <Border Grid.Column="1"
+                                        <Image.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="0" />
+                                        </Image.GestureRecognizers>
+                                    </Image>
+                                </Border>
+                                <Border Grid.Column="1"
                                     Margin="3,0,0,0"
                                     HeightRequest="26"
                                     Stroke="Blue"
                                     StrokeThickness="{Binding Checkrsl2StrokeThickness}"
                                     WidthRequest="26">
-                                <Image x:Name="imgBtn_rsl2"
+                                    <Image x:Name="imgBtn_rsl2"
                                        Aspect="Fill"
                                        HeightRequest="16"
                                        HorizontalOptions="Center"
@@ -866,18 +868,18 @@
                                        ToolTipProperties.Text="不合格"
                                        VerticalOptions="Center"
                                        WidthRequest="16">
-                                    <Image.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="1" />
-                                    </Image.GestureRecognizers>
-                                </Image>
-                            </Border>
-                            <Border Grid.Column="2"
+                                        <Image.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="1" />
+                                        </Image.GestureRecognizers>
+                                    </Image>
+                                </Border>
+                                <Border Grid.Column="2"
                                     Margin="3,0,0,0"
                                     HeightRequest="26"
                                     Stroke="Blue"
                                     StrokeThickness="{Binding Checkrsl4StrokeThickness}"
                                     WidthRequest="26">
-                                <Image x:Name="imgBtn_rsl4"
+                                    <Image x:Name="imgBtn_rsl4"
                                        Aspect="Fill"
                                        HeightRequest="16"
                                        HorizontalOptions="Center"
@@ -885,18 +887,18 @@
                                        ToolTipProperties.Text="合格"
                                        VerticalOptions="Center"
                                        WidthRequest="16">
-                                    <Image.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="2" />
-                                    </Image.GestureRecognizers>
-                                </Image>
-                            </Border>
-                            <Border Grid.Column="3"
+                                        <Image.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="2" />
+                                        </Image.GestureRecognizers>
+                                    </Image>
+                                </Border>
+                                <Border Grid.Column="3"
                                     Margin="3,0,3,0"
                                     HeightRequest="26"
                                     Stroke="Blue"
                                     StrokeThickness="{Binding Checkrsl5StrokeThickness}"
                                     WidthRequest="26">
-                                <Image x:Name="imgBtn_rsl5"
+                                    <Image x:Name="imgBtn_rsl5"
                                        Aspect="Fill"
                                        HeightRequest="16"
                                        HorizontalOptions="Center"
@@ -904,92 +906,90 @@
                                        ToolTipProperties.Text="是正済"
                                        VerticalOptions="Center"
                                        WidthRequest="16">
+                                        <Image.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="3" />
+                                        </Image.GestureRecognizers>
+                                    </Image>
+                                </Border>
+
+                            </Grid>
+
+                            <StackLayout Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                <Image Source="clear.png" WidthRequest="30" HeightRequest="30" BackgroundColor="{DynamicResource InkToolsBarBackgroundColor}">
                                     <Image.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnSignOptionTapped" CommandParameter="3" />
+                                        <TapGestureRecognizer Command="{Binding DeleteImageCommand}" />
                                     </Image.GestureRecognizers>
                                 </Image>
-                            </Border>
-
-                        </Grid>
-
-                        <StackLayout Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                            <Image Source="clear.png" WidthRequest="30" HeightRequest="30" BackgroundColor="{DynamicResource InkToolsBarBackgroundColor}">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding DeleteImageCommand}" />
-                                </Image.GestureRecognizers>
-                            </Image>
-                            <Label VerticalOptions="Center" FontSize="16" Text="{Binding Summary}" VerticalTextAlignment="Center" />
-                            <Border WidthRequest="80" HeightRequest="30" Margin="2" 
+                                <Label VerticalOptions="Center" FontSize="16" Text="{Binding Summary}" VerticalTextAlignment="Center" />
+                                <Border WidthRequest="80" HeightRequest="30" Margin="2" 
                                     HorizontalOptions="Center" Background="#CCCCCC">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ToggleSortCommand}" />
-                                </Border.GestureRecognizers>
-                                <Label HorizontalOptions="Center" 
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding ToggleSortCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <Label HorizontalOptions="Center" 
                                        VerticalOptions="Center" 
                                        Text="{Binding SortText}" 
                                        FontSize="14"
                                        TextColor="#333333"
                                        VerticalTextAlignment="Center" />
-                            </Border>
-                        </StackLayout>
-                    </Grid>
-
-                    <CollectionView x:Name="ImageGallery"
+                                </Border>
+                            </StackLayout>
+                        </Grid>
+                        
+                        <CollectionView x:Name="ImageGallery"
                                     ItemsSource="{Binding ImageList}"
-                                    IsVisible="{Binding IsImageGalleryVisible}"
-                                    Grid.Row="2"
+                                    Grid.Row="1"
                                     ItemsUpdatingScrollMode="KeepScrollOffset"
                                     Scrolled="OnCollectionViewScrolled">
-                        <CollectionView.ItemsLayout>
-                            <GridItemsLayout Orientation="Vertical" Span="3" VerticalItemSpacing="1" HorizontalItemSpacing="1"/>
-                        </CollectionView.ItemsLayout>
+                            <CollectionView.ItemsLayout>
+                                <GridItemsLayout Orientation="Vertical" Span="3" VerticalItemSpacing="1" HorizontalItemSpacing="1"/>
+                            </CollectionView.ItemsLayout>
 
-                        <CollectionView.Footer>
-                            <VerticalStackLayout IsVisible="{Binding IsFooterVisible}" HeightRequest="50" HorizontalOptions="Center">
-                                <ActivityIndicator IsRunning="True" WidthRequest="30" HeightRequest="30"/>
-                                <Label Text="Loading..." FontSize="12" HorizontalOptions="Center" VerticalTextAlignment="Center" />
-                            </VerticalStackLayout>
-                        </CollectionView.Footer>
+                            <CollectionView.Footer>
+                                <VerticalStackLayout IsVisible="{Binding IsFooterVisible}" HeightRequest="50" HorizontalOptions="Center">
+                                    <ActivityIndicator IsRunning="True" WidthRequest="30" HeightRequest="30"/>
+                                    <Label Text="Loading..." FontSize="12" HorizontalOptions="Center" VerticalTextAlignment="Center" />
+                                </VerticalStackLayout>
+                            </CollectionView.Footer>
 
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:InkImage">
-                                <Border x:Name="ItemBorder" Padding="2">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnGalleryItemTapped" />
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:InkImage">
+                                    <Border x:Name="ItemBorder" Stroke="#CCCCCC"  StrokeThickness="2">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnGalleryItemTapped" />
 
-                                        <DragGestureRecognizer DragStarting="OnDragStarting" CanDrag="True" />
+                                            <DragGestureRecognizer DragStarting="OnDragStarting" CanDrag="True" />
 
-                                        <DropGestureRecognizer AllowDrop="True" 
+                                            <DropGestureRecognizer AllowDrop="True" 
                                                                DragOver="OnDragOver" 
                                                                DragLeave="OnDragLeave" 
                                                                Drop="OnDrop" />
-                                    </Border.GestureRecognizers>
+                                        </Border.GestureRecognizers>
 
-                                    <Border.Triggers>
-                                        <DataTrigger TargetType="Border" Binding="{Binding CacheUpdater}" Value="True">
-                                            <Setter TargetName="ImageGalleryItemPlaceholder" Property="VisualElement.IsVisible" Value="False"/>
-                                            <Setter TargetName="ImageGalleryItemImage" Property="VisualElement.IsVisible" Value="True"/>
-                                        </DataTrigger>
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding CacheUpdater}" Value="True">
+                                                <Setter TargetName="ImageGalleryItemPlaceholder" Property="VisualElement.IsVisible" Value="False"/>
+                                                <Setter TargetName="ImageGalleryItemImage" Property="VisualElement.IsVisible" Value="True"/>
+                                            </DataTrigger>
 
-                                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource SelectedImageColor}" />
-                                            <Setter Property="Stroke" Value="#007AFF" />
-                                            <Setter Property="StrokeThickness" Value="2" />
-                                        </DataTrigger>
-                                    </Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                                <!--<Setter Property="Background" Value="{DynamicResource SelectedImageColor}" />-->
+                                                <Setter Property="Stroke" Value="#007AFF" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
 
-                                    <Grid ColumnDefinitions="4, *, 4">
+                                        <Grid ColumnDefinitions="4, *, 4">
 
-                                        <BoxView Grid.Column="0" 
+                                            <BoxView Grid.Column="0" 
                                                  x:Name="LeftDropIndicator" 
                                                  Color="Transparent" 
                                                  VerticalOptions="Fill" 
                                                  HorizontalOptions="Fill" 
                                                  Margin="0,0,2,0"/>
 
-                                        <StackLayout Grid.Column="1">
-                                            <Grid ColumnDefinitions="Auto, *, *, *" ColumnSpacing="5" VerticalOptions="Center">
-                                                <Image Grid.Column="0"
+                                            <StackLayout Grid.Column="1">
+                                                <Grid ColumnDefinitions="Auto, *, *, *" ColumnSpacing="5" VerticalOptions="Center" Margin="0,5,0,0">
+                                                    <Image Grid.Column="0"
                                                        x:Name="imgBtn_rsl_display" 
                                                        Margin="4,0,0,0"
                                                        Aspect="Fill"
@@ -998,74 +998,73 @@
                                                        HorizontalOptions="Center"
                                                        VerticalOptions="Center"
                                                        BackgroundColor="#CCCCCC">
-                                                    <Image.Source>
-                                                        <Binding Path="Sign">
-                                                            <Binding.FallbackValue>checkrsl1.png</Binding.FallbackValue>
-                                                            <Binding.TargetNullValue>checkrsl1.png</Binding.TargetNullValue>
-                                                        </Binding>
-                                                    </Image.Source>
+                                                        <Image.Source>
+                                                            <Binding Path="Sign">
+                                                                <Binding.FallbackValue>checkrsl1.png</Binding.FallbackValue>
+                                                                <Binding.TargetNullValue>checkrsl1.png</Binding.TargetNullValue>
+                                                            </Binding>
+                                                        </Image.Source>
 
-                                                    <Image.Triggers>
-                                                        <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="0">
-                                                            <Setter Property="Source" Value="checkrsl1.png" />
-                                                        </DataTrigger>
+                                                        <Image.Triggers>
+                                                            <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="0">
+                                                                <Setter Property="Source" Value="checkrsl1.png" />
+                                                            </DataTrigger>
 
-                                                        <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="1">
-                                                            <Setter Property="Source" Value="checkrsl2.png" />
-                                                        </DataTrigger>
+                                                            <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="1">
+                                                                <Setter Property="Source" Value="checkrsl2.png" />
+                                                            </DataTrigger>
 
-                                                        <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="2">
-                                                            <Setter Property="Source" Value="checkrsl4.png" />
-                                                        </DataTrigger>
+                                                            <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="2">
+                                                                <Setter Property="Source" Value="checkrsl4.png" />
+                                                            </DataTrigger>
 
-                                                        <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="3">
-                                                            <Setter Property="Source" Value="checkrsl5.png" />
-                                                        </DataTrigger>
-                                                    </Image.Triggers>
-                                                </Image>
+                                                            <DataTrigger TargetType="Image" Binding="{Binding Sign}" Value="3">
+                                                                <Setter Property="Source" Value="checkrsl5.png" />
+                                                            </DataTrigger>
+                                                        </Image.Triggers>
+                                                    </Image>
 
-                                                <Border x:Name="brd_photo" Grid.Column="1" HorizontalOptions="Fill" Background="Pink">
-                                                    <Label Text="写真" HorizontalOptions="Center" VerticalOptions="Center" FontSize="Caption" TextColor="Black" VerticalTextAlignment="Center" />
-                                                </Border>
+                                                    <Border x:Name="brd_photo" Grid.Column="1" HorizontalOptions="Fill" Background="Pink">
+                                                        <Label Text="写真" HorizontalOptions="Center" VerticalOptions="Center" FontSize="Caption" TextColor="Black" VerticalTextAlignment="Center" />
+                                                    </Border>
 
-                                                <Border x:Name="brd_greenbk" Grid.Column="2" HorizontalOptions="Fill" IsVisible="{Binding IsSvg}">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#FFCCCCCC" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger TargetType="Border" Binding="{Binding IsBlackboardVisible}" Value="True">
-                                                                    <Setter Property="Background" Value="Pink" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <Label Text="黒板" HorizontalOptions="Center" VerticalOptions="Center" FontSize="Caption" TextColor="Black" VerticalTextAlignment="Center" />
-                                                </Border>
+                                                    <Border x:Name="brd_greenbk" Grid.Column="2" HorizontalOptions="Fill" IsVisible="{Binding IsSvg}">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="#FFCCCCCC" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger TargetType="Border" Binding="{Binding IsBlackboardVisible}" Value="True">
+                                                                        <Setter Property="Background" Value="Pink" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <Label Text="黒板" HorizontalOptions="Center" VerticalOptions="Center" FontSize="Caption" TextColor="Black" VerticalTextAlignment="Center" />
+                                                    </Border>
 
-                                                <Border x:Name="brd_inkCanvas" Grid.Column="3" HorizontalOptions="Fill" IsVisible="{Binding IsSvg}">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#FFCCCCCC" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger TargetType="Border" Binding="{Binding IsStrokesVisible}" Value="True">
-                                                                    <Setter Property="Background" Value="Pink" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <Label Text="注釈" HorizontalOptions="Center" VerticalOptions="Center" FontSize="Caption" TextColor="Black" VerticalTextAlignment="Center" />
-                                                </Border>
-                                            </Grid>
+                                                    <Border x:Name="brd_inkCanvas" Grid.Column="3" HorizontalOptions="Fill" IsVisible="{Binding IsSvg}">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="#FFCCCCCC" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger TargetType="Border" Binding="{Binding IsStrokesVisible}" Value="True">
+                                                                        <Setter Property="Background" Value="Pink" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <Label Text="注釈" HorizontalOptions="Center" VerticalOptions="Center" FontSize="Caption" TextColor="Black" VerticalTextAlignment="Center" />
+                                                    </Border>
+                                                </Grid>
 
-                                            <Grid HeightRequest="102" BackgroundColor="White" Margin="1">
-                                                <Label x:Name="ImageGalleryItemPlaceholder" 
+                                                <Grid HeightRequest="114" BackgroundColor="{DynamicResource PageBackgroundColor}">
+                                                    <Label x:Name="ImageGalleryItemPlaceholder" 
                                                        Text="Loading..." 
                                                        TextColor="#AAAAAA" 
                                                        HorizontalOptions="Center" 
                                                        VerticalOptions="Center" 
-                                                       FontSize="10"
                                                        VerticalTextAlignment="Center"/>
-                                                <ff:CachedImage x:Name="ImageGalleryItemImage"
+                                                    <ff:CachedImage x:Name="ImageGalleryItemImage"
                                                                 Source="{Binding InkImageSource}"
                                                                 Aspect="AspectFit"
                                                                 IsVisible="False"
@@ -1073,40 +1072,41 @@
                                                                 CacheType="None"
                                                                 LoadingDelay="0"
                                                                 Success="OnImageVisualized">
-                                                    
-                                                    <ff:CachedImage.Triggers>
-                                                        <DataTrigger TargetType="ff:CachedImage" Binding="{Binding CacheUpdater}" Value="True">
-                                                            <Setter Property="IsVisible" Value="True"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger TargetType="ff:CachedImage" Binding="{Binding CacheUpdater}" Value="False">
-                                                            <Setter Property="IsVisible" Value="False"/>
-                                                        </DataTrigger>
-                                                    </ff:CachedImage.Triggers>
-                                                </ff:CachedImage>
-                                            </Grid>
 
-                                            <!--<StackLayout Padding="4,0,4,4" Spacing="0">
+                                                        <ff:CachedImage.Triggers>
+                                                            <DataTrigger TargetType="ff:CachedImage" Binding="{Binding CacheUpdater}" Value="True">
+                                                                <Setter Property="IsVisible" Value="True"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger TargetType="ff:CachedImage" Binding="{Binding CacheUpdater}" Value="False">
+                                                                <Setter Property="IsVisible" Value="False"/>
+                                                            </DataTrigger>
+                                                        </ff:CachedImage.Triggers>
+                                                    </ff:CachedImage>
+                                                </Grid>
+
+                                                <StackLayout Padding="5,0,0,5" Spacing="0">
                                                 <Label Text="{Binding Date}" FontSize="14" VerticalTextAlignment="Center" LineBreakMode="NoWrap"/>
-                                                <Label Text="{Binding DirsDisplyName}" FontSize="14" VerticalTextAlignment="Center" LineBreakMode="NoWrap"/>
-                                                <Label Text="{Binding Comment}" FontSize="14" VerticalTextAlignment="Center" LineBreakMode="NoWrap"/>
-                                            </StackLayout>-->
-                                        </StackLayout>
+                                                <!--<Label Text="{Binding DirsDisplyName}" FontSize="14" VerticalTextAlignment="Center" LineBreakMode="NoWrap"/>
+                                                <Label Text="{Binding Comment}" FontSize="14" VerticalTextAlignment="Center" LineBreakMode="NoWrap"/>-->
+                                            </StackLayout>
+                                            </StackLayout>
 
-                                        <BoxView Grid.Column="2" 
+                                            <BoxView Grid.Column="2" 
                                                  x:Name="RightDropIndicator" 
                                                  Color="Transparent" 
                                                  VerticalOptions="Fill" 
                                                  HorizontalOptions="Fill" 
                                                  Margin="0,0,2,0"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Grid>
 
                     <Grid x:Name="ImageGrid"
+                          Grid.Row="1"
                           IsVisible="{Binding IsImageGridVisible}"
-                          Grid.Row="2"
                           Background="#e8e8e8"
                           IsClippedToBounds="True">
                         <local:PinchToZoomContainer x:Name="DanmImagePinchToZoom">
@@ -1375,7 +1375,7 @@
                         </Grid>
 
                         <Grid ColumnDefinitions="Auto, *" Margin="0,10,0,0" IsVisible="{Binding CircleTextSelected}">
-                            <Label Text="フォント" 
+                            <Label Text="初期値" 
                                    Grid.Column="0"
                                    VerticalOptions="Center" 
                                    FontSize="14" 

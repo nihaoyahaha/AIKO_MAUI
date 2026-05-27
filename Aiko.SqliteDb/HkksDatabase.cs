@@ -935,7 +935,7 @@ public class HkksDatabase
 	/// </summary>
 	/// <param name="hm10DC">断面マスター</param>
 	/// <returns></returns>
-	public async Task<HC01CONT> GetHC01ListAsync(HC01CONT hc01DC)
+	public async Task<HC01CONT> GetHC01ListAsync(HC01CONT? hc01DC)
 	{
 		try
 		{

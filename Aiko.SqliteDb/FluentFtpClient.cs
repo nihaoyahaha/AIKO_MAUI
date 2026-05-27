@@ -7,6 +7,7 @@ public class FluentFtpClient
 {
 	readonly ILogger<FluentFtpClient> _logger;
 	AsyncFtpClient _client = new AsyncFtpClient();
+	FluentFtpOptions? _options;
 	public FluentFtpClient(ILogger<FluentFtpClient> logger)
 	{
 		_logger = logger;
@@ -17,14 +18,8 @@ public class FluentFtpClient
 	/// </summary>
 	public void InitializeFluentFtpClient(FluentFtpOptions options) 
 	{
-		_client = new AsyncFtpClient(options.Host , options.Username, options.Password , options.Port);
-		_client.Config.ConnectTimeout = 15000;
-		_client.Config.DataConnectionType = FtpDataConnectionType.AutoPassive;
-		if (options.UseSsl)
-		{
-			_client.Config.EncryptionMode = FtpEncryptionMode.Explicit;
-			_client.Config.ValidateAnyCertificate = true;
-		}
+		_options = options;
+		_client = CreateClient(options);
 	}
 
 	/// <summary>
@@ -43,7 +38,7 @@ public class FluentFtpClient
 				_logger?.LogWarning($"ローカルファイルは存在しません: {localPath}");
 				return false;
 			}
-			await EnsureConnectedAsync(ct);
+			await EnsureConnectedAsync();
 			
 			var status = await _client.UploadFile(
 				localPath,
@@ -78,7 +73,7 @@ public class FluentFtpClient
 				return false;
 			}
 
-			await EnsureConnectedAsync(ct);
+			await EnsureConnectedAsync();
 
 			var status = await _client.UploadStream(
 				stream,
@@ -103,18 +98,18 @@ public class FluentFtpClient
 	/// <param name="localPath">ローカルファイルパス</param>
 	/// <param name="ct">キャンセルトークン</param>
 	/// <returns>true：ダウンロード成功、false：ダウンロード失敗</returns>
-	public async Task<bool> DownloadAsync(string remotePath, string localPath,CancellationToken ct = default)
+	public async Task<bool> DownloadAsync(string remotePath, string localPath)
 	{
 		try
 		{
-			await EnsureConnectedAsync(ct);
+			await EnsureConnectedAsync();
 
 			var localDir = Path.GetDirectoryName(localPath);
 			if (!string.IsNullOrEmpty(localDir) && !Directory.Exists(localDir))
 			{
 				Directory.CreateDirectory(localDir);
 			}
-			if (!await FileExistsAsync(remotePath,ct)) 
+			if (!await FileExistsAsync(remotePath)) 
 			{
 				_logger.LogWarning($"ftp-ダウンロード対象のファイルが見つかりません:{remotePath}");
 				return false;
@@ -122,14 +117,13 @@ public class FluentFtpClient
 			var status = await _client.DownloadFile(
 				localPath,
 				remotePath,
-				FtpLocalExists.Overwrite,
-				token: ct);
+				FtpLocalExists.Overwrite);
 
 			return status == FtpStatus.Success;
 		}
 		catch (Exception ex)
 		{
-			_logger?.LogError($"FTPダウンロードに失敗しました: {ex.Message}");
+			_logger?.LogError($"FTPダウンロードに失敗しました,{remotePath}: {ex.Message}");
 			return false;
 		}
 	}
@@ -144,7 +138,7 @@ public class FluentFtpClient
 	{
 		try
 		{
-			await EnsureConnectedAsync(ct);
+			await EnsureConnectedAsync();
 			if (!await _client.FileExists(remotePath, ct))
 			{
 				return true;
@@ -167,7 +161,7 @@ public class FluentFtpClient
 	/// <returns>true：存在、false：存在しない</returns>
 	public async Task<bool> FileExistsAsync(string remotePath, CancellationToken ct = default)
 	{
-		await EnsureConnectedAsync(ct);
+		await EnsureConnectedAsync();
 		return await _client.FileExists(remotePath, ct);
 	}
 
@@ -175,12 +169,27 @@ public class FluentFtpClient
 	/// 接続が確立されていることを確認します
 	/// </summary>
 	/// <param name="ct">キャンセルトークン</param>
-	async Task EnsureConnectedAsync(CancellationToken ct)
+	async Task EnsureConnectedAsync()
 	{
 		if (!_client.IsConnected)
 		{
-			await _client.AutoConnect(ct);
+			await _client.Connect();
 		}
+	}
+
+	static AsyncFtpClient CreateClient(FluentFtpOptions options)
+	{
+		var client = new AsyncFtpClient(options.Host, options.Username, options.Password, options.Port);
+		client.Config.ConnectTimeout = 15000;
+		client.Config.ReadTimeout = 60000;
+		client.Config.DataConnectionType = FtpDataConnectionType.PASV;
+		if (options.UseSsl)
+		{
+			client.Config.EncryptionMode = FtpEncryptionMode.Explicit;
+			client.Config.ValidateAnyCertificate = true;
+			client.Config.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+		}
+		return client;
 	}
 
 	/// <summary>

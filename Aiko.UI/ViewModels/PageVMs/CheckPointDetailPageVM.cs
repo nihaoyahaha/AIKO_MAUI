@@ -19,6 +19,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
 
     private bool _first = false;
 
+    // 荧光笔是否为 Darken 效果
     [ObservableProperty]
     public partial bool IsDarkenMode { get; set; } = true;
 
@@ -31,6 +32,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     // 上下文数据
     private List<HR01ITEMPINFO> _hr01ItempInfoList = new List<HR01ITEMPINFO>();
 
+    // 提示框
     [ObservableProperty]
     public partial Toast Toast { get; set; } = new Toast();
 
@@ -43,10 +45,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     public partial ObservableCollection<InkImage> ImageList { get; set; } = new ObservableCollection<InkImage>();
     [ObservableProperty]
     public partial List<InkImage> Original‌ImageList { get; set; } = new List<InkImage>();
-    public string Summary => $"{SourceImageList.Count(image => image.IsVisualized)}/{ImagesCount}";
-
-    [ObservableProperty]
-    public partial int ImagesCount { get; set; } = 0;
+    public string Summary => $"{SourceImageList.Count(image => image.IsVisualized)}/{SourceImageList.Count}";
 
     [ObservableProperty]
     public partial bool IsAscending { get; set; } = true;
@@ -164,6 +163,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     [ObservableProperty]
     public partial int Checkrsl5StrokeThickness { get; set; } = 0;
 
+    // 检查符号
     [ObservableProperty]
     public partial int Sign { get; set; }
 
@@ -310,7 +310,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         HanteiDic.Clear();
         for (int i = 0; i < queryProjList.Count; i++)
         {
-            projList.Add(new ListItem(queryProjList[i].HM13005, queryProjList[i].HR03004));
+            projList.Add(new ListItem(queryProjList[i].HM13005.Trim(), queryProjList[i].HR03004));
             HanteiDic.Add(queryProjList[i].HR03004, queryProjList[i].HM13012);
         }
 
@@ -476,6 +476,11 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         ImageList.RemoveAt(index);
         SourceImageList.RemoveAt(index);
 
+        if (ImageList.Count < _pageSize)
+        {
+            LoadNextPage();
+        }
+
         var message = new AsyncRequestMessage("ClearImage");
         _ = WeakReferenceMessenger.Default.Send(message);
         await message.Tcs.Task;
@@ -624,7 +629,6 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     {
         ImageList.Clear();
         SourceImageList.Clear();
-        ImagesCount = 0;
 
         DanmImageSource = null;
 
@@ -1002,9 +1006,9 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         EraserSelected = false;
         EmptySelected = false;
     }
-    private void SetSelectedTool(string tool)
+    private void SetSelectedTool(string toolType)
     {
-        switch (tool)
+        switch (toolType)
         {
             case "BallpointPen":
                 BallpointPenSelected = true; break;
@@ -1066,7 +1070,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
     }
 
     /// <summary>
-    /// 確認项目画面のナビゲーションパラメータを作成する
+    /// 確認項目画面のナビゲーションパラメータを作成する
     /// </summary>
     /// <returns></returns>
     Dictionary<string, object> CreateNavigationParameterForCheckPoint()
@@ -1075,7 +1079,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         {
             FromPage = "CheckPointDetailPage",
             ProjectCode = Proc.Value,        //工程コード		
-            InspectionItemCode = Proj.Value, //確認项目コード
+            InspectionItemCode = Proj.Value, //確認項目コード
             ProjectPhotoList = _projectPhotoList //写真コレクション
 
         };
@@ -1114,6 +1118,7 @@ public partial class CheckPointDetailPageVM : Observablebase<CheckPointDetailPag
         _projectPhotoList.RemoveAll(x => x.ProjectCode == Proc.Value && x.InspectionItemCode == Proj.Value);
     }
 
+    // 与 view 的通信
     public class AsyncRequestMessage : RequestMessage<bool>
     {
         public string Name { get; }

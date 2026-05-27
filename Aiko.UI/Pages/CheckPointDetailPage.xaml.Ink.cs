@@ -487,13 +487,21 @@ public partial class CheckPointDetailPage : ContentPage
             FixedRectHeightSlider.Minimum = range.Min;
             FixedRectHeightSlider.Maximum = range.Max;
             FixedRectHeightSlider.ValueChanged += OnFixedRectDimensionChanged;
+
+            if (_currentTool is FixedRectTool fixedRectTool)
+            {
+                FixedRectWidthSlider.Value = fixedRectTool.Width;
+                FixedRectHeightSlider.Value = fixedRectTool.Height;
+            }
         }
 
         if (FontPreviewSection.IsVisible)
         {
-            TextTool textTool = _currentTool as TextTool;
-            FontPicker.SelectedItem = textTool.Font;
-            FontSizePicker.SelectedItem = (double)textTool.Size;
+            if (_currentTool is TextTool textTool)
+            {
+                FontPicker.SelectedItem = textTool.Font;
+                FontSizePicker.SelectedItem = (double)textTool.Size;
+            }
         }
 
         // 同步当前颜色到 FlexLayout 的选中状态
@@ -740,7 +748,7 @@ public partial class CheckPointDetailPage : ContentPage
         var canvas = e.Surface.Canvas;
         canvas.Clear();
 
-        TextTool textTool = _currentTool as TextTool;
+        if (_currentTool is not TextTool textTool) return;
 
         using var font = new SKFont
         {
@@ -843,7 +851,7 @@ public partial class CheckPointDetailPage : ContentPage
             newHeight));
     }
 
-    public async Task LoadTypeface(string font)
+    private async Task LoadTypeface(string font)
     {
         if (_typefaces.ContainsKey(font)) return;
 

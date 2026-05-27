@@ -8,7 +8,7 @@ namespace Aiko.Common;
 /// </summary>
 public class AikoAppContext
 {
-	public static Assembly MainAssembly { get; set; }
+	public static Assembly? MainAssembly { get; set; }
 
 	/// <summary>
 	/// オペレータコード

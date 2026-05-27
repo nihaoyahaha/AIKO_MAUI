@@ -27,7 +27,7 @@ public class ImageViewService : BaseService<ImageViewService>, IImageViewService
 
 	private ObservableCollection<PhotoPreviewModel> _photoPreviewModels = new ObservableCollection<PhotoPreviewModel>();
 
-	private InspectionItem _inspectionItem;
+	private InspectionItem _inspectionItem = new();
 
 	/// <summary>
 	/// 写真プレビューコレクションの初期化

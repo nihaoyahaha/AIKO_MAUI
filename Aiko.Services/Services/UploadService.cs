@@ -10,8 +10,8 @@ namespace Aiko.Services.Services;
 
 public class UploadService : BaseService<UploadService>, IUploadService
 {
-	IProgress<DownloadProgressArgs> _progressHandler;
-	readonly DataSyncService _dataSyncService;
+	private IProgress<DownloadProgressArgs>? _progressHandler;
+	private readonly DataSyncService _dataSyncService;
 
 	public UploadService(ServiceContext<UploadService> context, 
 		DataSyncService dataSyncService) : base(context)

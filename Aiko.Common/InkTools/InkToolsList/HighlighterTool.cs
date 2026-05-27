@@ -44,6 +44,8 @@ namespace Aiko.Common.InkTools
 
             if (currentStroke == null) return;
 
+            //currentStroke.Points = InkService.SmoothLine(currentStroke.Points);
+
             if (currentStroke.Points.Count >= 2)
             {
                 BuildPolygonPath(currentStroke);

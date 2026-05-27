@@ -8,9 +8,9 @@ namespace Aiko.Services.Services;
 
 public class DownloadService : BaseService<DownloadService>, IDownloadService
 {
-	readonly IAppInitializationService _appInitializationService;
-	readonly DataSyncService _dataSyncService;
-	IProgress <DownloadProgressArgs> _progressHandler;
+	private readonly IAppInitializationService _appInitializationService;
+	private readonly DataSyncService _dataSyncService;
+	private IProgress<DownloadProgressArgs>? _progressHandler;
 	public DownloadService(
 				IAppInitializationService appInitializationService,
 				ServiceContext<DownloadService> context,
@@ -85,7 +85,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 
 		//ペイントファイル画像のダウンロード
 		await ReportProgressAsync("ペイントファイル画像のダウンロード", currentStep++, totalSteps);
-		await _dataSyncService.DownloadPaintFilesAsync(workCode, hm04List, isIncludeDrawingFile, currentStep, totalSteps, ReportProgressAsync);
+		await _dataSyncService.DownloadPaintFilesAsync(workCode, hm04List, isIncludeDrawingFile, currentStep, totalSteps, ReportProgressAsync).ConfigureAwait(false);
 
 		//HM05KAIM
 		await ReportProgressAsync("階", currentStep++, totalSteps);
@@ -118,7 +118,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 
 		//図面ファイル画像のダウンロード
 		await ReportProgressAsync("図面ファイル画像のダウンロード", currentStep++, totalSteps);
-		await _dataSyncService.DownloadFilesAsync(workCode, hm12FileList, isIncludeDrawingFile, currentStep, totalSteps, ReportProgressAsync);
+		await _dataSyncService.DownloadFilesAsync(workCode, hm12FileList, isIncludeDrawingFile, currentStep, totalSteps, ReportProgressAsync).ConfigureAwait(false);
 		if (hm12Result)
 		{
 			List<string> tableNameList = new List<string>();
@@ -132,7 +132,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 
 		//断面画像のダウンロード
 		await ReportProgressAsync("断面画像のダウンロード", currentStep++, totalSteps);
-		await _dataSyncService.DownloadDamnFilesAsync(workCode, hm10Result.hm10List, currentStep, totalSteps, ReportProgressAsync);
+		await _dataSyncService.DownloadDamnFilesAsync(workCode, hm10Result.hm10List, currentStep, totalSteps, ReportProgressAsync).ConfigureAwait(false);
 		if (hm10Result.result)
 		{
 			List<string> tableNameList = new List<string>();
@@ -206,7 +206,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 
 		//写真画像のダウンロード
 		await ReportProgressAsync("写真画像のダウンロード", currentStep++, totalSteps);
-		await _dataSyncService.DownloadPhotoFilesAsync(workCode, hr03List, isIncludePhotoFile, currentStep, totalSteps, ReportProgressAsync);
+		await _dataSyncService.DownloadPhotoFilesAsync(workCode, hr03List, isIncludePhotoFile, currentStep, totalSteps, ReportProgressAsync).ConfigureAwait(false);
 		if (hr03Result)
 		{
 			List<string> tableNameList = new List<string>();

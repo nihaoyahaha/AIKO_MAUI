@@ -70,13 +70,13 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	public partial string LocationName { get; set; } = "";
 
 	/// <summary>
-	/// 確認项目リストのデータソース
+	/// 確認項目リストのデータソース
 	/// </summary>
 	[ObservableProperty]
 	public partial ObservableCollection<InspectionItem> InspectionItems { get; set; }
 
 	/// <summary>
-	/// 確認项目リスト選択行
+	/// 確認項目リスト選択行
 	/// </summary>
 	[ObservableProperty]
 	public partial InspectionItem? InspectionItemSelectedItem { get; set; }
@@ -322,7 +322,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	private string _applyQuery_ProjectCode = "";
 
 	/// <summary>
-	/// 確認项目コード(viewmodelのナビゲーションパラメータ)
+	/// 確認項目コード(viewmodelのナビゲーションパラメータ)
 	/// </summary>
 	private string _applyQuery_InspectionItemCode = "";
 
@@ -921,7 +921,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	}
 
 	/// <summary>
-	/// 確認项目明細画面に入る前のデータチェック
+	/// 確認項目明細画面に入る前のデータチェック
 	/// </summary>
 	/// <returns></returns>
 	bool ValidateBeforeNavigateToDetails()
@@ -932,7 +932,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	}
 
 	/// <summary>
-	/// 確認项目明細画面のナビゲーションパラメータを作成する
+	/// 確認項目明細画面のナビゲーションパラメータを作成する
 	/// </summary>
 	/// <returns></returns>
 	Dictionary<string, object> CreateNavigationParameterForCheckPointDetail()
@@ -1163,7 +1163,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	}
 
 	/// <summary>
-	/// 確認项目リスト選択行の検査結果画像
+	/// 確認項目リスト選択行の検査結果画像
 	/// </summary>
 	[RelayCommand]
 	private void InspectionItemSelectedItemCheckResultImageTapped()
@@ -1323,7 +1323,7 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 	}
 
 	/// <summary>
-	/// 確認项目明細画面にジャンプ
+	/// 確認項目明細画面にジャンプ
 	/// </summary>
 	/// <returns></returns>
 	[RelayCommand]

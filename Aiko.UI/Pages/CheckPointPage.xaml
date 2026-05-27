@@ -488,7 +488,7 @@
                     <Label
                         Grid.Column="1"
                         FontSize="Body"
-                        Text="確認项目" />
+                        Text="確認項目" />
                     <Label
                         Grid.Column="2"
                         FontSize="Body"
@@ -557,7 +557,7 @@
                 Grid.Column="1"
                 BackgroundColor="{Binding ConfirmationDateBackgroundColor}"
                 IsEnabled="{Binding ConfirmationDateIsEnabled}"
-                Placeholder="确认日"
+                Placeholder="確認日"
                 Text="{Binding ConfirmationDate}" />
 
             <Label
@@ -571,7 +571,7 @@
                 Grid.Column="3"
                 BackgroundColor="{Binding ConfirmerBackgroundColor}"
                 IsEnabled="{Binding ConfirmerIsEnabled}"
-                Placeholder="确认者"
+                Placeholder="確認者"
                 Text="{Binding Confirmer}" />
 
             <Grid
@@ -635,7 +635,7 @@
                     <x:Array Type="{x:Type x:String}">
                         <x:String>検査者が目視で確認</x:String>
                         <x:String>検査者が写真で確認</x:String>
-                        <x:String>轻微事项报告不要</x:String>
+                        <x:String>軽微な事項につき報告不要</x:String>
                     </x:Array>
                 </Picker.ItemsSource>
                 <Picker.Behaviors>

@@ -1,4 +1,4 @@
-using Aiko.Common;
+﻿using Aiko.Common;
 using Aiko.UI.CustomControls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;

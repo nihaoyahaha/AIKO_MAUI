@@ -21,7 +21,7 @@ namespace Aiko.Services.Services
 		}
 
 		#region プライベートフィールド
-		private HR01ITEM _hr01;
+		private HR01ITEM _hr01=new();
 
 		/// <summary>
 		/// 部位コード
@@ -66,7 +66,7 @@ namespace Aiko.Services.Services
 		/// <summary>
 		/// 選択した断面図
 		/// </summary>
-		private ImageSource _selectedDanmImageSource;
+		private ImageSource? _selectedDanmImageSource;
 		#endregion
 
 		#region ビジネスの実現方法
@@ -174,7 +174,7 @@ namespace Aiko.Services.Services
 			{
 				hm10.HM10002 = _floorCode;
 			}
-			List<HM10DANM> hm10List = await HkksDb.GetHM10DANMListAsync(hm10, null);
+			List<HM10DANM> hm10List = await HkksDb.GetHM10DANMListAsync(hm10, "");
 			if (!string.IsNullOrEmpty(_hr01.HR01020) && hm10List.Count > 0)
 			{
 				var item = hm10List.FirstOrDefault(x => x.HM10003 == _hr01.HR01020);

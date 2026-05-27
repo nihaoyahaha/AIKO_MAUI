@@ -32,6 +32,7 @@ namespace Aiko.Common.InkTools
 
             canvasView.InvalidateSurface();
         }
+
         public override void OnMove(SKPoint point, SKCanvasView canvasView)
         {
             if (currentStroke == null) return;
@@ -41,16 +42,78 @@ namespace Aiko.Common.InkTools
 
             canvasView.InvalidateSurface();
         }
+
         public override void OnUp(SKPoint point, SKCanvasView canvasView)
         {
             _manager.Status = InkStatusType.Idle;
 
             if (currentStroke == null) return;
 
+            currentStroke.Points = InkService.SmoothLine(currentStroke.Points);
+            currentStroke.Path = new SKPath();
+            foreach (var p in currentStroke.Points)
+            {
+                if (currentStroke.Path.PointCount == 0)
+                    currentStroke.Path.MoveTo(p);
+                else
+                    currentStroke.Path.LineTo(p);
+            }
+
+            // 抬笔点和最后一个移动点距离足够大时，补上最终点，避免路径尾部缺口
+            if (currentStroke.Points.Count == 0 || Distance(currentStroke.Points[^1], point) > 0.5f)
+            {
+                currentStroke.Points.Add(point);
+                currentStroke.Path?.LineTo(point);
+            }
+
+            // 抬笔后尝试识别闭合图形；识别成功则把手绘轨迹替换为规则化图形
+            ConvertToRecognizedShape(currentStroke);
+
             _manager.AddStroke(currentStroke);
             currentStroke = null;
 
             canvasView.InvalidateSurface();
+        }
+
+        /// <summary>
+        /// 尝试识别并替换当前笔迹为规则化图形
+        /// </summary>
+        private static void ConvertToRecognizedShape(InkStroke stroke)
+        {
+            var result = InkShapeRecognizer.Recognize(stroke.Points);
+            if (result == null) return;
+
+            stroke.Points = result.Points.ToList();
+            stroke.Path?.Dispose();
+            stroke.Path = BuildPath(stroke.Points);
+        }
+
+        /// <summary>
+        /// 根据点集合构建 Skia 折线路径
+        /// </summary>
+        private static SKPath BuildPath(IReadOnlyList<SKPoint> points)
+        {
+            // 识别器返回的是规则化点集，这里统一按折线路径重建 SKPath
+            var path = new SKPath();
+            if (points.Count == 0) return path;
+
+            path.MoveTo(points[0]);
+            for (int i = 1; i < points.Count; i++)
+            {
+                path.LineTo(points[i]);
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// 计算两个点之间的直线距离
+        /// </summary>
+        private static float Distance(SKPoint first, SKPoint second)
+        {
+            float dx = second.X - first.X;
+            float dy = second.Y - first.Y;
+            return MathF.Sqrt(dx * dx + dy * dy);
         }
 
         public override void Draw(SKCanvas canvas, InkStroke stroke)

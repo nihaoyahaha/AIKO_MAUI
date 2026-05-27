@@ -27,26 +27,26 @@ public class CameraService : BaseService<CameraService>, ICameraService
 	/// </summary>
 	public AikoAppContext AppContext => AikoAppContext;
 
-	private HR01ITEM _hr01;
+	private HR01ITEM _hr01 = new();
 
 	/// <summary>
 	/// 工程コード
 	/// </summary>
-	private string _projectCode;
+	private string _projectCode = string.Empty;
 
 	/// <summary>
 	/// 確認項目コード
 	/// </summary>
-	private string _hm13004;
+	private string _hm13004 = string.Empty;
 
 	private List<HM16SHDIR> _hm16List = new();
 
-	private GreenBackgroundModel _greenBackground;
+	private GreenBackgroundModel _greenBackground=new();
 
 	/// <summary>
 	/// 現在の確認項目
 	/// </summary>
-	private InspectionItem _inspectionItem;
+	private InspectionItem _inspectionItem = new();
 
 	private IImageViewService _imageViewService;
 
@@ -165,13 +165,13 @@ public class CameraService : BaseService<CameraService>, ICameraService
 		hr03DC.HR03006 = 0;
 		hr03DC.HR03007 = photo.Direction;
 		hr03DC.HR03008 = photo.Comment;
-		hr03DC.HR03009 = Convert.ToInt32(DtToString(photo.CreateTime.Value, 1));
-		hr03DC.HR03010 = Convert.ToInt32(DtToString(photo.CreateTime.Value, 2));
-		hr03DC.HR03011 = photo.CreateTime.Value.ToString("yyyy-MM-dd HH:mm:ss");
+		hr03DC.HR03009 = Convert.ToInt32(DtToString(photo.CreateTime, 1));
+		hr03DC.HR03010 = Convert.ToInt32(DtToString(photo.CreateTime, 2));
+		hr03DC.HR03011 = photo.CreateTime.ToString("yyyy-MM-dd HH:mm:ss");
 		hr03DC.HR03012 = AppContext.Name;
-		hr03DC.HR03013 = photo.CreateTime.Value.ToString("yyyy-MM-dd HH:mm:ss");
+		hr03DC.HR03013 = photo.CreateTime.ToString("yyyy-MM-dd HH:mm:ss");
 		hr03DC.HR03014 = AikoAppContext.Name;
-		hr03DC.HR03015 = photo.CreateTime.Value.ToString("yyyy-MM-dd HH:mm:ss");
+		hr03DC.HR03015 = photo.CreateTime.ToString("yyyy-MM-dd HH:mm:ss");
 		hr03DC.HR03016 = AppContext.Name;
 		hr03DC.HR03017 = photo.HR03017;
 		hr03DC.HR03018 = photo.HR03018;

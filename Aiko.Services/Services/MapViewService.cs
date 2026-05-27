@@ -26,7 +26,7 @@ public class MapViewService : BaseService<MapViewService>, IMapViewService
 		listItems.Add(new ListItem("階マスタ", ""));
 		foreach (var item in result)
 		{
-			ListItem listItem = new ListItem(item.HM05003, item.HM05002);
+			ListItem listItem = new ListItem(item.HM05003.Trim(), item.HM05002);
 			listItems.Add(listItem);
 		}
 		HM04MAPM hm04DC = new HM04MAPM();
@@ -66,7 +66,7 @@ public class MapViewService : BaseService<MapViewService>, IMapViewService
 		listItems.Add(new ListItem("マップ詳細", ""));
 		foreach (var item in result)
 		{
-			ListItem listItem = new ListItem(item.HM04003, item.HM04002);
+			ListItem listItem = new ListItem(item.HM04003.Trim(), item.HM04002);
 			listItems.Add(listItem);
 		}
 		return (listItems,result);
@@ -87,7 +87,7 @@ public class MapViewService : BaseService<MapViewService>, IMapViewService
 		listItems.Add(new ListItem("工区", " "));
 		foreach (var item in result)
 		{
-			ListItem listItem = new ListItem(item.HM07003, item.HM07002);
+			ListItem listItem = new ListItem(item.HM07003.Trim(), item.HM07002);
 			listItems.Add(listItem);
 		}
 		return listItems;
@@ -116,7 +116,7 @@ public class MapViewService : BaseService<MapViewService>, IMapViewService
 
 		foreach (var item in result)
 		{
-			ListItem listItem = new ListItem(item.HM06003, item.HM06002);
+			ListItem listItem = new ListItem(item.HM06003.Trim(), item.HM06002);
 			listItems.Add(listItem);
 		}
 		return listItems;
@@ -138,7 +138,7 @@ public class MapViewService : BaseService<MapViewService>, IMapViewService
 		var result = await HkksDb.GetHM09ListAsync(hm09DC, false);
 		for (int iHm09 = 0; iHm09 < result.Count; iHm09++)
 		{
-			ListItem listItem = new ListItem(result[iHm09].HM09003, result[iHm09].HM09002);
+			ListItem listItem = new ListItem(result[iHm09].HM09003.Trim(), result[iHm09].HM09002);
 			listItems.Add(listItem);
 		}
 		return listItems;
@@ -154,7 +154,7 @@ public class MapViewService : BaseService<MapViewService>, IMapViewService
 		listItems.Add(new ListItem("構造図", ""));
 		foreach (var item in result)
 		{
-			ListItem listItem = new ListItem(item.HM23003, item.HM23002);
+			ListItem listItem = new ListItem(item.HM23003.Trim(), item.HM23002);
 			listItems.Add(listItem);
 		}
 		return listItems;
@@ -365,7 +365,7 @@ public class MapViewService : BaseService<MapViewService>, IMapViewService
         {
             foreach (var item in result)
             {
-                ListItem listItem = new ListItem(item.HM20004, item.HM20003.ToString());
+                ListItem listItem = new ListItem(item.HM20004.Trim(), item.HM20003.ToString());
                 listItems.Add(listItem);
             }
         }

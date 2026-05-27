@@ -1,8 +1,34 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <path d="m 105.50037,281.60863 c -2.70293,0 -5.00091,-0.90042 -6.893127,-2.70209 -1.892214,-1.84778 -2.837901,-4.04181 -2.837901,-6.58209 0,-2.58722 0.945687,-4.80389 2.837901,-6.65167 1.892217,-1.84778 4.190197,-2.77167 6.893127,-2.77167 2.74819,0 5.06798,0.92389 6.96019,2.77167 1.93749,1.84778 2.90581,4.06445 2.90581,6.65167 0,2.54028 -0.96832,4.73431 -2.90581,6.58209 -1.89221,1.80167 -4.212,2.70209 -6.96019,2.70209 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="M 213.56111,280.08446 H 195.99044 L 149.69953,207.0544 c -1.17121,-1.84778 -2.14037,-3.76515 -2.90581,-5.75126 h -0.40578 c 0.36051,2.12528 0.54076,6.67515 0.54076,13.6496 v 65.13172 h -15.54349 v -99.36009 h 18.71925 l 44.7374,71.29798 c 1.89222,2.95695 3.1087,4.98917 3.64945,6.09751 h 0.26996 c -0.45021,-2.6325 -0.67573,-7.09015 -0.67573,-13.37293 v -64.02256 h 15.47557 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="m 289.25134,280.08446 h -54.40052 v -99.36009 h 52.23835 v 13.99669 h -36.15411 v 28.13085 h 33.31621 v 13.9271 h -33.31621 v 29.37835 h 38.31628 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="M 366.56466,194.72106 H 338.7222 v 85.3634 h -16.08423 v -85.3634 h -27.77455 v -13.99669 h 71.70124 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="1.5" dy="1.5" stdDeviation="1" flood-color="#444" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <!-- rounded outer frame -->
+  <rect x="2" y="2" width="196" height="196" rx="28" ry="28" fill="#FFFFFF" stroke="#9a7a56" stroke-width="2"/>
+
+  <!-- tablet body -->
+  <g filter="url(#shadow)">
+    <path d="M43 22 L95 6 L148 38 L148 170 L99 194 L43 163 Z" fill="#c9c9c9" stroke="#9f9f9f" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M58 45 L92 35 L128 56 L128 156 L93 172 L58 154 Z" fill="#f5f5f5" stroke="#b8b8b8" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="94" cy="181" r="4.2" fill="#e8e8e8" stroke="#bdbdbd" stroke-width="1"/>
+  </g>
+
+  <!-- orange D with grey outline shadow -->
+  <g>
+    <path d="M33 66 H85 C113 66 128 79 128 101 C128 123 113 136 85 136 H33 V113 H53 V118 H83 C99 118 108 111 108 101 C108 91 99 84 83 84 H53 V89 H33 Z" fill="#5b5b5b"/>
+    <path d="M36 63 H88 C116 63 131 76 131 98 C131 122 116 139 88 139 H36 V116 H56 V121 H86 C103 121 112 113 112 100 C112 88 103 81 86 81 H56 V86 H36 Z" fill="#f5a000"/>
+    <rect x="36" y="77" width="19" height="58" fill="#f5a000"/>
+    <rect x="32" y="74" width="6" height="64" fill="#666666" opacity="0.95"/>
+    <rect x="35" y="77" width="6" height="58" fill="#f5a000"/>
+  </g>
+
+  <!-- green i with grey outline shadow -->
+  <g>
+    <circle cx="148" cy="73" r="8" fill="#5b5b5b"/>
+    <circle cx="150" cy="71" r="8" fill="#18a53d"/>
+    <path d="M139 88 H152 V136 H135 C141 129 143 118 143 106 C143 99 142 93 139 88 Z" fill="#5b5b5b"/>
+    <path d="M141 86 H154 V134 H137 C143 128 145 117 145 105 C145 98 144 91 141 86 Z" fill="#1aa63c"/>
+  </g>
 </svg>

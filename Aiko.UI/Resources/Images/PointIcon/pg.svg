@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="134" height="224" viewBox="0 0 134 224">
+  <path transform="scale(0.99259259,0.97391304)" d="M 67.5 3
+C 29.5 3 3.5 35.5 3.5 75.5
+C 3.5 108.5 17.5 130.5 31.0 141.0
+L 4.8 225.0
+C 3.4 229.4 8.7 232.0 11.8 227.6
+L 55.5 153.5
+C 62.0 154.4 70.0 154.6 77.0 153.8
+C 110.0 149.8 131.5 119.5 131.5 80.5
+C 131.5 36.5 104.8 3.0 67.5 3.0
+Z" fill="#84E291" stroke="#000000" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

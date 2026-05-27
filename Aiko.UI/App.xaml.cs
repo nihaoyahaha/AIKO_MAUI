@@ -16,6 +16,8 @@ public partial class App : Application
 		ILogger<App> logger)
 	{
 		InitializeComponent();
+
+
 		Current.UserAppTheme = AppTheme.Light;
 		_appInitializationService = appInitializationService;
 		_shell = shell;
@@ -24,6 +26,11 @@ public partial class App : Application
 		{
 			var exception = e.ExceptionObject as Exception;
 			_logger.LogCritical($"appに未処理異常が発生しました:{exception.ToString()}");
+		};
+
+		TaskScheduler.UnobservedTaskException += (s, e) =>
+		{
+			_logger.LogCritical($"[TaskScheduler]に表示されないタスク例外:{e.Exception.ToString()}");
 		};
 	}
 
@@ -34,9 +41,17 @@ public partial class App : Application
 
     protected override async void OnStart()
     {
-        base.OnStart();
-		InitializeTheme();
-		await _appInitializationService.InitializeAppCommunicationServiceFromSqliteAsync();
+		try
+		{
+			base.OnStart();
+			InitializeTheme();
+			await _appInitializationService.InitializeAppCommunicationServiceFromSqliteAsync();
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical($"OnStart 初期化リンクに致命的な例外が発生しました: {ex}");
+		}
+
 	}
 
 	/// <summary>

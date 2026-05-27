@@ -213,6 +213,31 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     // 跳转到确认点页面前记录当前配筋点所属部位编号，用于返回时重新计算该点状态。
     private string _pendingRefreshPositionCode = "";
 
+    // 默认配筋点图标的高度
+    private const int CheckPointIconHeight = 20;
+    // 默认配筋点图标的宽度
+    private const int CheckPointIconWidth = 15;
+
+    private const int CheckPointLabelDownOffset = 6;
+    // 相机图标
+    private const string PhotoCountIconImageSource = "pca.png";
+    // 相机图标尺寸
+    private const int PhotoCountIconImageSize = 10;
+    // 照片枚数图标相对于确认点图标的垂直偏移，确保在默认尺寸下两者之间有适当间距；放大后保持同样的视觉效果。
+    private const int PhotoCountIconVerticalOffset = 2;
+    // 相机图标与照片枚数作为一个整体显示，这里不再单独做 1px 微调。
+    private const int PhotoCountIconVisualOffset = 0;
+    // 确认点标签下方的照片枚数标签与图标的高度差，确保两者之间有适当间距。
+    private const int CheckPointPhotoCountLabelHeight = 12;
+
+    private int PhotoCountLabelHeight => SizeFlag ? 2 * CheckPointPhotoCountLabelHeight : CheckPointPhotoCountLabelHeight;
+
+    private int PhotoCountIconOffset => SizeFlag ? 2 * PhotoCountIconVerticalOffset : PhotoCountIconVerticalOffset;
+
+    private int PhotoCountIconVisualOffsetY => SizeFlag ? 2 * PhotoCountIconVisualOffset : PhotoCountIconVisualOffset;
+
+    private int CheckPointLabelOffset => SizeFlag ? 2 * CheckPointLabelDownOffset : CheckPointLabelDownOffset;
+
 
 
     /// <summary>
@@ -396,9 +421,9 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task Home()
     {
-		WeakReferenceMessenger.Default.Send("Enter", "EnterOrLeaveLogoutPageToken");
-		await Shell.Current.GoToAsync("//Logout");
-	}
+        WeakReferenceMessenger.Default.Send("Enter", "EnterOrLeaveLogoutPageToken");
+        await Shell.Current.GoToAsync("//Logout");
+    }
 
     /// <summary>
     /// 控制弹窗显示隐藏
@@ -507,23 +532,33 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         {
             if (shape.Type == MapShapeType.Label)
             {
-                if (dictionaryKoKu.ContainsKey(shape.Tag))
+                switch (shape.LayoutRole)
                 {
-                    // 工区标签只受工区名开关控制。
-                    shape.Text = dictionaryKoKu[shape.Tag];
-                    shape.IsVisible = Hr01007Flag;
-                }
-                else
-                {
-                    // 确认点标签由多个开关组合生成文本。
-                    shape.Text = BuildCheckPointLabelText(shape.Tag);
-                    shape.IsVisible = !string.IsNullOrEmpty(shape.Text);
+                    case MapShapeLayoutRole.AreaLabel:
+                        // 工区标签只受工区名开关控制。
+                        shape.Text = dictionaryKoKu.TryGetValue(shape.Tag, out string? areaName) ? areaName : "";
+                        shape.IsVisible = Hr01007Flag && !string.IsNullOrEmpty(shape.Text);
+                        break;
+
+                    case MapShapeLayoutRole.CheckPointPhotoCountLabel:
+                        shape.Text = BuildCheckPointPhotoCountText(shape.Tag);
+                        shape.IsVisible = !string.IsNullOrEmpty(shape.Text);
+                        break;
+
+                    case MapShapeLayoutRole.CheckPointLabel:
+                        shape.Text = BuildCheckPointLabelText(shape.Tag);
+                        shape.IsVisible = !string.IsNullOrEmpty(shape.Text);
+                        break;
                 }
             }
             else if (shape.Type == MapShapeType.Image && string.Equals(shape.ImageSource, "smallarea.png", StringComparison.OrdinalIgnoreCase))
             {
                 // smallarea.png 只用于工区标记图标。
                 shape.IsVisible = Hr01007Flag;
+            }
+            else if (shape.Type == MapShapeType.Image && shape.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountIcon)
+            {
+                shape.IsVisible = !string.IsNullOrEmpty(BuildCheckPointPhotoCountText(shape.Tag));
             }
         }
     }
@@ -533,23 +568,48 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// </summary>
     private void ApplySizeFlagToDynamicShapes()
     {
-        int iconSize = SizeFlag ? 32 : 16;
-        int fontSize = SizeFlag ? 24 : 12;
+        int iconHeight = SizeFlag ? 40 : CheckPointIconHeight;
+        int iconWidth = SizeFlag ? 40 : CheckPointIconWidth;
+
+        int photoCountIconSize = SizeFlag ? 2 * PhotoCountIconImageSize : PhotoCountIconImageSize;
+        int photoCountLabelHeight = PhotoCountLabelHeight;
+        int photoCountIconOffset = PhotoCountIconOffset;
+        int photoCountIconVisualOffsetY = PhotoCountIconVisualOffsetY;
+        int checkPointLabelOffset = CheckPointLabelOffset;
+
+        int areaIconSize = SizeFlag ? 32 : 16;
+        int fontSize = SizeFlag ? 20 : 10;
 
         foreach (var shape in dynamicShapes)
         {
             switch (shape.LayoutRole)
             {
                 case MapShapeLayoutRole.CheckPointIcon:
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X, shape.LayoutOrigin.Y - iconHeight, iconWidth, iconHeight);
+                    break;
+
                 case MapShapeLayoutRole.AreaIcon:
                     // 图标基于锚点只改宽高。
-                    shape.Bounds = new Rect(shape.LayoutOrigin.X, shape.LayoutOrigin.Y, iconSize, iconSize);
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X, shape.LayoutOrigin.Y, areaIconSize, areaIconSize);
                     break;
 
                 case MapShapeLayoutRole.CheckPointLabel:
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, shape.LayoutOrigin.Y - iconHeight + checkPointLabelOffset, 0, 0);
+                    shape.FontSize = fontSize;
+                    break;
+
+                case MapShapeLayoutRole.CheckPointPhotoCountLabel:
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, shape.LayoutOrigin.Y - iconHeight + checkPointLabelOffset - photoCountLabelHeight - photoCountIconOffset + photoCountIconVisualOffsetY, photoCountIconSize, photoCountLabelHeight);
+                    shape.FontSize = fontSize;
+                    break;
+
+                case MapShapeLayoutRole.CheckPointPhotoCountIcon:
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, shape.LayoutOrigin.Y - iconHeight + checkPointLabelOffset - photoCountLabelHeight - photoCountIconOffset + photoCountIconVisualOffsetY, photoCountIconSize, photoCountIconSize);
+                    break;
+
                 case MapShapeLayoutRole.AreaLabel:
                     // 标签始终跟在图标右侧，偏移量等于当前图标尺寸。
-                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconSize, shape.LayoutOrigin.Y, 0, 0);
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X + areaIconSize, shape.LayoutOrigin.Y, 0, 0);
                     shape.FontSize = fontSize;
                     break;
             }
@@ -576,12 +636,17 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             parts.Add(section);
         }
 
+        return string.Concat(parts);
+    }
+
+    private string BuildCheckPointPhotoCountText(string tag)
+    {
         if (PhotoCountFlag && dicPicCount != null && dicPicCount.TryGetValue(tag, out var picCount))
         {
-            parts.Add(picCount);
+            return picCount;
         }
 
-        return string.Concat(parts);
+        return "";
     }
 
     /// <summary>
@@ -634,33 +699,33 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         await Shell.Current.GoToAsync("CheckPoint", CreateNavigationParameterForCheckPoint(projectSelectedItemCode));
     }
 
-	/// <summary>
-	/// 確認项目画面のナビゲーションパラメータを作成する
-	/// </summary>
-	/// <returns></returns>
-	private Dictionary<string, object> CreateNavigationParameterForCheckPoint(string projectCode)
-	{
-		var obj = new
-		{
-			FromPage = "MapViewPage",
-			ProjectCode = projectCode //工程コード
-		};
-		var options = new JsonSerializerOptions
-		{
-			WriteIndented = true,
-			Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-		};
-		string jsonString = JsonSerializer.Serialize(obj, options);
-		return new Dictionary<string, object>
-		{
-			{ "json", jsonString }
-		};
-	}
+    /// <summary>
+    /// 確認項目画面のナビゲーションパラメータを作成する
+    /// </summary>
+    /// <returns></returns>
+    private Dictionary<string, object> CreateNavigationParameterForCheckPoint(string projectCode)
+    {
+        var obj = new
+        {
+            FromPage = "MapViewPage",
+            ProjectCode = projectCode //工程コード
+        };
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        string jsonString = JsonSerializer.Serialize(obj, options);
+        return new Dictionary<string, object>
+        {
+            { "json", jsonString }
+        };
+    }
 
-	/// <summary>
-	/// 控制工区、部位、工程的picker是否可用
-	/// </summary>
-	private void SetPickersEnable()
+    /// <summary>
+    /// 控制工区、部位、工程的picker是否可用
+    /// </summary>
+    private void SetPickersEnable()
     {
         bool isEnable = MapSelectIndex > 0;
         AreaEnable = isEnable;
@@ -677,6 +742,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     {
         ClearPendingViewportState();
         string floorCode = Floors[FloorSelectIndex].Value;
+        MapSelectIndex = -1;
         (Maps, hm04List) = await Service.GetHM04DataSource(floorCode);
         MapSelectIndex = 0;
     }
@@ -1220,6 +1286,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         int status = GetCheckPointStatus(item, positionCode);
         string imageSource = BuildCheckPointImageSource(item, status);
         string labelText = BuildCheckPointLabelText(itemCode);
+        string photoCountText = BuildCheckPointPhotoCountText(itemCode);
 
         foreach (var shape in dynamicShapes.Where(p => string.Equals(p.Tag, itemCode, StringComparison.OrdinalIgnoreCase)))
         {
@@ -1231,7 +1298,16 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             else if (shape.LayoutRole == MapShapeLayoutRole.CheckPointLabel)
             {
                 shape.Text = labelText;
-                shape.IsVisible = Hr01020Flag || Hr01003Flag || PhotoCountFlag;
+                shape.IsVisible = !string.IsNullOrEmpty(shape.Text);
+            }
+            else if (shape.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountLabel)
+            {
+                shape.Text = photoCountText;
+                shape.IsVisible = !string.IsNullOrEmpty(shape.Text);
+            }
+            else if (shape.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountIcon)
+            {
+                shape.IsVisible = !string.IsNullOrEmpty(photoCountText);
             }
         }
     }
@@ -1286,17 +1362,14 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// </summary>
     private static string BuildCheckPointImageSource(ITEMMETA item, int status)
     {
-        string buimName = item.HM06016.Trim();
-        buimName = buimName.Substring(0, buimName.Length - 4);
-
         return status switch
         {
-            0 => $"p{buimName}g.png",
-            1 => $"p{buimName}r.png",
-            2 => $"p{buimName}w.png",
-            3 => $"p{buimName}y.png",
-            4 => $"p{buimName}b.png",
-            _ => buimName
+            0 => "pg.png",
+            1 => "pr.png",
+            2 => "pw.png",
+            3 => "py.png",
+            4 => "pb.png",
+            _ => "pw.png"
         };
     }
 
@@ -1310,9 +1383,15 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
         //double width = Convert.ToInt32(drSelect.HM04009);
         //double height = Convert.ToInt32(drSelect.HM04010);
+        int iconHeight = SizeFlag ? 40 : CheckPointIconHeight;
+        int iconWidth = SizeFlag ? 40 : CheckPointIconWidth;
 
-        int imgWidth = SizeFlag ? 32 : 16;
-        int imgHeight = SizeFlag ? 32 : 16;
+        int photoCountIconSize = SizeFlag ? 2 * PhotoCountIconImageSize : PhotoCountIconImageSize;
+        int photoCountLabelHeight = PhotoCountLabelHeight;
+        int photoCountIconOffset = PhotoCountIconOffset;
+        int photoCountIconVisualOffsetY = PhotoCountIconVisualOffsetY;
+        int checkPointLabelOffset = CheckPointLabelOffset;
+        int fontSize = SizeFlag ? 20 : 10;
 
         dynamicShapes.Add(new MapShape
         {
@@ -1320,7 +1399,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             LayoutRole = MapShapeLayoutRole.CheckPointIcon,
             Tag = strTag.Trim(),
             LayoutOrigin = e,
-            Bounds = new Rect(e.X, e.Y, imgWidth, imgHeight),
+            Bounds = new Rect(e.X, e.Y - iconHeight, iconWidth, iconHeight),
             ImageSource = strBuimName,
             ZIndex = 999,
             CommandParameter = item
@@ -1332,11 +1411,27 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             LayoutRole = MapShapeLayoutRole.CheckPointLabel,
             Tag = strTag.Trim(),
             LayoutOrigin = e,
-            Bounds = new Rect(e.X + (SizeFlag ? 32 : 16), e.Y, 0, 0),
+            Bounds = new Rect(e.X + iconWidth, e.Y - iconHeight + checkPointLabelOffset, 0, 0),
             Text = strName.TrimEnd(),
-            FontSize = SizeFlag ? 24 : 12,
+            FontSize = fontSize,
             TextColor = Colors.Black,
-            IsVisible = Hr01020Flag || Hr01003Flag || PhotoCountFlag
+            IsVisible = !string.IsNullOrEmpty(strName.TrimEnd())
+        });
+
+        string photoCountText = BuildCheckPointPhotoCountText(strTag.Trim());
+
+        dynamicShapes.Add(new MapShape
+        {
+            Type = MapShapeType.Label,
+            LayoutRole = MapShapeLayoutRole.CheckPointPhotoCountLabel,
+            Tag = strTag.Trim(),
+            LayoutOrigin = e,
+            Bounds = new Rect(e.X + iconWidth, e.Y - iconHeight + checkPointLabelOffset - photoCountLabelHeight - photoCountIconOffset + photoCountIconVisualOffsetY, photoCountIconSize, photoCountLabelHeight),
+            Text = photoCountText,
+            FontSize = fontSize,
+            TextColor = Colors.Black,
+            ImageSource = PhotoCountIconImageSource,
+            IsVisible = !string.IsNullOrEmpty(photoCountText)
         });
     }
 

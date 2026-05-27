@@ -61,7 +61,6 @@ public partial class CheckPointDetailPage : ContentPage
 
         images = images.Where(image => File.Exists(Path.Combine(path, image.Name))).ToList();
 
-        _vm.ImagesCount = images.Count;
         _vm.NoditySummary();
 
         List<FileInfo> files = images.Select(image => new FileInfo(Path.Combine(path, image.Name))).ToList();

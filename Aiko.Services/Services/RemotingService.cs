@@ -25,9 +25,8 @@ namespace Aiko.Services.Services
         {
             try
             {
-                return AikoWcf
-                    .WcfConnectionTest(server, serverPort, serverTimeOut)
-                    .IpPortIsTrue();
+                var serviceApi = AikoWcf.WcfConnectionTest(server, serverPort, serverTimeOut);
+                return serviceApi?.IpPortIsTrue() ?? 0;
             }
             catch (Exception ex)
             {

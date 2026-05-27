@@ -30,6 +30,10 @@ namespace Aiko.Common.InkTools
                 Font = this.Font
             };
 
+            UpdateTextBounds(currentStroke);
+            point = new SKPoint(point.X + currentStroke.TextBounds.Height * 0.05f, point.Y - currentStroke.TextBounds.Height * 0.2f);
+            currentStroke.Points = new List<SKPoint> { point };
+
             _manager.AddStroke(currentStroke);
             currentStroke = null;
 

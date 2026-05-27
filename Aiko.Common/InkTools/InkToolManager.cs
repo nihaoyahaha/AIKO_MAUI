@@ -1,5 +1,4 @@
-﻿using Aiko.Common.InkTools;
-using SkiaSharp;
+﻿using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
 
@@ -10,7 +9,7 @@ namespace Aiko.Common.InkTools
     public class InkToolManager
     {
         // 存储所有可用工具的字典
-        public Dictionary<string, IInkTool> _tools;
+        private Dictionary<string, IInkTool> _tools;
 
         public IInkTool CurrentTool { get; private set; }
 
@@ -47,6 +46,8 @@ namespace Aiko.Common.InkTools
                 { "Eraser", new EraserTool(this) },
                 { "Move", new MoveTool(this) }
             };
+
+            LoadToolPreferences();
 
             SwitchTool();
         }
@@ -338,6 +339,203 @@ namespace Aiko.Common.InkTools
             _completedStrokes = strokes.Select(stroke => stroke.Clone()).ToList();
 
             ResetStrokesChange();
+        }
+
+        // --- 工具偏好相关 ---
+
+        public void LoadToolPreferences()
+        {
+            var ballpointPenTool = _tools["BallpointPen"] as BallpointPenTool;
+            var pencilTool = _tools["Pencil"] as PencilTool;
+            var highlighterTool = _tools["Highlighter"] as HighlighterTool;
+            var lineTool = _tools["Line"] as LineTool;
+            var fixedRectTool = _tools["FixedRect"] as FixedRectTool;
+            var fixedCircleTool = _tools["FixedCircle"] as FixedCircleTool;
+            var textTool = _tools["Text"] as TextTool;
+            var circleTextTool = _tools["CircleText"] as CircleTextTool;
+            var rectTextTool = _tools["RectText"] as RectTextTool;
+            var acceptTool = _tools["Accept"] as AcceptTool;
+
+            string ballpointPenToolColor = Preferences.Get("BallpointPenTool_Color", "#000000");
+            float ballpointPenToolSize = Preferences.Get("BallpointPenTool_Size", 1f);
+            string pencilToolColor = Preferences.Get("PencilTool_Color", "#000000");
+            float pencilToolSize = Preferences.Get("PencilTool_Size", 1f);
+            string highlighterToolColor = Preferences.Get("HighlighterTool_Color", "#000000");
+            float highlighterToolSize = Preferences.Get("HighlighterTool_Size", 12f);
+            string lineToolColor = Preferences.Get("LineTool_Color", "#000000");
+            float lineToolSize = Preferences.Get("LineTool_Size", 1f);
+            string fixedRectToolColor = Preferences.Get("FixedRectTool_Color", "#000000");
+            float fixedRectToolWidth = Preferences.Get("FixedRectTool_Width", 1f);
+            float fixedRectToolHeight = Preferences.Get("FixedRectTool_Height", 1f);
+            string fixedCircleToolColor = Preferences.Get("FixedCircleTool_Color", "#000000");
+            float fixedCircleToolSize = Preferences.Get("FixedCircleTool_Size", 1f);
+            string textToolColor = Preferences.Get("TextTool_Color", "#000000");
+            string textToolFont = Preferences.Get("TextTool_Font", "ヒラギノ丸ゴ ProN");
+            float textToolSize = Preferences.Get("TextTool_Size", 24f);
+            string circleTextToolColor = Preferences.Get("CircleTextTool_Color", "#000000");
+            string circleTextToolFont = Preferences.Get("CircleTextTool_Font", "ヒラギノ丸ゴ ProN");
+            float circleTextToolSize = Preferences.Get("CircleTextTool_Size", 24f);
+            string rectTextToolColor = Preferences.Get("RectTextTool_Color", "#000000");
+            string rectTextToolFont = Preferences.Get("RectTextTool_Font", "ヒラギノ丸ゴ ProN");
+            float rectTextToolSize = Preferences.Get("RectTextTool_Size", 24f);
+            string acceptToolColor = Preferences.Get("AcceptTool_Color", "#000000");
+            string acceptToolFont = Preferences.Get("AcceptTool_Font", "ヒラギノ丸ゴ ProN");
+            float acceptToolSize = Preferences.Get("AcceptTool_Size", 24f);
+
+            if (ballpointPenTool != null)
+            {
+                if (SKColor.TryParse(ballpointPenToolColor, out var color))
+                {
+                    ballpointPenTool.Color = color;
+                }
+                ballpointPenTool.Size = ballpointPenToolSize;
+            }
+            if (pencilTool != null)
+            {
+                if (SKColor.TryParse(pencilToolColor, out var color))
+                {
+                    pencilTool.Color = color;
+                }
+                pencilTool.Size = pencilToolSize;
+            }
+            if (highlighterTool != null)
+            {
+                if (SKColor.TryParse(highlighterToolColor, out var color))
+                {
+                    highlighterTool.Color = color;
+                }
+                highlighterTool.Size = highlighterToolSize;
+            }
+            if (lineTool != null)
+            {
+                if (SKColor.TryParse(lineToolColor, out var color))
+                {
+                    lineTool.Color = color;
+                }
+                lineTool.Size = lineToolSize;
+            }
+            if (fixedRectTool != null)
+            {
+                if (SKColor.TryParse(fixedRectToolColor, out var color))
+                {
+                    fixedRectTool.Color = color;
+                }
+                fixedRectTool.Width = fixedRectToolWidth;
+                fixedRectTool.Height = fixedRectToolHeight;
+            }
+            if (fixedCircleTool != null)
+            {
+                if (SKColor.TryParse(fixedCircleToolColor, out var color))
+                {
+                    fixedCircleTool.Color = color;
+                }
+                fixedCircleTool.Size = fixedCircleToolSize;
+            }
+            if (textTool != null)
+            {
+                if (SKColor.TryParse(textToolColor, out var color))
+                {
+                    textTool.Color = color;
+                }
+                textTool.Font = textToolFont;
+                textTool.Size = textToolSize;
+            }
+            if (circleTextTool != null)
+            {
+                if (SKColor.TryParse(circleTextToolColor, out var color))
+                {
+                    circleTextTool.Color = color;
+                }
+                circleTextTool.Font = circleTextToolFont;
+                circleTextTool.Size = circleTextToolSize;
+            }
+            if (rectTextTool != null)
+            {
+                if (SKColor.TryParse(rectTextToolColor, out var color))
+                {
+                    rectTextTool.Color = color;
+                }
+                rectTextTool.Font = rectTextToolFont;
+                rectTextTool.Size = rectTextToolSize;
+            }
+            if (acceptTool != null)
+            {
+                if (SKColor.TryParse(acceptToolColor, out var color))
+                {
+                    acceptTool.Color = color;
+                }
+                acceptTool.Font = acceptToolFont;
+                acceptTool.Size = acceptToolSize;
+            }
+        }
+        public void SaveToolPreferences()
+        {
+            var ballpointPenTool = _tools["BallpointPen"] as BallpointPenTool;
+            var pencilTool = _tools["Pencil"] as PencilTool;
+            var highlighterTool = _tools["Highlighter"] as HighlighterTool;
+            var lineTool = _tools["Line"] as LineTool;
+            var fixedRectTool = _tools["FixedRect"] as FixedRectTool;
+            var fixedCircleTool = _tools["FixedCircle"] as FixedCircleTool;
+            var textTool = _tools["Text"] as TextTool;
+            var circleTextTool = _tools["CircleText"] as CircleTextTool;
+            var rectTextTool = _tools["RectText"] as RectTextTool;
+            var acceptTool = _tools["Accept"] as AcceptTool;
+
+            if (ballpointPenTool != null)
+            {
+                Preferences.Set("BallpointPenTool_Color", ballpointPenTool.Color.ToString());
+                Preferences.Set("BallpointPenTool_Size", ballpointPenTool.Size);
+            }
+            if (pencilTool != null)
+            {
+                Preferences.Set("PencilTool_Color", pencilTool.Color.ToString());
+                Preferences.Set("PencilTool_Size", pencilTool.Size);
+            }
+            if (highlighterTool != null)
+            {
+                Preferences.Set("HighlighterTool_Color", highlighterTool.Color.ToString());
+                Preferences.Set("HighlighterTool_Size", highlighterTool.Size);
+            }
+            if (lineTool != null)
+            {
+                Preferences.Set("LineTool_Color", lineTool.Color.ToString());
+                Preferences.Set("LineTool_Size", lineTool.Size);
+            }
+            if (fixedRectTool != null)
+            {
+                Preferences.Set("FixedRectTool_Color", fixedRectTool.Color.ToString());
+                Preferences.Set("FixedRectTool_Width", fixedRectTool.Width);
+                Preferences.Set("FixedRectTool_Height", fixedRectTool.Height);
+            }
+            if (fixedCircleTool != null)
+            {
+                Preferences.Set("FixedCircleTool_Color", fixedCircleTool.Color.ToString());
+                Preferences.Set("FixedCircleTool_Size", fixedCircleTool.Size);
+            }
+            if (textTool != null)
+            {
+                Preferences.Set("TextTool_Color", textTool.Color.ToString());
+                Preferences.Set("TextTool_Font", textTool.Font);
+                Preferences.Set("TextTool_Size", textTool.Size);
+            }
+            if (circleTextTool != null)
+            {
+                Preferences.Set("CircleTextTool_Color", circleTextTool.Color.ToString());
+                Preferences.Set("CircleTextTool_Font", circleTextTool.Font);
+                Preferences.Set("CircleTextTool_Size", circleTextTool.Size);
+            }
+            if (rectTextTool != null)
+            {
+                Preferences.Set("RectTextTool_Color", rectTextTool.Color.ToString());
+                Preferences.Set("RectTextTool_Font", rectTextTool.Font);
+                Preferences.Set("RectTextTool_Size", rectTextTool.Size);
+            }
+            if (acceptTool != null)
+            {
+                Preferences.Set("AcceptTool_Color", acceptTool.Color.ToString());
+                Preferences.Set("AcceptTool_Font", acceptTool.Font);
+                Preferences.Set("AcceptTool_Size", acceptTool.Size);
+            }
         }
     }
 }

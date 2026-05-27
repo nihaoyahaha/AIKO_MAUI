@@ -16,6 +16,8 @@ public enum MapShapeLayoutRole
     None,
     CheckPointIcon,
     CheckPointLabel,
+    CheckPointPhotoCountIcon,
+    CheckPointPhotoCountLabel,
     AreaIcon,
     AreaLabel
 }
