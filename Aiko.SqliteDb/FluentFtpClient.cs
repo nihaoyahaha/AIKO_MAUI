@@ -7,7 +7,6 @@ public class FluentFtpClient
 {
 	readonly ILogger<FluentFtpClient> _logger;
 	AsyncFtpClient _client = new AsyncFtpClient();
-	FluentFtpOptions? _options;
 	public FluentFtpClient(ILogger<FluentFtpClient> logger)
 	{
 		_logger = logger;
@@ -16,10 +15,16 @@ public class FluentFtpClient
 	/// <summary>
 	/// FluentFtpClientクライアントの初期化
 	/// </summary>
-	public void InitializeFluentFtpClient(FluentFtpOptions options) 
+	public void InitializeFluentFtpClient(FluentFtpOptions options)
 	{
-		_options = options;
-		_client = CreateClient(options);
+		_client = new AsyncFtpClient(options.Host, options.Username, options.Password, options.Port);
+		_client.Config.ConnectTimeout = 15000;
+		_client.Config.DataConnectionType = FtpDataConnectionType.AutoPassive;
+		if (options.UseSsl)
+		{
+			_client.Config.EncryptionMode = FtpEncryptionMode.Explicit;
+			_client.Config.ValidateAnyCertificate = true;
+		}
 	}
 
 	/// <summary>
@@ -38,8 +43,8 @@ public class FluentFtpClient
 				_logger?.LogWarning($"ローカルファイルは存在しません: {localPath}");
 				return false;
 			}
-			await EnsureConnectedAsync();
-			
+			await EnsureConnectedAsync(ct);
+
 			var status = await _client.UploadFile(
 				localPath,
 				remotePath,
@@ -73,12 +78,12 @@ public class FluentFtpClient
 				return false;
 			}
 
-			await EnsureConnectedAsync();
+			await EnsureConnectedAsync(ct);
 
 			var status = await _client.UploadStream(
 				stream,
 				remotePath,
-				FtpRemoteExists.Overwrite, 
+				FtpRemoteExists.Overwrite,
 				createRemoteDir: true,
 				token: ct);
 
@@ -98,18 +103,18 @@ public class FluentFtpClient
 	/// <param name="localPath">ローカルファイルパス</param>
 	/// <param name="ct">キャンセルトークン</param>
 	/// <returns>true：ダウンロード成功、false：ダウンロード失敗</returns>
-	public async Task<bool> DownloadAsync(string remotePath, string localPath)
+	public async Task<bool> DownloadAsync(string remotePath, string localPath, CancellationToken ct = default)
 	{
 		try
 		{
-			await EnsureConnectedAsync();
+			await EnsureConnectedAsync(ct);
 
 			var localDir = Path.GetDirectoryName(localPath);
 			if (!string.IsNullOrEmpty(localDir) && !Directory.Exists(localDir))
 			{
 				Directory.CreateDirectory(localDir);
 			}
-			if (!await FileExistsAsync(remotePath)) 
+			if (!await FileExistsAsync(remotePath, ct))
 			{
 				_logger.LogWarning($"ftp-ダウンロード対象のファイルが見つかりません:{remotePath}");
 				return false;
@@ -117,13 +122,14 @@ public class FluentFtpClient
 			var status = await _client.DownloadFile(
 				localPath,
 				remotePath,
-				FtpLocalExists.Overwrite);
+				FtpLocalExists.Overwrite,
+				token: ct);
 
 			return status == FtpStatus.Success;
 		}
 		catch (Exception ex)
 		{
-			_logger?.LogError($"FTPダウンロードに失敗しました,{remotePath}: {ex.Message}");
+			_logger?.LogError($"FTPダウンロードに失敗しました: {ex.Message}");
 			return false;
 		}
 	}
@@ -138,7 +144,7 @@ public class FluentFtpClient
 	{
 		try
 		{
-			await EnsureConnectedAsync();
+			await EnsureConnectedAsync(ct);
 			if (!await _client.FileExists(remotePath, ct))
 			{
 				return true;
@@ -161,7 +167,7 @@ public class FluentFtpClient
 	/// <returns>true：存在、false：存在しない</returns>
 	public async Task<bool> FileExistsAsync(string remotePath, CancellationToken ct = default)
 	{
-		await EnsureConnectedAsync();
+		await EnsureConnectedAsync(ct);
 		return await _client.FileExists(remotePath, ct);
 	}
 
@@ -169,27 +175,12 @@ public class FluentFtpClient
 	/// 接続が確立されていることを確認します
 	/// </summary>
 	/// <param name="ct">キャンセルトークン</param>
-	async Task EnsureConnectedAsync()
+	async Task EnsureConnectedAsync(CancellationToken ct)
 	{
 		if (!_client.IsConnected)
 		{
-			await _client.Connect();
+			await _client.AutoConnect(ct);
 		}
-	}
-
-	static AsyncFtpClient CreateClient(FluentFtpOptions options)
-	{
-		var client = new AsyncFtpClient(options.Host, options.Username, options.Password, options.Port);
-		client.Config.ConnectTimeout = 15000;
-		client.Config.ReadTimeout = 60000;
-		client.Config.DataConnectionType = FtpDataConnectionType.PASV;
-		if (options.UseSsl)
-		{
-			client.Config.EncryptionMode = FtpEncryptionMode.Explicit;
-			client.Config.ValidateAnyCertificate = true;
-			client.Config.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
-		}
-		return client;
 	}
 
 	/// <summary>

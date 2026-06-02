@@ -334,9 +334,11 @@
                 VerticalOptions="Start">
                 <Button
                     x:Name="btn_backgroundRect"
+                    BorderColor="{Binding CameraButtonColorBlack}"
                     Command="{Binding BackgroundRectClickCommand}"
                     Style="{StaticResource CustomButtonStyle}"
-                    Text="黒" />
+                    Text="黒"
+                    TextColor="{Binding CameraButtonColorBlack}" />
                 <HorizontalStackLayout
                     x:Name="hsStack_backgroundRect"
                     HeightRequest="50"
@@ -346,7 +348,7 @@
                         x:Name="chk_rectGridVisibly"
                         IsChecked="True"
                         VerticalOptions="Center"
-                        Color="Blue">
+                        Color="White">
                         <CheckBox.Behaviors>
                             <toolkit:EventToCommandBehavior
                                 BindingContext="{Binding Path=BindingContext, Source={x:Reference chk_rectGridVisibly}}"
@@ -397,9 +399,11 @@
                 VerticalOptions="Start">
                 <Button
                     x:Name="btn_cameraPosition"
+                    BorderColor="{Binding CameraButtonColorReplace}"
                     Command="{Binding CameraPositionClickCommand}"
                     Style="{StaticResource CustomButtonStyle}"
-                    Text="替" />
+                    Text="替"
+                    TextColor="{Binding CameraButtonColorReplace}" />
                 <HorizontalStackLayout
                     x:Name="hsStack_cameraPosition"
                     HeightRequest="50"

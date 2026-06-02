@@ -17,6 +17,7 @@ public static class RegisterViewExts
         services.AddScopedWithShellRoute<CheckPointDetailPage, CheckPointDetailPageVM>("CheckPointDetailPage");
         services.AddScoped<EditView_IncludingImage>();
 		services.AddTransientPopup<PunchListPopup, PunchListPopupVM>();
+		services.AddTransientPopup<ColorPickerPopup, ColorPickerPopupVM>();
 		services.AddScopedWithShellRoute<ImageViewPage, ImageViewPageVM>("ImageView");
 		
 		services.AddScoped<LoginOutPage, LoginOutPageVM>();

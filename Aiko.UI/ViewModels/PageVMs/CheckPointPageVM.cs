@@ -438,6 +438,8 @@ public partial class CheckPointPageVM : Observablebase<CheckPointPageVM, ICheckP
 		{
 			Row1Buttons[0].BackgroundColor = _pink;
 			ContainerImageSource = await Service.GetImageSourceAsync(0);
+			// 断面ボタン行のレイアウト反映後に画像サイズを再計算する。
+			await Task.Delay(50);
 			WeakReferenceMessenger.Default.Send("", "RefreshCheckPointPageImageToken");
 		}
 	}

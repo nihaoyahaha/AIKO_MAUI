@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="Aiko.UI.CustomControls.ColorPickerPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Aiko.UI.ViewModels.UserControlVms"
+    x:Name="popupRoot"
+    x:DataType="vm:ColorPickerPopupVM"
+    WidthRequest="360">
+    <Border BackgroundColor="{DynamicResource PageBackgroundColor}">
+        <Grid
+            Padding="20"
+            RowDefinitions="Auto, Auto, Auto"
+            RowSpacing="14">
+            <Grid ColumnDefinitions="80, Auto, *" ColumnSpacing="10">
+                <Label
+                    FontSize="Body"
+                    Text="選択色"
+                    VerticalTextAlignment="Center" />
+                <Border
+                    Grid.Column="1"
+                    HeightRequest="32"
+                    Stroke="#FF8B8B8B"
+                    StrokeThickness="1"
+                    WidthRequest="48">
+                    <BoxView Color="{Binding SelectedColor}" />
+                </Border>
+                <Entry
+                    Grid.Column="2"
+                    Text="{Binding SelectedHex}"
+                    VerticalOptions="Center" />
+            </Grid>
+
+            <CollectionView
+                Grid.Row="1"
+                ItemsSource="{Binding ColorOptions}"
+                SelectionMode="None" Margin="0,0,1,0">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical" Span="6" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ColorOption">
+                        <Button
+                            Margin="3"
+                            BackgroundColor="{Binding Color}"
+                            BorderColor="#FF8B8B8B"
+                            BorderWidth="1"
+                            Command="{Binding BindingContext.SelectColorCommand, Source={x:Reference popupRoot}}"
+                            CommandParameter="{Binding .}"
+                            HeightRequest="34"
+                            WidthRequest="34" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <HorizontalStackLayout
+                Grid.Row="2"
+                HorizontalOptions="End"
+                Spacing="10">
+                <Button
+                    Command="{Binding CancelCommand}"
+                    Text="キャンセル"
+                    WidthRequest="100" />
+                <Button
+                    Command="{Binding AddCommand}"
+                    Text="選択"
+                    WidthRequest="100" />
+            </HorizontalStackLayout>
+        </Grid>
+    </Border>
+</ContentView>

@@ -206,6 +206,73 @@
                     Stroke="#FF8B8B8B"
                     StrokeShape="RoundRectangle 8"
                     StrokeThickness="1">
+                    <HorizontalStackLayout Spacing="40">
+                        <Grid ColumnDefinitions="60, auto, auto" ColumnSpacing="10">
+                            <Label
+                                FontSize="Body"
+                                HorizontalTextAlignment="End"
+                                Text="黒"
+                                VerticalTextAlignment="Center" />
+                            <Border
+                                Grid.Column="1"
+                                HeightRequest="20"
+                                Stroke="#FF8B8B8B"
+                                StrokeThickness="1"
+                                VerticalOptions="Center"
+                                WidthRequest="24">
+                                <BoxView Color="{Binding BlackCameraButtonColor}" />
+                            </Border>
+                            <Button
+                                Grid.Column="2"
+                                Command="{Binding SelectBlackCameraButtonColorCommand}"
+                                HeightRequest="28"
+                                Padding="12,0"
+                                Text="選択"
+                                VerticalOptions="Center"
+                                WidthRequest="60" />
+                        </Grid>
+                        <Grid ColumnDefinitions="60, auto, auto" ColumnSpacing="10">
+                            <Label
+                                FontSize="Body"
+                                HorizontalTextAlignment="End"
+                                Text="替"
+                                VerticalTextAlignment="Center" />
+                            <Border
+                                Grid.Column="1"
+                                HeightRequest="20"
+                                Stroke="#FF8B8B8B"
+                                StrokeThickness="1"
+                                VerticalOptions="Center"
+                                WidthRequest="24">
+                                <BoxView Color="{Binding ReplaceCameraButtonColor}" />
+                            </Border>
+                            <Button
+                                Grid.Column="2"
+                                Command="{Binding SelectReplaceCameraButtonColorCommand}"
+                                HeightRequest="28"
+                                Padding="12,0"
+                                Text="選択"
+                                VerticalOptions="Center"
+                                WidthRequest="60" />
+                        </Grid>
+                    </HorizontalStackLayout>
+                </Border>
+                <Label
+                    Margin="15,-10,0,0"
+                    Padding="5,0"
+                    BackgroundColor="{DynamicResource PageBackgroundColor}"
+                    FontSize="Body"
+                    HorizontalOptions="Start"
+                    Text="カメラボタン色設定"
+                    VerticalOptions="Start" />
+            </Grid>
+
+            <Grid>
+                <Border
+                    Padding="20,25,20,20"
+                    Stroke="#FF8B8B8B"
+                    StrokeShape="RoundRectangle 8"
+                    StrokeThickness="1">
                     <Grid ColumnDefinitions="160, *">
                         <Label
                             FontSize="Body"
@@ -221,7 +288,7 @@
                                     <behaviors:NumericOnlyBehavior MaxLength="2" />
                                 </Entry.Behaviors>
                             </Entry>
-                            <Label FontSize="Body" Text="10～16の数字を入力してください。" />
+                            <Label FontSize="Body" Text="14～25の数字を入力してください。" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>

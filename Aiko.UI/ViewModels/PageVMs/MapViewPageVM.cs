@@ -218,17 +218,19 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     // 默认配筋点图标的宽度
     private const int CheckPointIconWidth = 15;
 
-    private const int CheckPointLabelDownOffset = 6;
+    private const int CheckPointLabelDownOffset = 10;
     // 相机图标
     private const string PhotoCountIconImageSource = "pca.png";
     // 相机图标尺寸
     private const int PhotoCountIconImageSize = 10;
-    // 照片枚数图标相对于确认点图标的垂直偏移，确保在默认尺寸下两者之间有适当间距；放大后保持同样的视觉效果。
-    private const int PhotoCountIconVerticalOffset = 2;
+    // 照片枚数行与确认点名称行之间的固定间距。
+    private const int PhotoCountIconVerticalOffset = 0;
     // 相机图标与照片枚数作为一个整体显示，这里不再单独做 1px 微调。
     private const int PhotoCountIconVisualOffset = 0;
     // 确认点标签下方的照片枚数标签与图标的高度差，确保两者之间有适当间距。
     private const int CheckPointPhotoCountLabelHeight = 12;
+
+    private const int CheckPointTextZIndex = 1000;
 
     private int PhotoCountLabelHeight => SizeFlag ? 2 * CheckPointPhotoCountLabelHeight : CheckPointPhotoCountLabelHeight;
 
@@ -342,6 +344,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// <returns></returns>
     private async Task InitCboHM05Async()
     {
+        FloorSelectIndex = -1;
         Floors = await Service.GetHM05DataSource();
         FloorSelectIndex = 0;
     }
@@ -355,7 +358,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         _isInitialingAreas = true; // 【开启屏蔽】
         try
         {
-            string mapCode = Maps[MapSelectIndex].Value;
+            AreaSelectIndex = -1;
+            string mapCode = IsValidIndex(Maps, MapSelectIndex) ? Maps[MapSelectIndex].Value : "";
             Areas = await Service.GetHM07DataSource(mapCode);
             AreaSelectIndex = 0;
         }
@@ -373,8 +377,9 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         _isInitialingPositions = true; // 【开启屏蔽】
         try 
         {
-            string mapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
-            string areaCode = Areas.Count > 0 && AreaSelectIndex > -1 ? Areas[AreaSelectIndex].Value : "";
+            PositionSelectIndex = -1;
+            string mapCode = IsValidIndex(Maps, MapSelectIndex) ? Maps[MapSelectIndex].Value : "";
+            string areaCode = IsValidIndex(Areas, AreaSelectIndex) ? Areas[AreaSelectIndex].Value : "";
             Positions = await Service.GetHM06DataSource(mapCode, areaCode);
             PositionSelectIndex = 0;
         }
@@ -395,6 +400,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
         try
         {
+            ProckSelectIndex = -1;
             Procks = await Service.GetHM09DataSource();
             ProckSelectIndex = 0;
         }
@@ -410,6 +416,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     /// <returns></returns>
     private async Task InitCboHM12Async()
     {
+        ClassSelectIndex = -1;
         Classs = await Service.GetHM12DataSource();
         ClassSelectIndex = 0;
     }
@@ -569,7 +576,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     private void ApplySizeFlagToDynamicShapes()
     {
         int iconHeight = SizeFlag ? 40 : CheckPointIconHeight;
-        int iconWidth = SizeFlag ? 40 : CheckPointIconWidth;
+        int iconWidth = SizeFlag ? 30 : CheckPointIconWidth;
 
         int photoCountIconSize = SizeFlag ? 2 * PhotoCountIconImageSize : PhotoCountIconImageSize;
         int photoCountLabelHeight = PhotoCountLabelHeight;
@@ -579,6 +586,9 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
 
         int areaIconSize = SizeFlag ? 32 : 16;
         int fontSize = SizeFlag ? 20 : 10;
+
+        double GetCheckPointLabelY(Point origin) => origin.Y - iconHeight + checkPointLabelOffset;
+        double GetPhotoCountY(Point origin) => GetCheckPointLabelY(origin) - photoCountLabelHeight - photoCountIconOffset + photoCountIconVisualOffsetY;
 
         foreach (var shape in dynamicShapes)
         {
@@ -594,17 +604,17 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
                     break;
 
                 case MapShapeLayoutRole.CheckPointLabel:
-                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, shape.LayoutOrigin.Y - iconHeight + checkPointLabelOffset, 0, 0);
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, GetCheckPointLabelY(shape.LayoutOrigin), 0, 0);
                     shape.FontSize = fontSize;
                     break;
 
                 case MapShapeLayoutRole.CheckPointPhotoCountLabel:
-                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, shape.LayoutOrigin.Y - iconHeight + checkPointLabelOffset - photoCountLabelHeight - photoCountIconOffset + photoCountIconVisualOffsetY, photoCountIconSize, photoCountLabelHeight);
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, GetPhotoCountY(shape.LayoutOrigin), photoCountIconSize, photoCountLabelHeight);
                     shape.FontSize = fontSize;
                     break;
 
                 case MapShapeLayoutRole.CheckPointPhotoCountIcon:
-                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, shape.LayoutOrigin.Y - iconHeight + checkPointLabelOffset - photoCountLabelHeight - photoCountIconOffset + photoCountIconVisualOffsetY, photoCountIconSize, photoCountIconSize);
+                    shape.Bounds = new Rect(shape.LayoutOrigin.X + iconWidth, GetPhotoCountY(shape.LayoutOrigin), photoCountIconSize, photoCountIconSize);
                     break;
 
                 case MapShapeLayoutRole.AreaLabel:
@@ -657,12 +667,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     public void SavePendingViewportState(MapViewportState? state)
     {
         _pendingViewportState = state;
-        _pendingViewportMapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
+        _pendingViewportMapCode = IsValidIndex(Maps, MapSelectIndex) ? Maps[MapSelectIndex].Value : "";
     }
 
     public bool TryGetPendingViewportState(out MapViewportState? state)
     {
-        string currentMapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
+        string currentMapCode = IsValidIndex(Maps, MapSelectIndex) ? Maps[MapSelectIndex].Value : "";
 
         if (_pendingViewportState != null &&
             !string.IsNullOrWhiteSpace(_pendingViewportMapCode) &&
@@ -682,6 +692,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         _pendingViewportMapCode = "";
     }
 
+    private static bool IsValidIndex<T>(ICollection<T> items, int index)
+    {
+        return index >= 0 && index < items.Count;
+    }
+
     /// <summary>
     /// 跳转到确认点页面。
     /// </summary>
@@ -695,7 +710,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         _pendingRefreshItemCode = item.HR01003?.TrimEnd() ?? "";
         _pendingRefreshPositionCode = item.HR01019?.TrimEnd() ?? "";
         _checkPointService.SetHR01ITEM(item);
-        string projectSelectedItemCode = ProckSelectIndex > -1 ? Procks[ProckSelectIndex].Value : "";
+        string projectSelectedItemCode = IsValidIndex(Procks, ProckSelectIndex) ? Procks[ProckSelectIndex].Value : "";
         await Shell.Current.GoToAsync("CheckPoint", CreateNavigationParameterForCheckPoint(projectSelectedItemCode));
     }
 
@@ -740,6 +755,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task FloorSelectedIndexChanged()
     {
+        if (!IsValidIndex(Floors, FloorSelectIndex))
+        {
+            return;
+        }
+
         ClearPendingViewportState();
         string floorCode = Floors[FloorSelectIndex].Value;
         MapSelectIndex = -1;
@@ -757,11 +777,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         ClearPendingViewportState();
         ProckSelectIndex = Procks.Count > 0 ? 0 : -1;
 
-        string mapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
+        string mapCode = IsValidIndex(Maps, MapSelectIndex) ? Maps[MapSelectIndex].Value : "";
 
         // 切图前先清空旧 Guide 和旧图元显示，避免新底图自适应时仍看到上一张地图的数据。
-        Guide = new ObservableCollection<ListItem>();
         GuideSelectIndex = -1;
+        Guide = new ObservableCollection<ListItem>();
         GuideXItems = new List<GuideDrawItem>();
         GuideYItems = new List<GuideDrawItem>();
         GuideY2Items = new List<GuideDrawItem>();
@@ -774,8 +794,10 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             ImageSource = "";
             WeakReferenceMessenger.Default.Send("", "RefreshMapToken");
 
+            AreaSelectIndex = -1;
             Areas = new ObservableCollection<ListItem> { new("工区", " ") };
             AreaSelectIndex = 0;
+            PositionSelectIndex = -1;
             Positions = new ObservableCollection<ListItem> { new("部　位", "") };
             PositionSelectIndex = 0;
 
@@ -883,10 +905,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         SetPickersEnable();
 
         // マップガイドヘッダマスター
-        Guide = await Service.GetHM20GUIDHEADNUMList(mapCode);
         _suppressGuideSelectionChanged = true;
         try
         {
+            GuideSelectIndex = -1;
+            Guide = await Service.GetHM20GUIDHEADNUMList(mapCode);
             GuideSelectIndex = Guide.Count > 0 ? 0 : -1;
             await GetdataSource();
             // 图元数据准备完成后，仅刷新覆盖内容，不再重新触发底图自适应。
@@ -973,6 +996,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
     [RelayCommand]
     private async Task ClassSelectIndexChanged() 
     {
+        if (!IsValidIndex(Classs, ClassSelectIndex))
+        {
+            return;
+        }
+
         string classCode = Classs[ClassSelectIndex].Value;
         if (classCode != "") 
         {
@@ -1127,10 +1155,10 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         dictionaryKoKu.Clear();
 
         // マップコード
-        string mapCode = Maps.Count > 0 ? Maps[MapSelectIndex].Value : "";
+        string mapCode = IsValidIndex(Maps, MapSelectIndex) ? Maps[MapSelectIndex].Value : "";
 
         // 工程Code
-        string procksCode = Procks.Count > 0 ? Procks[ProckSelectIndex].Value : "";
+        string procksCode = IsValidIndex(Procks, ProckSelectIndex) ? Procks[ProckSelectIndex].Value : "";
 
         if (string.IsNullOrWhiteSpace(mapCode))
         {
@@ -1157,13 +1185,13 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         List<ITEMMETA> dataList = hr01ItemList.ToList();
 
         // 工区
-        if (AreaSelectIndex!=-1 && AreaSelectIndex != 0)
+        if (IsValidIndex(Areas, AreaSelectIndex) && AreaSelectIndex != 0)
         {
             dataList = dataList.Where(p => p.HR01007 == Areas[AreaSelectIndex].Value).ToList();
         }
 
         // 部位
-        if (PositionSelectIndex != -1 && PositionSelectIndex != 0)
+        if (IsValidIndex(Positions, PositionSelectIndex) && PositionSelectIndex != 0)
         {
             dataList = dataList.Where(p => p.HR01019 == Positions[PositionSelectIndex].Value || p.HR01004 == 1).ToList();
         }
@@ -1266,8 +1294,8 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         if (item == null)
             return;
 
-        string mapCode = Maps.Count > 0 && MapSelectIndex > -1 ? Maps[MapSelectIndex].Value : "";
-        string procksCode = Procks.Count > 0 && ProckSelectIndex > -1 ? Procks[ProckSelectIndex].Value : "";
+        string mapCode = IsValidIndex(Maps, MapSelectIndex) ? Maps[MapSelectIndex].Value : "";
+        string procksCode = IsValidIndex(Procks, ProckSelectIndex) ? Procks[ProckSelectIndex].Value : "";
 
         if (string.IsNullOrWhiteSpace(mapCode))
             return;
@@ -1384,7 +1412,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         //double width = Convert.ToInt32(drSelect.HM04009);
         //double height = Convert.ToInt32(drSelect.HM04010);
         int iconHeight = SizeFlag ? 40 : CheckPointIconHeight;
-        int iconWidth = SizeFlag ? 40 : CheckPointIconWidth;
+        int iconWidth = SizeFlag ? 30 : CheckPointIconWidth;
 
         int photoCountIconSize = SizeFlag ? 2 * PhotoCountIconImageSize : PhotoCountIconImageSize;
         int photoCountLabelHeight = PhotoCountLabelHeight;
@@ -1392,6 +1420,9 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         int photoCountIconVisualOffsetY = PhotoCountIconVisualOffsetY;
         int checkPointLabelOffset = CheckPointLabelOffset;
         int fontSize = SizeFlag ? 20 : 10;
+
+        double checkPointLabelY = e.Y - iconHeight + checkPointLabelOffset;
+        double photoCountY = checkPointLabelY - photoCountLabelHeight - photoCountIconOffset + photoCountIconVisualOffsetY;
 
         dynamicShapes.Add(new MapShape
         {
@@ -1411,10 +1442,11 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             LayoutRole = MapShapeLayoutRole.CheckPointLabel,
             Tag = strTag.Trim(),
             LayoutOrigin = e,
-            Bounds = new Rect(e.X + iconWidth, e.Y - iconHeight + checkPointLabelOffset, 0, 0),
+            Bounds = new Rect(e.X + iconWidth, checkPointLabelY, 0, 0),
             Text = strName.TrimEnd(),
             FontSize = fontSize,
             TextColor = Colors.Black,
+            ZIndex = CheckPointTextZIndex,
             IsVisible = !string.IsNullOrEmpty(strName.TrimEnd())
         });
 
@@ -1426,11 +1458,12 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
             LayoutRole = MapShapeLayoutRole.CheckPointPhotoCountLabel,
             Tag = strTag.Trim(),
             LayoutOrigin = e,
-            Bounds = new Rect(e.X + iconWidth, e.Y - iconHeight + checkPointLabelOffset - photoCountLabelHeight - photoCountIconOffset + photoCountIconVisualOffsetY, photoCountIconSize, photoCountLabelHeight),
+            Bounds = new Rect(e.X + iconWidth, photoCountY, photoCountIconSize, photoCountLabelHeight),
             Text = photoCountText,
             FontSize = fontSize,
             TextColor = Colors.Black,
             ImageSource = PhotoCountIconImageSource,
+            ZIndex = CheckPointTextZIndex,
             IsVisible = !string.IsNullOrEmpty(photoCountText)
         });
     }
@@ -1630,7 +1663,7 @@ public partial class MapViewPageVM : Observablebase<MapViewPageVM, IMapViewServi
         GuideYItems = new List<GuideDrawItem>();
         GuideY2Items = new List<GuideDrawItem>();
 
-        if (CurrentMap == null || MapSelectIndex < 0 || GuideSelectIndex < 0 || Maps.Count == 0 || Guide.Count == 0)
+        if (CurrentMap == null || !IsValidIndex(Maps, MapSelectIndex) || !IsValidIndex(Guide, GuideSelectIndex))
         {
             return;
         }

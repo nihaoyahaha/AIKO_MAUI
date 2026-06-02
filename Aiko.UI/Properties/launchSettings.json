@@ -7,7 +7,7 @@
     "windows平板": {
       "commandName": "MsixPackage",
       "remoteDebugEnabled": true,
-      "remoteDebugMachine": "172.29.2.182:4026",
+      "remoteDebugMachine": "172.29.2.155:4026",
       "authenticationMode": "None",
       "nativeDebugging": true
     },

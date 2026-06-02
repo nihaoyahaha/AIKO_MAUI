@@ -1,6 +1,5 @@
 ﻿using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Aiko.Common.InkTools
 {

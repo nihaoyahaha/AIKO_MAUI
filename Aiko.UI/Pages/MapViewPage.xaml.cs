@@ -11,6 +11,9 @@ namespace Aiko.UI;
 
 public partial class MapViewPage : ContentPage
 {
+    private const double PhotoCountIconVerticalOffset = -1d;
+    private const double PhotoCountTextVerticalOffset = -2d;
+
     // 当前底图实际显示尺寸（根据容器与原图比例计算）
     private double showW = 0;
     private double showH = 0;
@@ -29,6 +32,8 @@ public partial class MapViewPage : ContentPage
     private readonly Dictionary<MapShape, VisualElement> _shapeElements = new();
     // 常用地图图标缓存，避免相同文件名反复创建 ImageSource。
     private static readonly Dictionary<string, ImageSource> _mapIconSourceCache = new(StringComparer.OrdinalIgnoreCase);
+    // iOS/Mac Skia 叠加层使用的图标缓存。
+    private static readonly Dictionary<string, SKBitmap?> _skiaIconCache = new(StringComparer.OrdinalIgnoreCase);
     // 延迟补绘次级图元时使用的取消令牌，避免快速切图时旧任务回写。
     private CancellationTokenSource? _deferredShapeRenderCts;
     // 首帧图元延迟显示取消令牌。
@@ -527,6 +532,8 @@ public partial class MapViewPage : ContentPage
                 VerticalOptions = LayoutOptions.Start,
                 Spacing = 0,
                 Padding = Thickness.Zero,
+                BackgroundColor = Colors.Transparent,
+                ZIndex = shape.ZIndex,
                 IsVisible = shape.IsVisible,
                 Children =
                 {
@@ -559,6 +566,8 @@ public partial class MapViewPage : ContentPage
             Text = shape.Text,
             TextColor = shape.TextColor,
             FontSize = shape.FontSize,
+            BackgroundColor = Colors.Transparent,
+            ZIndex = shape.ZIndex,
             IsVisible = shape.IsVisible
         };
     }
@@ -581,12 +590,15 @@ public partial class MapViewPage : ContentPage
         double groupHeight = Math.Max(1d, shape.Bounds.Height * baseScale);
 
         layout.HeightRequest = groupHeight;
+        layout.BackgroundColor = Colors.Transparent;
 
         if (layout.Children[0] is Image image)
         {
             image.Source = GetOrCreateMapIconSource(shape.ImageSource);
             image.WidthRequest = iconSize;
             image.HeightRequest = iconSize;
+            image.VerticalOptions = LayoutOptions.Center;
+            image.TranslationY = PhotoCountIconVerticalOffset * baseScale;
         }
 
         if (layout.Children[1] is Label label)
@@ -594,9 +606,37 @@ public partial class MapViewPage : ContentPage
             label.Text = shape.Text;
             label.FontSize = fontSize;
             label.HeightRequest = groupHeight;
+            label.VerticalOptions = LayoutOptions.Center;
             label.VerticalTextAlignment = TextAlignment.Center;
             label.TextColor = shape.TextColor;
+            label.TranslationY = PhotoCountTextVerticalOffset * baseScale;
         }
+    }
+
+    /// <summary>
+    /// 照片枚数行的位置以确认点名称行为基准取整，避免两行分别缩放后产生 1px 的舍入误差。
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <param name="sy"></param>
+    /// <param name="baseScale"></param>
+    /// <returns></returns>
+    private (double Y, double Height) GetPhotoCountLayoutMetrics(MapShape shape, double sy, double baseScale)
+    {
+        double height = Math.Round(Math.Max(1d, shape.Bounds.Height * baseScale));
+        double y = Math.Round(shape.Bounds.Y * sy);
+
+        var checkPointLabel = _dynamicShapes.FirstOrDefault(p =>
+            p.LayoutRole == MapShapeLayoutRole.CheckPointLabel &&
+            string.Equals(p.Tag, shape.Tag, StringComparison.OrdinalIgnoreCase));
+
+        if (checkPointLabel != null)
+        {
+            double labelY = Math.Round(checkPointLabel.Bounds.Y * sy);
+            double gap = Math.Round((checkPointLabel.Bounds.Y - shape.Bounds.Y - shape.Bounds.Height) * sy);
+            y = labelY - height - gap;
+        }
+
+        return (y, height);
     }
 
     /// <summary>
@@ -816,7 +856,7 @@ public partial class MapViewPage : ContentPage
         if (_isDeferredShapesInitialized) return;
 
 #if WINDOWS
-        foreach (var shape in _dynamicShapes)
+        foreach (var shape in _dynamicShapes.OrderBy(s => s.ZIndex))
         {
             if (shape.Type != MapShapeType.Image)
             {
@@ -938,6 +978,8 @@ public partial class MapViewPage : ContentPage
                 lbl.Text = shape.Text;
                 lbl.FontSize = Math.Max(1d, shape.FontSize * baseScale);
                 lbl.TextColor = shape.TextColor;
+                lbl.BackgroundColor = Colors.Transparent;
+                lbl.ZIndex = shape.ZIndex;
 
                 AbsoluteLayout.SetLayoutBounds(lbl, new Rect(
                     shape.Bounds.X * sx,
@@ -948,13 +990,15 @@ public partial class MapViewPage : ContentPage
             }
             else if (shape.Type == MapShapeType.Label && element is HorizontalStackLayout photoCountLayout)
             {
+                var photoCountMetrics = GetPhotoCountLayoutMetrics(shape, sy, baseScale);
                 UpdatePhotoCountLayout(photoCountLayout, shape, sx, sy, baseScale);
+                photoCountLayout.ZIndex = shape.ZIndex;
 
                 AbsoluteLayout.SetLayoutBounds(photoCountLayout, new Rect(
                     shape.Bounds.X * sx,
-                    shape.Bounds.Y * sy,
+                    photoCountMetrics.Y,
                     AbsoluteLayout.AutoSize,
-                    Math.Max(1d, shape.Bounds.Height * baseScale)));
+                    photoCountMetrics.Height));
                 AbsoluteLayout.SetLayoutFlags(photoCountLayout, AbsoluteLayoutFlags.None);
             }
 #else
@@ -980,6 +1024,7 @@ public partial class MapViewPage : ContentPage
 
                 AbsoluteLayout.SetLayoutFlags(element, AbsoluteLayoutFlags.None);
             }
+            // iOS/Mac：照片枚数行也在 OverlayCanvas 绘制，避免被绘制层遮住。
 #endif
         }
 
@@ -1558,6 +1603,11 @@ public partial class MapViewPage : ContentPage
             if (!shape.IsVisible)
                 continue;
 
+            if (shape.LayoutRole == MapShapeLayoutRole.CheckPointLabel ||
+                shape.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountLabel ||
+                shape.LayoutRole == MapShapeLayoutRole.CheckPointIcon)
+                continue;
+
             if (shape.Type == MapShapeType.Rectangle)
             {
                 float x = SnapPx(ToPx(tx + shape.Bounds.X * sx * zoomScale, density));
@@ -1612,36 +1662,128 @@ public partial class MapViewPage : ContentPage
             }
             else if (shape.Type == MapShapeType.Label)
             {
-                float textSizePx = Math.Max(1f, ToPx(shape.FontSize * baseScale * zoomScale, density));
-                if (string.IsNullOrEmpty(shape.Text))
-                    continue;
-
-                using var paint = new SKPaint
-                {
-                    IsAntialias = true,
-                    Color = ToSkColor(shape.TextColor),
-                    IsStroke = false
-                };
-
-                using var font = new SKFont
-                {
-                    Typeface = _jpTypeface,
-                    Size = textSizePx,
-                    Subpixel = true,
-
-                    // 你的场景是透明叠加层 + 拖动中的文字
-                    // 先用 Antialias 更稳一些
-                    Edging = SKFontEdging.Antialias
-                };
-
-                float x = ToPx(tx + shape.Bounds.X * sx * zoomScale, density);
-                float yTop = ToPx(ty + shape.Bounds.Y * sy * zoomScale, density);
-
-                var metrics = font.Metrics;
-                float baseline = yTop - metrics.Ascent;
-
-                canvas.DrawText(shape.Text, x, baseline, font, paint);
+                DrawOverlayLabel(canvas, shape, sx, sy, baseScale, zoomScale, tx, ty, density);
             }
+        }
+
+        foreach (var shape in _dynamicShapes
+            .Where(p => p.IsVisible &&
+                (p.LayoutRole == MapShapeLayoutRole.CheckPointLabel ||
+                 p.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountLabel))
+            .OrderBy(p => p.ZIndex))
+        {
+            DrawOverlayLabel(canvas, shape, sx, sy, baseScale, zoomScale, tx, ty, density);
+        }
+
+        foreach (var shape in _dynamicShapes
+            .Where(p => p.IsVisible && p.LayoutRole == MapShapeLayoutRole.CheckPointIcon)
+            .OrderBy(p => p.ZIndex))
+        {
+            DrawOverlayImage(canvas, shape, sx, sy, zoomScale, tx, ty, density);
+        }
+    }
+
+    /// <summary>
+    /// iOS/Mac の Skia 叠加层に画像图元を描画する。
+    /// </summary>
+    private static void DrawOverlayImage(SKCanvas canvas, MapShape shape, double sx, double sy, double zoomScale, double tx, double ty, float density)
+    {
+        float x = ToPx(tx + shape.Bounds.X * sx * zoomScale, density);
+        float y = ToPx(ty + shape.Bounds.Y * sy * zoomScale, density);
+        float width = Math.Max(1f, ToPx(shape.Bounds.Width * sx * zoomScale, density));
+        float height = Math.Max(1f, ToPx(shape.Bounds.Height * sy * zoomScale, density));
+
+        DrawOverlayIcon(canvas, shape.ImageSource, new SKRect(x, y, x + width, y + height));
+    }
+
+    /// <summary>
+    /// iOS/Mac の Skia 叠加层绘制文本；确认点两行会在最后调用，保证处于最上层。
+    /// </summary>
+    private void DrawOverlayLabel(SKCanvas canvas, MapShape shape, double sx, double sy, double baseScale, double zoomScale, double tx, double ty, float density)
+    {
+        float textSizePx = Math.Max(1f, ToPx(shape.FontSize * baseScale * zoomScale, density));
+        if (string.IsNullOrEmpty(shape.Text))
+            return;
+
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            Color = ToSkColor(shape.TextColor),
+            IsStroke = false
+        };
+
+        using var font = new SKFont
+        {
+            Typeface = _jpTypeface,
+            Size = textSizePx,
+            Subpixel = true,
+            Edging = SKFontEdging.Antialias
+        };
+
+        float x = ToPx(tx + shape.Bounds.X * sx * zoomScale, density);
+        float yTop = ToPx(ty + shape.Bounds.Y * sy * zoomScale, density);
+        float textX = x;
+
+        if (shape.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountLabel)
+        {
+            float iconSize = Math.Max(1f, ToPx(shape.Bounds.Width * sx * zoomScale, density));
+            textX += iconSize;
+        }
+
+        var metrics = font.Metrics;
+        float baseline = yTop - metrics.Ascent;
+
+        if (shape.LayoutRole == MapShapeLayoutRole.CheckPointPhotoCountLabel)
+        {
+            float iconSize = Math.Max(1f, ToPx(shape.Bounds.Width * sx * zoomScale, density));
+            DrawOverlayIcon(canvas, shape.ImageSource, x, yTop, iconSize);
+        }
+
+        canvas.DrawText(shape.Text, textX, baseline, font, paint);
+    }
+
+    /// <summary>
+    /// iOS/Mac の Skia 叠加层に写真枚数アイコンを描画する。
+    /// </summary>
+    private static void DrawOverlayIcon(SKCanvas canvas, string imageSource, float x, float y, float size)
+    {
+        DrawOverlayIcon(canvas, imageSource, new SKRect(x, y, x + size, y + size));
+    }
+
+    /// <summary>
+    /// iOS/Mac の Skia 叠加层に指定範囲で画像を描画する。
+    /// </summary>
+    private static void DrawOverlayIcon(SKCanvas canvas, string imageSource, SKRect destination)
+    {
+        var bitmap = GetOrCreateSkiaIcon(imageSource);
+        if (bitmap == null)
+            return;
+
+        canvas.DrawBitmap(bitmap, destination);
+    }
+
+    /// <summary>
+    /// Skia 用に画像リソースを読み込む。
+    /// </summary>
+    private static SKBitmap? GetOrCreateSkiaIcon(string imageSource)
+    {
+        if (string.IsNullOrWhiteSpace(imageSource))
+            return null;
+
+        if (_skiaIconCache.TryGetValue(imageSource, out var cachedBitmap))
+            return cachedBitmap;
+
+        try
+        {
+            using var stream = FileSystem.OpenAppPackageFileAsync(imageSource).GetAwaiter().GetResult();
+            var bitmap = SKBitmap.Decode(stream);
+            _skiaIconCache[imageSource] = bitmap;
+            return bitmap;
+        }
+        catch
+        {
+            _skiaIconCache[imageSource] = null;
+            return null;
         }
     }
 

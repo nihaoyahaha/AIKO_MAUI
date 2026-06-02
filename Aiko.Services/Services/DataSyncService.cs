@@ -632,7 +632,7 @@ public class DataSyncService
 			hm17DC.HM17013 = operatorId;
 			hm17DC.HM17014 = ipAddress;
 			hm17DC.HM17015 = await GetDeviceId();
-            hm17DC.HM17017 = hm17017;
+			hm17DC.HM17017 = hm17017;
 			hm17DC.HM17018 = workCode;
 
 			list.Add(hm17DC);
@@ -794,7 +794,7 @@ public class DataSyncService
 			{
 				if (liHR03Local[iRowCount].HR03002.Trim() != "")
 				{
-                    isExists = checkFileExists(workCode, liHR03Local[iRowCount]);
+					isExists = checkFileExists(workCode, liHR03Local[iRowCount]);
 				}
 			}
 
@@ -876,17 +876,17 @@ public class DataSyncService
 					{
 						downloadHR03ImageList.Add(dataListLocal[i]);
 					}
-                    //else
-                    //{
-                    //    // 图片的情况下由于HR03020不会改变 会出现第一次不满足日期的情况下不下载  修改时间后,第二次才能下载的情况
-                    //    bool isExists = checkFileExists(workCode, dataListLocal[i]);
-                    //    if (!isExists)
-                    //    {
-                    //        downloadHR03ImageList.Add(dataListLocal[i]);
-                    //    }
-                    //}
+					//else
+					//{
+					//    // 图片的情况下由于HR03020不会改变 会出现第一次不满足日期的情况下不下载  修改时间后,第二次才能下载的情况
+					//    bool isExists = checkFileExists(workCode, dataListLocal[i]);
+					//    if (!isExists)
+					//    {
+					//        downloadHR03ImageList.Add(dataListLocal[i]);
+					//    }
+					//}
 
-                }
+				}
 				else
 				{
 					downloadHR03ImageList.Add(dataListLocal[i]);
@@ -902,42 +902,42 @@ public class DataSyncService
 	}
 
 
-    /// <summary>
-    /// 判断图片本地是否存在
-    /// </summary>
-    /// <param name="hc01"></param>
-    /// <param name="hr03"></param>
-    /// <returns></returns>
-    private bool checkFileExists(string workCode, HR03SYAS hr03)
-    {
-        string fileName = hr03.HR03017 == 0 ? $"{hr03.HR03002.Trim()}.jpg" : $"{hr03.HR03002.Trim()}.svg";
-        string filePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", fileName);
+	/// <summary>
+	/// 判断图片本地是否存在
+	/// </summary>
+	/// <param name="hc01"></param>
+	/// <param name="hr03"></param>
+	/// <returns></returns>
+	private bool checkFileExists(string workCode, HR03SYAS hr03)
+	{
+		string fileName = hr03.HR03017 == 0 ? $"{hr03.HR03002.Trim()}.jpg" : $"{hr03.HR03002.Trim()}.svg";
+		string filePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", fileName);
 
-        if (!File.Exists(filePath))
-        {
-            return false;
-        }
-        else
-        {
-            FileInfo f = new FileInfo(filePath);
-            if (f.Length == 0)
-            {
-                return false;
-            }
-        }
+		if (!File.Exists(filePath))
+		{
+			return false;
+		}
+		else
+		{
+			FileInfo f = new FileInfo(filePath);
+			if (f.Length == 0)
+			{
+				return false;
+			}
+		}
 
-        return true;
+		return true;
 
-    }
+	}
 
 
-    /// <summary>
-    /// マップマスター
-    /// </summary>
-    /// <param name="workCode">工事コード</param>
-    /// <param name="isIncludeDrawingFile">図面ファイルを含む</param>
-    /// <returns></returns>
-    public async Task<List<HM04MAPM>> GetHM04MAPMAsync(string workCode, bool isIncludeDrawingFile)
+	/// <summary>
+	/// マップマスター
+	/// </summary>
+	/// <param name="workCode">工事コード</param>
+	/// <param name="isIncludeDrawingFile">図面ファイルを含む</param>
+	/// <returns></returns>
+	public async Task<List<HM04MAPM>> GetHM04MAPMAsync(string workCode, bool isIncludeDrawingFile)
 	{
 		List<HM04MAPM> hm04List = new List<HM04MAPM>();
 		IList<HM04MAPMDC> hm04DCList = new List<HM04MAPMDC>();
@@ -2345,6 +2345,7 @@ public class DataSyncService
 			{
 				string message = $"ペイントファイル画像のダウンロード:{++count}/{allCount}";
 				await asyncMethod(message, currentStep, totalSteps);
+				using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 				string fileUri = $"{workCode}/paint/{item.HM04042.Trim()}.jpg";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "paint", $"{item.HM04042.Trim()}.jpg");
 				bool result;
@@ -2357,7 +2358,7 @@ public class DataSyncService
 				{
 					//ファイルサーバタイプ:ftp
 					fileUri = $"/{_appContext.HC01013}/{fileUri}";
-					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath);
+					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
 				}
 				if (!result)
 				{
@@ -2388,6 +2389,7 @@ public class DataSyncService
 				string fileName = $"{item.HM12002.Trim()}{Path.GetExtension(item.HM12003.Trim())}";
 				string fileUri = $"{workCode}/{fileName}";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, fileName);
+				using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 				bool result;
 				if (_appContext.FileServerType == 2)
 				{
@@ -2398,7 +2400,7 @@ public class DataSyncService
 				{
 					//ファイルサーバタイプ:ftp
 					fileUri = $"/{_appContext.HC01013}/{fileUri}";
-					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath);
+					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
 				}
 				if (!result)
 				{
@@ -2429,6 +2431,7 @@ public class DataSyncService
 				await asyncMethod(message, currentStep, totalSteps);
 				string fileUri = $"{workCode}/danm/{item.HM10025.Trim()}.jpg";
 				string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "danm", $"{item.HM10025.Trim()}.jpg");
+				using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 				bool result;
 				if (_appContext.FileServerType == 2)
 				{
@@ -2439,7 +2442,7 @@ public class DataSyncService
 				{
 					//ファイルサーバタイプ:ftp
 					fileUri = $"/{_appContext.HC01013}/{fileUri}";
-					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath);
+					result = await _fluentFtpClient.DownloadAsync(fileUri, localFilePath, ct: cts.Token);
 				}
 				if (!result)
 				{
@@ -2478,6 +2481,8 @@ public class DataSyncService
 					string localFilePath = Path.Combine(_appContext.AppDataFoler, workCode, "photo", fileName);
 
 					if (mimetype == ".json" && !await JsonFileExistsAsync(fileUri)) continue;
+
+					using CancellationTokenSource cts = new CancellationTokenSource(_timeout);
 					bool result;
 					if (_appContext.FileServerType == 2)
 					{
@@ -2488,7 +2493,7 @@ public class DataSyncService
 					{
 						//ファイルサーバタイプ:ftp
 						string remotePath = $"/{_appContext.HC01013}/{fileUri}";
-						result = await _fluentFtpClient.DownloadAsync(remotePath, localFilePath);
+						result = await _fluentFtpClient.DownloadAsync(remotePath, localFilePath, cts.Token);
 					}
 					if (!result)
 					{
@@ -2800,13 +2805,13 @@ public class DataSyncService
 		}
 	}
 
-    /// <summary>
-    /// 端末のserial numberまたはIMEI
-    /// </summary>
-    /// <returns></returns>
-    async Task<string> GetDeviceId()
-    {
-        const string key = "app_device_id";
+	/// <summary>
+	/// 端末のserial numberまたはIMEI
+	/// </summary>
+	/// <returns></returns>
+	async Task<string> GetDeviceId()
+	{
+		const string key = "app_device_id";
 
 		var cached = await SecureStorage.Default.GetAsync(key);
 		if (!string.IsNullOrWhiteSpace(cached))
@@ -2849,25 +2854,25 @@ public class DataSyncService
     }
 
 #elif IOS || MACCATALYST
-        id = UIDevice.CurrentDevice.IdentifierForVendor?.AsString() ?? string.Empty;
+		id = UIDevice.CurrentDevice.IdentifierForVendor?.AsString() ?? string.Empty;
 #endif
 
-        // 3. 最终还取不到，就生成一个本地稳定 ID
-        if (string.IsNullOrWhiteSpace(id))
-            id = Guid.NewGuid().ToString("N");
+		// 3. 最终还取不到，就生成一个本地稳定 ID
+		if (string.IsNullOrWhiteSpace(id))
+			id = Guid.NewGuid().ToString("N");
 
-        await SecureStorage.Default.SetAsync(key, id);
-        return id;
-    }
+		await SecureStorage.Default.SetAsync(key, id);
+		return id;
+	}
 
-    /// <summary>
-    /// ClassDCをClassに転化する。
-    /// </summary>
-    /// <typeparam name="D">Class</typeparam>
-    /// <typeparam name="S">ClassDC</typeparam>
-    /// <param name="s">ClassDCのデータ</param>
-    /// <returns></returns>
-    D Mapper<D, S>(S s)
+	/// <summary>
+	/// ClassDCをClassに転化する。
+	/// </summary>
+	/// <typeparam name="D">Class</typeparam>
+	/// <typeparam name="S">ClassDC</typeparam>
+	/// <param name="s">ClassDCのデータ</param>
+	/// <returns></returns>
+	D Mapper<D, S>(S s)
 	{
 		D d = Activator.CreateInstance<D>();
 		try

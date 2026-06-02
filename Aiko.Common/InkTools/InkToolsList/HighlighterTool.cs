@@ -86,7 +86,7 @@ namespace Aiko.Common.InkTools
             return new SKPaint
             {
                 Style = SKPaintStyle.Fill,
-                Color = color.WithAlpha(128),
+                Color = color,
                 BlendMode = SKBlendMode.Darken,
                 IsAntialias = true
             };

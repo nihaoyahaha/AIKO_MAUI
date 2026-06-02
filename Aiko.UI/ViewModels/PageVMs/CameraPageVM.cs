@@ -143,6 +143,18 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	/// </summary>
 	[ObservableProperty]
 	public partial string ReinforcementTypeText { get; set; } = "";
+
+	/// <summary>
+	/// 黒の文字色
+	/// </summary>
+	[ObservableProperty]
+	public partial Color CameraButtonColorBlack { get; set; } = Colors.White;
+
+	/// <summary>
+	/// 替の文字色
+	/// </summary>
+	[ObservableProperty]
+	public partial Color CameraButtonColorReplace { get; set; } = Colors.White;
 	#endregion
 
 	#region プライベートフィールド
@@ -156,6 +168,9 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 	/// 前のページの名前
 	/// </summary>
 	private string _fromPage = "";
+	private string _blackCameraButtonColorKey = "CameraButtonColor_Black";
+	private string _replaceCameraButtonColorKey = "CameraButtonColor_Replace";
+	private const string _defaultCameraButtonColor = "#FFFFFF";
 	#endregion
 
 	#region 公開フィールド
@@ -233,6 +248,12 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		Remark = "";
 		if (_fromPage == "CheckPointPage") PhotoScreenshot = null;
 		await RefreshCameras(CancellationToken.None);
+
+		//黒の文字色
+		CameraButtonColorBlack = ReadColorPreference(_blackCameraButtonColorKey);
+		//替の文字色
+		CameraButtonColorReplace = ReadColorPreference(_replaceCameraButtonColorKey);
+
 		GreenBackgroundModel = Service.GetGreenBackgroundModel();
 		//断面図の表示
 		GreenBackgroundModel.IsSectionalDrawingVisible = GreenBackgroundImageIsVisible;
@@ -932,6 +953,22 @@ public partial class CameraPageVM : Observablebase<CameraPageVM, ICameraService>
 		else
 		{
 			ReinforcementTypeSelectedItem = ReinforcementTypeList.FirstOrDefault(x => x.DisplyName.Trim() == ReinforcementTypeText.Trim());
+		}
+	}
+
+	/// <summary>
+	/// 構成内の色の取得
+	/// </summary>
+	Color ReadColorPreference(string key)
+	{
+		string hex = Preferences.Default.Get(key, _defaultCameraButtonColor);
+		try
+		{
+			return Color.FromArgb(hex);
+		}
+		catch
+		{
+			return Color.FromArgb(_defaultCameraButtonColor);
 		}
 	}
 	#endregion

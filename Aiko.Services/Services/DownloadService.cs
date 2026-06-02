@@ -30,7 +30,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 	/// App通信サービスの初期化
 	/// </summary>
 	/// <returns></returns>
-	public async Task InitializeCommunicationServiceAsync() 
+	public async Task InitializeCommunicationServiceAsync()
 	{
 		await _appInitializationService.InitializeAppCommunicationServiceFromSqliteAsync();
 	}
@@ -85,7 +85,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 
 		//ペイントファイル画像のダウンロード
 		await ReportProgressAsync("ペイントファイル画像のダウンロード", currentStep++, totalSteps);
-		await _dataSyncService.DownloadPaintFilesAsync(workCode, hm04List, isIncludeDrawingFile, currentStep, totalSteps, ReportProgressAsync).ConfigureAwait(false);
+		await _dataSyncService.DownloadPaintFilesAsync(workCode, hm04List, isIncludeDrawingFile, currentStep, totalSteps, ReportProgressAsync);
 
 		//HM05KAIM
 		await ReportProgressAsync("階", currentStep++, totalSteps);
@@ -118,7 +118,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 
 		//図面ファイル画像のダウンロード
 		await ReportProgressAsync("図面ファイル画像のダウンロード", currentStep++, totalSteps);
-		await _dataSyncService.DownloadFilesAsync(workCode, hm12FileList, isIncludeDrawingFile, currentStep, totalSteps, ReportProgressAsync).ConfigureAwait(false);
+		await _dataSyncService.DownloadFilesAsync(workCode, hm12FileList, isIncludeDrawingFile, currentStep, totalSteps, ReportProgressAsync);
 		if (hm12Result)
 		{
 			List<string> tableNameList = new List<string>();
@@ -132,7 +132,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 
 		//断面画像のダウンロード
 		await ReportProgressAsync("断面画像のダウンロード", currentStep++, totalSteps);
-		await _dataSyncService.DownloadDamnFilesAsync(workCode, hm10Result.hm10List, currentStep, totalSteps, ReportProgressAsync).ConfigureAwait(false);
+		await _dataSyncService.DownloadDamnFilesAsync(workCode, hm10Result.hm10List, currentStep, totalSteps, ReportProgressAsync);
 		if (hm10Result.result)
 		{
 			List<string> tableNameList = new List<string>();
@@ -189,7 +189,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 		}
 
 		await ReportProgressAsync("写真", currentStep++, totalSteps);
-		var hr03Tuple = await _dataSyncService.GetHR03SYASAsync(workCode, isIncludePhotoFile, passedDay,currentStep,totalSteps,ReportProgressAsync);
+		var hr03Tuple = await _dataSyncService.GetHR03SYASAsync(workCode, isIncludePhotoFile, passedDay, currentStep, totalSteps, ReportProgressAsync);
 
 		// 写真ファイルをアップロード
 		await ReportProgressAsync("写真を更新", currentStep++, totalSteps);
@@ -206,7 +206,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 
 		//写真画像のダウンロード
 		await ReportProgressAsync("写真画像のダウンロード", currentStep++, totalSteps);
-		await _dataSyncService.DownloadPhotoFilesAsync(workCode, hr03List, isIncludePhotoFile, currentStep, totalSteps, ReportProgressAsync).ConfigureAwait(false);
+		await _dataSyncService.DownloadPhotoFilesAsync(workCode, hr03List, isIncludePhotoFile, currentStep, totalSteps, ReportProgressAsync);
 		if (hr03Result)
 		{
 			List<string> tableNameList = new List<string>();
@@ -226,7 +226,7 @@ public class DownloadService : BaseService<DownloadService>, IDownloadService
 		await ReportProgressAsync("無効な画像の削除", currentStep++, totalSteps);
 		await _dataSyncService.DeletePhotoFilesAsync(workCode, hr06List, currentStep, totalSteps, ReportProgressAsync);
 	}
-	
+
 	/// <summary>
 	/// 非同期でダウンロード/同期の進捗を報告し、UI表示を更新する
 	/// </summary>

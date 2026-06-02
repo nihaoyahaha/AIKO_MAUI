@@ -215,16 +215,8 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 				PercentText = args.PercentText;
 			});
 			IsShowProgressGridFlag = true;
-			await _dataSyncService.UpdateHM17Async(1, SelectedConstruction.Value).ConfigureAwait(false);
-			await Task.Run(async () =>
-			{
-				await Service.DownLoadAsync(
-					SelectedConstruction.Value,
-					IsIncludeDrawingFile,
-					IsIncludePhotoFile,
-					progressHandler).ConfigureAwait(false);
-			}).ConfigureAwait(false);
-
+			await _dataSyncService.UpdateHM17Async(1, SelectedConstruction.Value);
+			await Service.DownLoadAsync(SelectedConstruction.Value, IsIncludeDrawingFile, IsIncludePhotoFile, progressHandler);
 		}
 		catch (Exception exp)
 		{
@@ -239,40 +231,36 @@ public partial class DownloadPageVM : Observablebase<DownloadPageVM, IDownloadSe
 		}
 		finally
 		{
-			await MainThread.InvokeOnMainThreadAsync(async () =>
+			InitializateProgress();
+
+			await _dataSyncService.UpdateHM17Async(0, SelectedConstruction.Value);
+			// 結果メッセージ
+			string errMsg;
+			if (ioExp)
 			{
-
-				InitializateProgress();
-
-				await _dataSyncService.UpdateHM17Async(0, SelectedConstruction.Value);
-				// 結果メッセージ
-				string errMsg;
-				if (ioExp)
-				{
-					errMsg = ErrorMessage.ERRORPOP("CM00105");
-				}
-				//テーブルデータの同期に失敗しました
-				else if (!_dataSyncService.DataStatus)
-				{
-					errMsg = ErrorMessage.ERRORPOP("CM01034");
-				}
-				else if (!_dataSyncService.FileStatus)
-				{
-					string msg = ErrorMessage.ERRORPOP("CM01038");
-					errMsg = string.Format(msg, _dataSyncService.FileSyncErrorMessage);
-				}
-				// ダウンロードに失敗しました
-				else if (!blResult)
-				{
-					errMsg = ErrorMessage.ERRORPOP("CM00001");
-				}
-				// ダウンロードに成功しました
-				else
-				{
-					errMsg = ErrorMessage.ERRORPOP("CM01030");
-				}
-				DialogHelper.MessageDialogOk(errMsg);
-			});
+				errMsg = ErrorMessage.ERRORPOP("CM00105");
+			}
+			//テーブルデータの同期に失敗しました
+			else if (!_dataSyncService.DataStatus)
+			{
+				errMsg = ErrorMessage.ERRORPOP("CM01034");
+			}
+			else if (!_dataSyncService.FileStatus)
+			{
+				string msg = ErrorMessage.ERRORPOP("CM01038");
+				errMsg = string.Format(msg, _dataSyncService.FileSyncErrorMessage);
+			}
+			// ダウンロードに失敗しました
+			else if (!blResult)
+			{
+				errMsg = ErrorMessage.ERRORPOP("CM00001");
+			}
+			// ダウンロードに成功しました
+			else
+			{
+				errMsg = ErrorMessage.ERRORPOP("CM01030");
+			}
+			DialogHelper.MessageDialogOk(errMsg);
 		}
 	}
 

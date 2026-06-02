@@ -49,25 +49,20 @@ namespace Aiko.Common.InkTools
 
             if (currentStroke == null) return;
 
-            currentStroke.Points = InkService.SmoothLine(currentStroke.Points);
-            currentStroke.Path = new SKPath();
-            foreach (var p in currentStroke.Points)
-            {
-                if (currentStroke.Path.PointCount == 0)
-                    currentStroke.Path.MoveTo(p);
-                else
-                    currentStroke.Path.LineTo(p);
-            }
-
             // 抬笔点和最后一个移动点距离足够大时，补上最终点，避免路径尾部缺口
             if (currentStroke.Points.Count == 0 || Distance(currentStroke.Points[^1], point) > 0.5f)
             {
                 currentStroke.Points.Add(point);
-                currentStroke.Path?.LineTo(point);
             }
 
+            currentStroke.Points = InkService.SmoothLine(currentStroke.Points);
+
             // 抬笔后尝试识别闭合图形；识别成功则把手绘轨迹替换为规则化图形
-            ConvertToRecognizedShape(currentStroke);
+            if (!TryConvertToRecognizedShape(currentStroke))
+            {
+                currentStroke.Path?.Dispose();
+                currentStroke.Path = BuildPath(currentStroke.Points);
+            }
 
             _manager.AddStroke(currentStroke);
             currentStroke = null;
@@ -78,14 +73,15 @@ namespace Aiko.Common.InkTools
         /// <summary>
         /// 尝试识别并替换当前笔迹为规则化图形
         /// </summary>
-        private static void ConvertToRecognizedShape(InkStroke stroke)
+        private static bool TryConvertToRecognizedShape(InkStroke stroke)
         {
             var result = InkShapeRecognizer.Recognize(stroke.Points);
-            if (result == null) return;
+            if (result == null) return false;
 
             stroke.Points = result.Points.ToList();
             stroke.Path?.Dispose();
             stroke.Path = BuildPath(stroke.Points);
+            return true;
         }
 
         /// <summary>
@@ -135,13 +131,7 @@ namespace Aiko.Common.InkTools
         {
             var stroke = base.Rebuild(json);
 
-            stroke.Path = new SKPath();
-            if (stroke.Points.Count > 0)
-            {
-                stroke.Path.MoveTo(stroke.Points[0]);
-                for (int i = 1; i < stroke.Points.Count; i++)
-                    stroke.Path.LineTo(stroke.Points[i]);
-            }
+            stroke.Path = BuildPath(stroke.Points);
 
             return stroke;
         }
